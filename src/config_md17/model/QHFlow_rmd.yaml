@@ -1,0 +1,8 @@
+model_name: QHFlow
+version: QHFlow
+
+hidden_size: 192
+bottle_hidden_size: 64
+num_gnn_layers: 4
+use_block_S: False
+dataset_type: "md17"

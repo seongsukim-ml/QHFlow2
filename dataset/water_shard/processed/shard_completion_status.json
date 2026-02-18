@@ -1,0 +1,10 @@
+{
+  "total_shards": 2,
+  "completed_shards": [
+    0,
+    1
+  ],
+  "missing_shards": [],
+  "completion_time": "2025-10-16T19:28:25.153959",
+  "all_completed": true
+}
