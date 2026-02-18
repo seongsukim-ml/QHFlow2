@@ -1,0 +1,48 @@
+hydra:
+  run:
+    dir: outputs/${dataset.dataset_full_name}/${wandb.run_name}
+
+
+defaults:
+  - model: QHFlow
+  - dataset: QH9Stable
+device: 0
+ckpt_dir: 'checkpoints'
+split_seed: 42
+check_val_every_n_epoch: 1
+
+optimizer: adamW
+decay_factor: 0.5
+decay_patience: 5
+# ema_start_epoch: 40  # 40 for water, and 0 for others
+ema_start_epoch: -1
+warmup_step: 1000
+num_training_steps: ${dataset.total_steps}
+end_lr: 1e-7
+scheduler_power: 1.0
+
+use_init_hamiltonian_residue: True
+
+qh9: True
+seed: 0
+
+data_type: float32
+
+loss_weights: {"hamiltonian": 10.0,}
+
+pl_type: no_flow
+prefix: ""
+mode: train
+
+
+wandb:
+  mode: disabled
+  project: "DFT-25-QH9"
+  entity: "kaist-korea"
+  run_id: Null
+  run_name: ${model.version}${prefix}-camera-ready-${dataset.dataset_full_name}-UR_${use_init_hamiltonian_residue}
+  tags: ["qh9"]
+  # resume: must
+
+# resume / inference (inference should be copied or it will be overwritten when training)
+ckpt: ''

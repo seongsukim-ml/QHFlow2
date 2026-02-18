@@ -1,0 +1,7 @@
+model_name: QHNet
+version: Real_QHNet
+
+hidden_size: 192
+bottle_hidden_size: 64
+num_gnn_layers: 4
+dataset_type: "md17"

@@ -1,0 +1,10 @@
+model_name: QHFlow_so2_v5_1
+version: QHFlow_so2_v5_1
+
+hidden_size: 64
+bottle_hidden_size: 32
+use_block_S: False
+use_block_H: False
+num_gnn_layers: 4
+num_ham_gnn_layers: 2
+# dataset_type: "md17"

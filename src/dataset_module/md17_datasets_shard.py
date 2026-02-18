@@ -1,0 +1,632 @@
+import numpy as np
+import lmdb
+import pickle
+import os
+from common.custom_logger import setup_global_logger, get_logger
+import json
+import gdown
+import torch
+from tqdm import tqdm
+import random
+import time
+import tarfile
+from typing import Union, List
+
+from common.metric import cal_orbital_and_energies
+from common.matrix_transforms import pack_upper_triangle, unpack_upper_triangle, _matrix_transform_single, get_convention_dict, _cut_matrix_3d, _cut_matrix_3d_last
+from dataset_module.lmdb_shard import LMDBShard_maker_db
+from common.dft_utils import calc_overlap_and_init_hamiltonian, calc_dm0
+
+from torch_geometric.data import InMemoryDataset, Data, download_url
+from utils import AOData, Onsite_3idx_Overlap_Integral, build_molecule, build_AO_index
+from common.units import *
+from ase.db import connect
+from ase.db.core import b2o, o2b, bytes_to_object, object_to_bytes
+
+logger = get_logger(__file__)
+
+########################################################
+# MD17
+########################################################
+
+class MD17_shard(LMDBShard_maker_db):
+    def __init__(
+        self,
+        root_path: str,
+        shard_num: int,
+        save_path=None,
+        max_workers=8,
+        use_parallel=True,
+        processd_dir_name="processed",
+        shard_dir_name="lmdbs",
+        split="random",
+        cal_orbital_and_energies=False,
+        functional="pbe",
+        basis="def2svp",
+        *args,
+        **kwargs,
+    ):
+        super().__init__(
+            root_path=root_path,
+            shard_num=shard_num,
+            save_path=save_path,
+            max_workers=max_workers,
+            use_parallel=use_parallel,
+            processd_dir_name=processd_dir_name,
+            shard_dir_name=shard_dir_name,
+            *args,
+            **kwargs,
+        )
+        self.split = split
+        assert self.split in ["random", None], f"Split {self.split} for MD17 is not supported"
+        if self.split == "random":
+            self.split_path = os.path.join(self.save_path, "random_split.json")
+        elif self.split is None:
+            self.split_path = None
+        # if cal_orbital_and_energies is True, data will contain orbital energies and coefficients
+        self.cal_orbital_and_energies = cal_orbital_and_energies
+        self.functional = functional
+        self.basis = basis
+
+    def _make_split_info(self,seed=43):
+        if self.split is None:
+            return
+        else:
+            if os.path.exists(self.split_path):
+                pass
+            else:
+                if self.split == "random":
+                    logger.info("Making random split")
+                    self.split_info = {
+                        "train": 0.8,
+                        "val": 0.1,
+                        "test": 0.1,
+                    }
+                    total_len = self._get_total_len()
+                    train_len = int(total_len * self.split_info["train"])
+                    val_len = int(total_len * self.split_info["val"])
+                    test_len = total_len - train_len - val_len
+                    indices = np.random.RandomState(seed=seed).permutation(total_len)
+                    train_indices = indices[:train_len]
+                    val_indices = indices[train_len:train_len+val_len]
+                    test_indices = indices[train_len+val_len:]
+
+                assert len(train_indices) + len(val_indices) + len(test_indices) == total_len, f"Total length {total_len} is not equal to the sum of train, val, and test length {len(train_indices) + len(val_indices) + len(test_indices)}"
+                self.split_info = {
+                    "train": sorted(train_indices.tolist()),
+                    "val": sorted(val_indices.tolist()),
+                    "test": sorted(test_indices.tolist()),
+                }
+                with open(self.split_path, "w") as f:
+                    json.dump(self.split_info, f)
+
+    def process_data(self, key_data_pair):
+        """
+        Process a single row from the database.
+        
+        Args:
+            data: Database row containing molecular data
+            
+        Returns:
+            tuple: (key, data_dict) for LMDB storage
+
+        Note:
+            MD17.db data format: (To be updated)
+      """
+        data, data_idx = key_data_pair      
+        key = int(data_idx).to_bytes(length=4, byteorder="big") # real key is not used
+        pos = np.frombuffer(data[6], dtype=np.float64)
+        atoms = np.frombuffer(data[5], dtype=np.int32)
+        data_dict = bytes_to_object(data[26])
+        force = data_dict["forces"]
+        energy = data_dict["energy"]
+        data_hamiltonian = data_dict["hamiltonian"]
+        # data_overlap = data_dict["overlap"]
+        
+        # xc="pbe" is used for compatibility with the original dataset
+        ovlp, init_ham, mf = calc_overlap_and_init_hamiltonian(
+            atoms, pos.reshape(-1, 3), out_mf=True, xc=self.functional, basis=self.basis)
+        dft_energy = mf.kernel()
+        hamiltonian = mf.get_fock(dm=mf.make_rdm1())
+        # hamiltonian = np.frombuffer(data[4], np.float64) # flattened hamiltonian matrix
+        h_dim = ovlp.shape[0]
+        hamiltonian = hamiltonian.reshape(h_dim, h_dim)
+        orbital_energies, orbital_coefficients = cal_orbital_and_energies(
+            torch.from_numpy(ovlp).unsqueeze(0).to(torch.float64),
+            torch.from_numpy(hamiltonian).unsqueeze(0).to(torch.float64),
+        )
+        orbital_coefficients = orbital_coefficients.squeeze()
+        dm0 = calc_dm0(atoms, orbital_coefficients)
+
+        orbital_coefficients = orbital_coefficients.cpu().numpy()
+        orbital_energies = orbital_energies.cpu().numpy()
+
+        # Calculate DFT forces
+        grad_frame = mf.nuc_grad_method()
+        mo_occ = mf.get_occ(orbital_energies.squeeze(), orbital_coefficients.squeeze())
+        dft_forces = -grad_frame.kernel(mo_energy=orbital_energies.squeeze(), mo_coeff=orbital_coefficients.squeeze(), mo_occ=mo_occ)
+        
+        packed_hamiltonian, h_dim = self.pack_upper_triangle(hamiltonian) # h_dim is the dimension of the hamiltonian matrix
+        packed_data_hamiltonian, _ = self.pack_upper_triangle(data_hamiltonian)
+        packed_ovlp, _ = self.pack_upper_triangle(ovlp)
+        packed_init_ham, _ = self.pack_upper_triangle(init_ham)
+
+        # Those are not symmetric, so we do not pack them
+        # packed_dm0, _ = self.pack_upper_triangle(dm0)
+        # packed_orbital_coefficients, _ = self.pack_upper_triangle(orbital_coefficients)
+
+        ori_data_dict = {
+            # "id": data[0],
+            "num_nodes": pos.shape[0],
+            "atoms": atoms.tobytes(),
+            "pos": pos.tobytes(),     # unit: angstrom
+            "energy": energy.item(),  # unit: Eh
+            "force": force.tobytes(), # unit: Eh/Bohr
+            "dft_energy": dft_energy, # unit: Eh
+            "dft_forces": dft_forces.tobytes(), # unit: Eh/Bohr
+            "h_dim": h_dim,
+            "packed_hamiltonian": packed_hamiltonian.tobytes(), # unit: Eh
+            "packed_data_hamiltonian": packed_data_hamiltonian.tobytes(), # unit: Eh
+            "packed_overlap": packed_ovlp.tobytes(),
+            "packed_initial_hamiltonian": packed_init_ham.tobytes(), # unit: Eh
+            "orbital_energies": orbital_energies.tobytes(), # unit: Eh
+            "dm0": dm0.tobytes(),
+            "orbital_coefficients": orbital_coefficients.tobytes(),
+            "functional": self.functional,
+            "basis": self.basis,
+            # "packed_orbital_coefficients": packed_orbital_coefficients.tobytes(),
+            # "packed_dm0": packed_dm0.tobytes(),
+        }
+        data_dict = pickle.dumps(ori_data_dict)
+        return key, data_dict
+
+class MD17_DFT_Shard(InMemoryDataset):
+
+    url = "http://quantum-machine.org/data/schnorb_hamiltonian"
+    chemical_symbols = ["n", "H", "He", "Li", "Be", "B", "C", "N", "O"]
+
+    def __init__(
+        self,
+        root="datasets/",
+        name="water",
+        transform=None,
+        pre_transform=None,
+        pre_filter=None,
+        prefix="",
+        shard_num=-1,
+        shard_idx=-1,
+        max_workers_preprocess=8,
+        use_parallel_preprocess=False,
+        split="random",
+        use_in_memory=False,
+        all_features=False,
+        functional="pbe",
+        basis="def2svp",
+    ):
+        self.name = name
+        self.folder = os.path.join(root, self.name + prefix)
+        self.processd_dir_name = "processed"
+        self.shard_dir_name = "lmdbs"
+        self._processed_path = os.path.join(self.folder, self.processd_dir_name)
+
+        self.shard_num = shard_num
+        if self.shard_num == -1:
+            if self.name == "water":
+                self.shard_num = 2
+            elif self.name == "ethanol":
+                self.shard_num = 8
+            elif self.name == "malondialdehyde":
+                self.shard_num = 8
+            elif self.name == "uracil":
+                self.shard_num = 16
+
+        self.shard_idx = shard_idx
+        self.max_workers_preprocess = max_workers_preprocess
+        self.use_parallel_preprocess = use_parallel_preprocess
+        self.split = split
+        self.all_features = all_features
+                
+        self.lmdb_path_list = [os.path.join(self._processed_path,self.shard_dir_name, f"shard_{i:03d}.lmdb") for i in range(self.shard_num)]
+        
+        self.full_orbitals = 14
+        self.orbital_mask = {}
+        
+        orbitals_ref = {}
+        orbitals_ref[1] = np.array([0, 0, 1])  # H: 2s 1p
+        orbitals_ref[6] = np.array([0, 0, 0, 1, 1, 2])  # C: 3s 2p 1d
+        orbitals_ref[7] = np.array([0, 0, 0, 1, 1, 2])  # N: 3s 2p 1d
+        orbitals_ref[8] = np.array([0, 0, 0, 1, 1, 2])  # O: 3s 2p 1d
+        self.orbitals_ref = orbitals_ref
+
+        orbitals = []
+        assert name in ["water", "ethanol", "malondialdehyde", "uracil", "aspirin", "malonaldehyde"]
+        if name == "malonaldehyde":
+            logger.info("Malonaldehyde is renamed to Malondialdehyde for compatibility")
+            name = "malondialdehyde"
+        if name == "water":
+            self.atoms = [8, 1, 1]
+            self.atom_list = ["O", "H"]
+            self.hamiltonian_size = 24
+        elif name == "ethanol":
+            self.atoms = [6, 6, 8, 1, 1, 1, 1, 1, 1]
+            self.atom_list = ["C", "O", "H"]
+            self.hamiltonian_size = 72
+        elif name == "malondialdehyde":
+            self.atoms = [6, 6, 6, 8, 8, 1, 1, 1, 1]
+            self.atom_list = ["C", "O", "H"]
+            self.hamiltonian_size = 90
+        elif name == "uracil":
+            self.atoms = [6, 6, 7, 6, 7, 6, 8, 8, 1, 1, 1, 1]
+            self.atom_list = ["C", "N", "O", "H"]
+            self.hamiltonian_size = 132
+        elif name == "aspirin":
+            self.atoms = [6, 6, 6, 6, 6, 6, 6, 8, 8, 8, 6, 6, 8, 1, 1, 1, 1, 1, 1, 1, 1]
+            self.atom_list = ["C", "O", "H"]
+            raise NotImplementedError
+        
+        self.Q_dict = Onsite_3idx_Overlap_Integral(atom_list=self.atom_list, basis="def2-svp").Q_table()
+        self.convention_dict = get_convention_dict()
+        self.setup_Q()
+  
+        for Z in self.atoms:
+            orbitals.append(tuple((int(Z), int(l)) for l in self.orbitals_ref[Z]))
+        
+        self.orbitals = tuple(orbitals)
+
+        self._db_envs = {}  # Cache for LMDB environments by shard index
+        self.shard_idx_list = [] # Mapping from data index to shard index
+
+        self.functional = functional
+        self.basis = basis
+
+        super(MD17_DFT_Shard, self).__init__(self.folder, transform, pre_transform, pre_filter)
+        
+        self._load_index_info()
+        
+        self.use_in_memory = use_in_memory
+        # Faster loading in memory but need more memory
+        if self.use_in_memory:
+            data_list = []
+            for idx in range(len(self.shard_idx_list)):
+                data_list.append(self._get(idx))
+            self.data, self.slices = self.collate(data_list)
+            del data_list
+        else:
+        # Used when memory is not enough
+            self.slices = { 
+                "id": torch.arange(len(self.shard_idx_list) + 1)
+            }
+            self.get = self._get
+
+            
+    def _load_index_info(self):
+        with open(os.path.join(self._processed_path, "index.json"), "r") as f:
+            self.index_info = json.load(f)
+        self.index_info = self.index_info["index"]
+        self.shard_idx_list = []
+        self.shard_data_idx_list = []
+        for idx, index_info in enumerate(self.index_info):
+            shard_idx, cur_idx, shard_data_idx = index_info
+            assert cur_idx == idx, f"Shard index {cur_idx} is not equal to the index {idx}"
+            self.shard_idx_list.append(shard_idx)
+            self.shard_data_idx_list.append(shard_data_idx)
+        self.shard_idx_list = torch.tensor(self.shard_idx_list, dtype=torch.int64)
+        max_shard_idx = torch.max(self.shard_idx_list)
+        assert max_shard_idx == self.shard_num - 1, f"Max shard index {max_shard_idx} is not equal to the number of shards {self.shard_num}"
+
+    @property
+    def raw_file_names(self):
+        if self.name == "ethanol":
+            return [
+                f"schnorb_hamiltonian_{self.name}_dft.tgz",
+                f"schnorb_hamiltonian_{self.name}_dft.db",
+            ]
+        elif self.name == "aspirin":
+            return [
+                f"schnorb_hamiltonian_{self.name}_quambo.db",
+                f"schnorb_hamiltonian_{self.name}_quambo.db",
+            ]
+        else: # water, malondialdehyde, uracil
+            return [
+                f"schnorb_hamiltonian_{self.name}.tgz",
+                f"schnorb_hamiltonian_{self.name}.db",
+            ]
+    @property
+    def processed_file_names(self):
+        if self.split == "random":
+            return [
+                "random_split.json",
+                "ALL_SHARDS_COMPLETED.txt",
+                "index.json",
+            ]
+        else:
+            return [
+                "ALL_SHARDS_COMPLETED.txt",
+                "index.json",
+            ]
+
+    def download(self):
+        if self.name == "ethanol":
+            url = f"{self.url}/schnorb_hamiltonian_{self.name}" + "_dft.tgz"
+        else:
+            url = f"{self.url}/schnorb_hamiltonian_{self.name}" + ".tgz"
+        download_url(url, self.raw_dir)
+        extract_path = self.raw_dir
+        tar = tarfile.open(os.path.join(self.raw_dir, self.raw_file_names[0]), "r")
+        for item in tar:
+            tar.extract(item, extract_path)
+
+    def matrix_transform(self, hamiltonian, atoms, convention="pyscf_def2svp_to_e3nn"):
+        return _matrix_transform_single(hamiltonian, atoms, self.convention_dict[convention])
+
+
+    @staticmethod
+    def construct_orbital_l_index(AO_lm_index):
+        idx = 0
+        AO_l_index = []
+        while True:
+            if idx >= len(AO_lm_index):
+                break
+            AO_l_index.append(AO_lm_index[idx].item())
+            idx += 2 * AO_lm_index[idx] + 1
+        return torch.tensor(AO_l_index)
+    
+    def setup_Q(self):
+        Q_blocks = []
+        for l in range(60):
+            block_diag_components = [self.Q_dict[z][l] for z in self.atoms]
+            Q_blocks.append(torch.block_diag(*block_diag_components))
+        Q = torch.stack(Q_blocks)  # [60, h_dim, h_dim]
+        Q = self.matrix_transform(Q, torch.tensor(self.atoms), convention="pyscf_def2svp_to_e3nn").permute(1, 2, 0) #[h_dim, h_dim, 60]
+        Q[:, :, 16:40] = (
+            Q[:, :, 16:40]
+            .reshape(self.hamiltonian_size, self.hamiltonian_size, -1, 3)[:, :, :, [1, 2, 0]]
+            .reshape(self.hamiltonian_size, self.hamiltonian_size, 24)
+        )
+        self.Q = Q
+    
+    def process(self):
+        self.MD17_DFT_Shard = MD17_shard(
+            root_path=self.raw_paths[1],
+            shard_num=self.shard_num,
+            save_path=self.folder,
+            max_workers=self.max_workers_preprocess,
+            processd_dir_name=self.processd_dir_name,
+            shard_dir_name=self.shard_dir_name,
+            use_parallel=self.use_parallel_preprocess,
+            split=self.split,
+            table_name="systems",
+            functional=self.functional, # only used for processing
+            basis=self.basis, # only used for processing
+        )
+        
+        if self.shard_idx == -1 or self.shard_idx is None:
+            logger.info(f"Processing all shards of MD17_DFT dataset")
+            self.MD17_DFT_Shard.process()
+        else:
+            logger.info(f"Processing MD17_DFT dataset with shard_idx: {self.shard_idx}")
+            self.MD17_DFT_Shard.process(self.shard_idx)
+    
+    def _get_shard_db_env(self, idx):
+        """Get LMDB environment with caching for performance optimization."""
+        shard_idx = self.shard_idx_list[idx]
+        
+        # Return cached environment if available
+        if shard_idx in self._db_envs:
+            try:
+                # Test if the environment is still valid
+                with self._db_envs[shard_idx].begin() as txn:
+                    txn.stat()  # This will raise an exception if the env is invalid
+                return self._db_envs[shard_idx]
+            except Exception:
+                # Environment is invalid, remove it from cache
+                try:
+                    self._db_envs[shard_idx].close()
+                except:
+                    pass
+                del self._db_envs[shard_idx]
+        
+        # Create new environment and cache it
+        db_env = lmdb.open(
+            self.lmdb_path_list[shard_idx], 
+            readonly=True, 
+            lock=False,
+            max_readers=1024,  # Increase max readers
+            readahead=False    # Disable readahead for better concurrent access
+        )
+        self._db_envs[shard_idx] = db_env
+        return db_env
+        
+        
+    def _close_db_envs(self):
+        """Safely close all cached LMDB environments."""
+        for shard_idx, db_env in list(self._db_envs.items()):
+            try:
+                db_env.close()
+            except Exception as e:
+                logger.warning(f"Error closing LMDB environment for shard {shard_idx}: {e}")
+        self._db_envs.clear()
+    
+    def __del__(self):
+        """Destructor: Clean up all LMDB environments."""
+        self._close_db_envs()
+    
+    def __enter__(self):
+        """Context manager entry: Initialize LMDB environments."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit: Clean up all LMDB environments."""
+        self._close_db_envs()
+        
+    @staticmethod
+    def unpack_upper_triangle(packed: np.ndarray, h_dim: int):
+        return unpack_upper_triangle(packed, h_dim)
+    
+    
+    # def __getitem__(self, idx):
+    #     return self.get(idx)
+    
+    def _get(self, idx):
+        """Optimized data loading: Reuse LMDB connection and minimize unnecessary operations."""
+        try:
+            return self._get(idx)
+        except Exception as e:
+            # If there's an error, try to refresh the LMDB environment
+            logger.warning(f"Error accessing LMDB for idx {idx}: {e}. Attempting to refresh environment.")
+            shard_idx = self.shard_idx_list[idx]
+            if shard_idx in self._db_envs:
+                try:
+                    self._db_envs[shard_idx].close()
+                except:
+                    pass
+                del self._db_envs[shard_idx]
+            
+            # Retry with fresh environment
+            return self._get(idx)
+    
+    def _get(self, idx):
+        # Get cached LMDB environment (no need for context manager since we're reusing connections)        
+        db_env = self._get_shard_db_env(idx)
+        with db_env.begin() as txn:
+            key = int(idx).to_bytes(length=4, byteorder="big")
+            data_dict = txn.get(key)
+            
+            if data_dict is None:
+                print(self.get_key_list(idx))
+                raise KeyError(f"Index idx: {idx}, shard_data_idx: {self.shard_data_idx_list[idx]} not found in database {self.shard_idx_list[idx]}")
+                
+            data_dict = pickle.loads(data_dict)
+            data = self.get_mol(data_dict, orb_energy_and_coeff=True)
+        return data
+    
+    def get_mol(self, data_dict, orb_energy_and_coeff=False):
+        num_nodes = torch.tensor(data_dict["num_nodes"], dtype=torch.int64)
+        atoms = torch.tensor(np.frombuffer(data_dict["atoms"], np.int32), dtype=torch.int64)
+        pos = torch.tensor(np.frombuffer(data_dict["pos"], np.float64).reshape(-1, 3), dtype=torch.float64)
+        energy = torch.tensor(data_dict["energy"], dtype=torch.float64)
+        force = torch.tensor(np.frombuffer(data_dict["force"], np.float32).reshape(-1, 3), dtype=torch.float64) # unit: meV/Angstrom
+        dft_energy = torch.tensor(data_dict["dft_energy"], dtype=torch.float64)
+        dft_forces = torch.tensor(np.frombuffer(data_dict["dft_forces"], np.float64).reshape(-1, 3), dtype=torch.float64) # unit: Eh/Bohr
+        h_dim = data_dict["h_dim"] # sum of orbital dimensions
+        packed_hamiltonian = np.frombuffer(data_dict["packed_hamiltonian"], np.float64)
+        packed_data_hamiltonian = np.frombuffer(data_dict["packed_data_hamiltonian"], np.float64)
+        packed_ovlp = np.frombuffer(data_dict["packed_overlap"], np.float64)
+        packed_init_ham = np.frombuffer(data_dict["packed_initial_hamiltonian"], np.float64)
+        # packed_dm0 = np.frombuffer(data_dict["packed_dm0"], np.float64)
+        
+        hamiltonian = torch.from_numpy(self.unpack_upper_triangle(packed_hamiltonian, h_dim)).to(torch.float64)
+        data_hamiltonian = torch.from_numpy(self.unpack_upper_triangle(packed_data_hamiltonian, h_dim)).to(torch.float64)
+        overlap_matrix = torch.from_numpy(self.unpack_upper_triangle(packed_ovlp, h_dim)).to(torch.float64)
+        initial_hamiltonian = torch.from_numpy(self.unpack_upper_triangle(packed_init_ham, h_dim)).to(torch.float64)
+        # dm0 = torch.from_numpy(self.unpack_upper_triangle(packed_dm0, h_dim)).to(torch.float64)
+        
+        convention = "pyscf_def2svp_to_e3nn"
+        
+        hamiltonian = self.matrix_transform(hamiltonian, atoms, convention=convention)
+        overlap_matrix = self.matrix_transform(overlap_matrix, atoms, convention=convention)
+        initial_hamiltonian = self.matrix_transform(initial_hamiltonian, atoms, convention=convention)
+        
+        AO_index = build_AO_index(build_molecule(atoms, pos), "def2-svp")
+        AO_l_index = self.construct_orbital_l_index(AO_index[1])
+        
+        edge_index = []
+        for i in range(len(atoms)):
+            for j in range(len(atoms)):
+                if i != j:
+                    edge_index.append([i, j])
+        edge_index = torch.tensor(edge_index, dtype=torch.int64).t().contiguous()
+        full_edge_index = edge_index
+        
+        ret_data = AOData(
+            pos=pos,
+            atoms=atoms.view(-1, 1),
+            dft_energy=dft_energy.view(1, 1),
+            dft_forces=dft_forces,
+            # energy=energy.view(1, 1),
+            # force=force,
+            hamiltonian=hamiltonian.reshape(1, h_dim, h_dim),
+            # data_hamiltonian=data_hamiltonian.reshape(1, h_dim, h_dim),
+            overlap=overlap_matrix.reshape(1, h_dim, h_dim),
+            init_ham=initial_hamiltonian.reshape(1, h_dim, h_dim),
+            AO_index=AO_index,
+            AO_l_index=AO_l_index,
+            AO_l_index_len=torch.tensor(len(AO_l_index), dtype=torch.int64).view(1, 1),
+            num_atoms=num_nodes.view(1, 1),
+            Q=self.Q,
+            h_dim=torch.tensor(h_dim, dtype=torch.int64).view(1, 1),
+            full_edge_index=full_edge_index,
+        )
+
+        # For GPU memory efficiency, we only use the necessary features
+        if self.all_features:
+            ret_data.energy = energy.view(1, 1)
+            ret_data.force = force
+            data_hamiltonian = self.matrix_transform(data_hamiltonian, atoms, convention="orca_to_e3nn")
+            ret_data.data_hamiltonian = data_hamiltonian.reshape(1, h_dim, h_dim)
+        return ret_data
+
+def parse_shard_idx(shard_idx_str):
+    """Parse shard_idx string into a list of integers"""
+    if shard_idx_str == "-1":
+        return int(-1)
+    elif ',' in shard_idx_str:
+        # Comma-separated list: "0,1,2,3"
+        return [int(x.strip()) for x in shard_idx_str.split(',')]
+    elif '-' in shard_idx_str and shard_idx_str.count('-') == 1:
+        # Range: "0-5"
+        start, end = map(int, shard_idx_str.split('-'))
+        return list(range(start, end + 1))
+    else:
+        # Single integer: "0"
+        return [int(shard_idx_str)]
+        
+if __name__ == "__main__":
+    # get arguments
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Generation")
+    parser.add_argument(
+        "--root",
+        type=str,
+        default=os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "dataset"),
+    )
+    parser.add_argument("--name", type=str, default="water")
+    parser.add_argument("--pdb", action="store_true")
+    parser.add_argument("--shard_idx", type=str, default="-1")
+    parser.add_argument("--shard_num", type=int, default=-1)
+    parser.add_argument("--split", type=str, default=None)
+    parser.add_argument("--prefix", type=str, default="_shard")
+    parser.add_argument("--functional", type=str, default="pbe")
+    parser.add_argument("--basis", type=str, default="def2svp")
+
+    args = parser.parse_args()
+    logger.info(f"Functional: {args.functional}, Basis: {args.basis}")
+    shard_idx = parse_shard_idx(args.shard_idx)
+    logger.info(f"Shard index: {shard_idx}")
+    torch.set_num_threads(4)
+
+    os.environ["OMP_NUM_THREADS"] = "4"
+    os.environ["MKL_NUM_THREADS"] = "4"
+    os.environ["NUMEXPR_NUM_THREADS"] = "4"
+    os.environ["OPENBLAS_NUM_THREADS"] = "4"
+
+    args = parser.parse_args()
+    dataset = MD17_DFT_Shard(
+        root=args.root,
+        name=args.name,
+        shard_idx=shard_idx,
+        shard_num=args.shard_num,
+        split=args.split,
+        prefix=args.prefix,
+        functional=args.functional,
+        basis=args.basis,
+    )
+    print(len(dataset))
+    print(dataset[0])
+    print(dataset[-1])
+    if args.pdb:
+        import pdb
+
+        pdb.set_trace()
+    logger.info("Finished")
