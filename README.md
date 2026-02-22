@@ -2,7 +2,7 @@
 
 <!-- # High-order Equivariant Flow Matching for Density Functional Theory Hamiltonian Prediction (QHFlow) -->
 
-By Seongsu Kim, Aug, 2025 [[arxiv]](https://arxiv.org/abs/2505.18817) [[PDF]](https://arxiv.org/pdf/2505.18817)
+By Seongsu Kim, Feb, 2026 [[PDF]]([https://arxiv.org/abs/2505.18817](https://arxiv.org/pdf/2602.16897v1))
 
 🌟 This repository contains an implementation of the QHFlow2 for DFT Hamiltonian prediction. This repository is still updating.
 
