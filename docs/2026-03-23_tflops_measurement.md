@@ -127,17 +127,43 @@ class TFLOPSCallback(pl.Callback):
 
 4. **MFU (Model FLOPs Utilization)**: Chowdhery et al. 2022 (PaLM 논문)에서 정의한 표준 효율 지표.
 
-### 주의할 점
+### E3NN 연산은 카운트되는가?
 
-1. **`FlopCounterMode`는 ATen 연산만 카운트**: E3NN의 `spherical_harmonics`, `torch_cluster.radius_graph`, custom CUDA 커널 등은 포함되지 않음. 따라서 실제 FLOPs보다 **과소 추정**될 수 있음.
+실측 결과 (QHFlow2 small model, batch=4):
 
-2. **fvcore와의 차이**: Meta의 `fvcore.nn.FlopCounterMode`는 더 많은 custom op를 지원하지만, PyTorch 2.1+ 내장 counter가 더 최신이고 유지보수됨. 둘 다 표준적.
+| 연산 | FlopCounterMode | 비고 |
+|---|---|---|
+| `o3.FullyConnectedTensorProduct` | **COUNTED** | 내부적으로 `einsum`/`mm` 사용 |
+| `nn.Linear`, `bmm`, `addmm` | **COUNTED** | ATen 연산 |
+| `o3.spherical_harmonics` | **NOT COUNTED** | polynomial 연산, FLOP 미미 |
+| `scatter_mean/sum` | **NOT COUNTED** | custom CUDA kernel |
+| `radius_graph` | **NOT COUNTED** | custom CUDA kernel |
 
-3. **MFU vs HFU**: MFU는 model FLOPs만 고려. HFU (Hardware FLOPs Utilization)는 activation recomputation 등을 포함. QHFlow2는 activation recomputation을 사용하지 않으므로 MFU ≈ HFU.
+**결론: 카운트되지 않는 연산은 전체 GPU 시간의 ~5% 미만.**
 
-4. **배치 크기 의존**: FLOPs는 배치 크기에 비례. TFLOPS는 배치 크기가 충분히 크면 포화하고, 너무 작으면 GPU utilization이 낮아 TFLOPS가 떨어짐. 따라서 비교 시 배치 크기를 명시해야 함.
+Per-module FLOP breakdown (실측):
 
-5. **GNN 특성**: GNN의 FLOPs는 그래프 크기(노드 수, 엣지 수)에 따라 달라짐. 배치 내 분자 크기가 다르므로 step 간 TFLOPS 변동이 있을 수 있음. Callback이 주기적으로(50 step마다) 측정하는 이유.
+| 모듈 | GFLOPs | 비율 |
+|---|---|---|
+| `node_attr_backbone` (ESCN GNN) | 31.5 | 79.3% |
+| `ham_gnn_backbone` | 7.3 | 18.3% |
+| `pre_output_ij` | 0.83 | 2.1% |
+| 기타 (output, contraction) | 0.1 | 0.3% |
+| **Total** | **39.8** | |
+
+GNN의 핵심 연산인 TensorProduct, Linear, BMM이 **전체 FLOPs의 ~99%**를 차지하며 모두 카운트됨.
+`spherical_harmonics`는 단순한 polynomial 연산이라 FLOP 기여가 미미하고,
+`scatter`/`radius_graph`는 메모리 바운드 연산이라 FLOP보다는 bandwidth가 병목.
+
+따라서 **FlopCounterMode의 FLOP 수는 실질적으로 정확**하다.
+
+### 기타 주의사항
+
+1. **MFU vs HFU**: MFU는 model FLOPs만 고려. HFU (Hardware FLOPs Utilization)는 activation recomputation 등을 포함. QHFlow2는 activation recomputation을 사용하지 않으므로 MFU ≈ HFU.
+
+2. **배치 크기 의존**: FLOPs는 배치 크기에 비례. TFLOPS는 배치 크기가 충분히 크면 포화하고, 너무 작으면 GPU utilization이 낮아 TFLOPS가 떨어짐. 따라서 비교 시 배치 크기를 명시해야 함.
+
+3. **GNN 특성**: GNN의 FLOPs는 그래프 크기(노드 수, 엣지 수)에 따라 달라짐. 배치 내 분자 크기가 다르므로 step 간 TFLOPS 변동이 있을 수 있음. Callback이 주기적으로(50 step마다) 측정하는 이유.
 
 ## 대안 및 향후 확장
 
