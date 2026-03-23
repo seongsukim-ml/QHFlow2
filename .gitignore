@@ -36,3 +36,6 @@ debug_outputs/
 .cursorrc
 /.cursor
 *.csv
+*.pt
+*.ckpt
+lightning_logs/
