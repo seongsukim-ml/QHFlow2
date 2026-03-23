@@ -1,0 +1,58 @@
+[project]
+name = "qhflow2"
+version = "0.1.0"
+description = "Equivariant Flow Matching for DFT Hamiltonian Prediction"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "seongsukim-ml", email = "seongsu.kim@kaist.ac.kr" },
+]
+
+dependencies = [
+    # Core (inference-capable minimal set)
+    "torch>=2.1",
+    "e3nn>=0.5",
+    "torch-scatter",
+    "torch-cluster",
+    "torch-geometric>=2.3",
+    "numpy",
+    "scipy",
+    "tqdm",
+    "rich",
+]
+
+[project.optional-dependencies]
+training = [
+    "pytorch-lightning>=2.0",
+    "hydra-core>=1.3",
+    "omegaconf",
+    "wandb",
+    "torch-ema",
+    "tensorboard",
+    "pandas",
+    "transformers",
+]
+data = [
+    "lmdb",
+    "apsw",
+]
+dft = [
+    "pyscf>=2.4",
+]
+md = [
+    "ase>=3.22",
+]
+fairchem = [
+    "fairchem-core>=2.6",
+]
+all = [
+    "qhflow2[training,data,dft,md,fairchem]",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/qhflow2"]
