@@ -721,7 +721,7 @@ def matrix_transform_blocks(
     
     Example:
         >>> import torch
-        >>> from common.matrix_transforms import matrix_transform_blocks, _get_orbital_mask
+        >>> from qhflow2.common.matrix_transforms import matrix_transform_blocks, _get_orbital_mask
         >>> 
         >>> # Create block matrices for CH3 molecule
         >>> atoms = torch.tensor([6, 1, 1, 1])
@@ -1009,7 +1009,7 @@ def benchmark_matrix_transform(hamiltonian, atoms, convention="pyscf_def2svp", n
     
     Example:
         >>> import torch
-        >>> from common.matrix_transforms import benchmark_matrix_transform, get_convention_dict
+        >>> from qhflow2.common.matrix_transforms import benchmark_matrix_transform, get_convention_dict
         >>> 
         >>> # Create test data for a small molecule (e.g., CH4)
         >>> atoms = torch.tensor([6, 1, 1, 1, 1])  # C and 4 H atoms
@@ -1131,7 +1131,7 @@ def benchmark_matrix_transform_blocks(
 
     Example:
         >>> import torch
-        >>> from common.matrix_transforms import benchmark_matrix_transform_blocks
+        >>> from qhflow2.common.matrix_transforms import benchmark_matrix_transform_blocks
         >>>
         >>> results = benchmark_matrix_transform_blocks()
         >>> print(results["speedup"])
@@ -1615,7 +1615,7 @@ def benchmark_cut_matrix(matrix, atoms, orbital_mask, full_orbitals, n_iteration
     
     Example:
         >>> import torch
-        >>> from common.matrix_transforms import benchmark_cut_matrix, _get_orbital_mask
+        >>> from qhflow2.common.matrix_transforms import benchmark_cut_matrix, _get_orbital_mask
         >>> 
         >>> atoms = torch.tensor([6, 1, 1, 1, 1])
         >>> matrix = torch.randn(34, 34)

@@ -59,8 +59,8 @@ BOHR2ANG = 0.529177210903
 
 def init_q_infrastructure():
     """Q tensor 계산에 필요한 Q_dict와 convention 로드."""
-    from utils import Onsite_3idx_Overlap_Integral
-    from common.matrix_transforms import get_convention_dict, matrix_transform_single
+    from qhflow2.utils import Onsite_3idx_Overlap_Integral
+    from qhflow2.common.matrix_transforms import get_convention_dict, matrix_transform_single
 
     Q_dict = Onsite_3idx_Overlap_Integral(
         atom_list=("H", "C", "N", "O", "F"),
@@ -87,7 +87,7 @@ def build_q_tensor(
     Returns:
         Q tensor as numpy array (nao, nao, 60) after convention transform
     """
-    from common.matrix_transforms import matrix_transform_single
+    from qhflow2.common.matrix_transforms import matrix_transform_single
 
     atoms_torch = torch.tensor(atoms, dtype=torch.int64)
     blocks = []
@@ -377,8 +377,8 @@ def verify_samples(
     n_verify: int = 50,
 ):
     """전처리 결과를 원본 BaseQH9Dataset과 비교 검증."""
-    from dataset_module.qh9_datasets_shard import QH9Stable
-    from common.matrix_transforms import _cut_matrix_3d
+    from qhflow2.dataset_module.qh9_datasets_shard import QH9Stable
+    from qhflow2.common.matrix_transforms import _cut_matrix_3d
 
     logger.info(f"Verifying {n_verify} samples against original dataset...")
 

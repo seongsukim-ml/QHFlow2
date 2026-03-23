@@ -26,8 +26,8 @@ MODE_DICT = {
     "pred": "predict",
 }
 
-# Ex: /mnt/QHFlow  (project root = 3 levels up from common/)
-DEFAULT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+# Ex: /mnt/QHFlow  (project root = 3 levels up: common/ → qhflow2/ → src/ → QHFlow2/)
+DEFAULT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 # Ex: /mnt/QHFlow/src  (no longer needed for sys.path since qhflow2 is a proper package)
 DEFAULT_SRC_PATH  = os.path.join(DEFAULT_ROOT_PATH, "src")
 

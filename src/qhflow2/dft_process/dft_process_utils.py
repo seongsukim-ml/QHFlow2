@@ -55,7 +55,7 @@ from qhflow2.dataset_module.ori_dataset import (
     Onsite_3idx_Overlap_Integral
 )
 
-# from dft_process.rmd17dataset import RMD17NPZLoader
+# from qhflow2.dft_process.rmd17dataset import RMD17NPZLoader
 
 # Set root path
 root_path = os.path.dirname(source)

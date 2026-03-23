@@ -627,7 +627,7 @@ if __name__ == "__main__":
 
     # Compare with split dataset
     if args.pdb:
-        from dataset_module.qh9_datasets_split import QH9Stable as QH9Stable_split, QH9Dynamic as QH9Dynamic_split
+        from qhflow2.dataset_module.qh9_datasets_split import QH9Stable as QH9Stable_split, QH9Dynamic as QH9Dynamic_split
         dataset[158]
         import pdb
         pdb.set_trace()
@@ -695,7 +695,7 @@ if __name__ == "__main__":
         # print(f"Time taken calc: {end_time - start_time} seconds")
         
         # Debugging: Check eigenvalue ordering and CHC calculation
-        from dataset_module.qh9_common import debug_eigenvalue_ordering_and_chc
+        from qhflow2.dataset_module.qh9_common import debug_eigenvalue_ordering_and_chc
         import random
         
         logger.info("=" * 80)

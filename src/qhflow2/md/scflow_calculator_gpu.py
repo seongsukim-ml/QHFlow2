@@ -620,7 +620,7 @@ class SCFlowRKSCalculator(RKSCalculator):
         else:
             ham_transformed = torch.tensor(ham_transformed, dtype=dtype).unsqueeze(0)
         
-        from common.metric import cal_orbital_and_energies
+        from qhflow2.common.metric import cal_orbital_and_energies
         orbital_energies, orbital_coefficients = cal_orbital_and_energies(
             overlap, ham_transformed, tol=tol, pad_eigval=pad_eigval
         )

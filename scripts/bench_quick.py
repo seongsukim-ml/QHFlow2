@@ -56,16 +56,16 @@ def bench(atoms, use_gpu_fock=False):
         basis="def2-SVP", xc="pbe", init_xc="pbe",
         density_fit=True, init_density_fit=True,
     )
-    # Warm up
+    # Warm up — call calculate directly with both properties
+    from ase.calculators.calculator import all_changes
     a = atoms.copy(); a.calc = calc
-    a.get_potential_energy(); a.get_forces()
+    calc.calculate(a, ["energy", "forces"], all_changes)
 
     times = []
     for _ in range(N):
         a = atoms.copy(); a.calc = calc
         t0 = time.time()
-        a.get_potential_energy()
-        a.get_forces()
+        calc.calculate(a, ["energy", "forces"], all_changes)
         td = dict(calc.time_dict)
         td["total"] = time.time() - t0
         times.append(td)

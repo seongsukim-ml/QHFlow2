@@ -886,13 +886,13 @@ def debug_eigenvalue_ordering_and_chc(
     import pickle
     import numpy as np
     import torch
-    from common.metric import cal_orbital_and_energies
-    from common.matrix_transforms import (
+    from qhflow2.common.metric import cal_orbital_and_energies
+    from qhflow2.common.matrix_transforms import (
         compute_chc_from_blocks,
         _reconstruct_full_matrix,
         cut_orbital_coefficients,
     )
-    from common.custom_logger import get_logger
+    from qhflow2.common.custom_logger import get_logger
     
     if logger is None:
         logger = get_logger(__file__)
@@ -1164,8 +1164,8 @@ def _check_block_wise_chc(
     import pickle
     import numpy as np
     import torch
-    from common.metric import cal_orbital_and_energies
-    from common.matrix_transforms import (
+    from qhflow2.common.metric import cal_orbital_and_energies
+    from qhflow2.common.matrix_transforms import (
         compute_chc_from_blocks,
         _reconstruct_full_matrix,
         cut_orbital_coefficients,
@@ -1326,8 +1326,8 @@ def _check_flow_module_chc(
     """Check flow_module-style CHC calculation."""
     import numpy as np
     import torch
-    from common.metric import cal_orbital_and_energies
-    from common.matrix_transforms import (
+    from qhflow2.common.metric import cal_orbital_and_energies
+    from qhflow2.common.matrix_transforms import (
         compute_chc_from_blocks,
         _reconstruct_full_matrix,
         cut_orbital_coefficients,
@@ -1485,7 +1485,7 @@ def _check_transformed_chc_matches_original_eigenvalues(
     """
     import numpy as np
     import torch
-    from common.matrix_transforms import (
+    from qhflow2.common.matrix_transforms import (
         compute_chc_from_blocks,
         _cut_matrix_3d,
         cut_orbital_coefficients,
@@ -1538,7 +1538,7 @@ def _check_transformed_chc_matches_original_eigenvalues(
         
         # First, verify block-wise CHC for original matrices
         logger.info(f"Index {debug_idx}: Step 2a: Verifying block-wise CHC for original matrices...")
-        from common.matrix_transforms import _reconstruct_full_matrix
+        from qhflow2.common.matrix_transforms import _reconstruct_full_matrix
         
         # Cut original Hamiltonian into blocks for comparison
         original_hamiltonian_3d = original_hamiltonian.unsqueeze(0)  # [1, n_orb, n_orb]
@@ -1758,7 +1758,7 @@ def _check_transformed_chc_matches_original_eigenvalues(
             
             # Apply inverse transform: Since transform is permutation + sign, we need to find inverse
             # Try to find inverse convention or apply transform twice to see if it's self-inverse
-            from common.matrix_transforms import get_convention_dict
+            from qhflow2.common.matrix_transforms import get_convention_dict
             convention_dict = get_convention_dict()
             
             # Try different inverse conventions

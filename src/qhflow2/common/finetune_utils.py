@@ -9,7 +9,7 @@ logger = get_logger(__file__)
 
 def setup_finetune_model(conf: DictConfig, pl_model_cls, output_dir: Path):
     """Setup fine-tuning model with pretrained weights."""
-    from common.checkpoint_utils import _find_best_checkpoint
+    from qhflow2.common.checkpoint_utils import _find_best_checkpoint
     
     # Get original checkpoint
     original_ckpt = conf.get("original_ckpt")

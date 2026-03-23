@@ -83,7 +83,7 @@ def main(conf):
     setattr(lit_model, "test_mode", "test")
 
     # Import checkpoint utilities
-    from common.checkpoint_utils import get_checkpoint_path, setup_wandb_logger
+    from qhflow2.common.checkpoint_utils import get_checkpoint_path, setup_wandb_logger
     
     # Load the checkpoint if it exists
     if mode in ["train", "test", "inference", "predict", "test-mul"]:

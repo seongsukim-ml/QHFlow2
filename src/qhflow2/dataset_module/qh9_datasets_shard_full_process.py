@@ -1447,7 +1447,7 @@ if __name__ == "__main__":
 
     # Compare with split dataset
     if args.pdb:
-        from dataset_module.qh9_datasets_split import QH9Stable as QH9Stable_split, QH9Dynamic as QH9Dynamic_split
+        from qhflow2.dataset_module.qh9_datasets_split import QH9Stable as QH9Stable_split, QH9Dynamic as QH9Dynamic_split
 
         import pdb
         pdb.set_trace()
