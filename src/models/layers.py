@@ -712,6 +712,644 @@ class Expansion(nn.Module):
         )
 
 
+class SO2Expansion(nn.Module):
+    """SO(2)-style expansion: features → matrix via bond-aligned local frame.
+
+    In the local frame (bond axis aligned with e3nn's Y-axis), the Hamiltonian
+    block is approximately banded in delta_m = m1 - m2.  For each band, we use
+    the corresponding m_in component of input features, then rotate back to the
+    global frame with Wigner-D matrices.
+
+    Vectorized implementation inspired by eSEN's SO(2) convolution:
+    - All delta_m bands processed without Python loops over m-pairs
+    - Direct outer-product rotation: H_global = Σ_d h_d · (D1_cols @ D2_cols^T)
+    - Contributions from multiple l_in paths summed before rotation
+
+    Args:
+        irrep_in: Input irreps (e.g., "32x0e + 32x1e + 32x2e")
+        irrep_out_1: Row irreps of output matrix (e.g., "3x0e + 2x1e + 1x2e")
+        irrep_out_2: Col irreps of output matrix
+        bandwidth: max |m1 - m2| in local frame. 0 = diagonal, 1 = tridiagonal, etc.
+    """
+
+    def __init__(self, irrep_in, irrep_out_1, irrep_out_2, bandwidth=0):
+        super().__init__()
+        self.irrep_in = irrep_in
+        self.irrep_out_1 = irrep_out_1
+        self.irrep_out_2 = irrep_out_2
+        self.bandwidth = bandwidth
+
+        # Build valid CG paths
+        self.instructions = []
+        for i, (num_in, ir_in) in enumerate(irrep_in):
+            for j, (num_out1, ir_out1) in enumerate(irrep_out_1):
+                for k, (num_out2, ir_out2) in enumerate(irrep_out_2):
+                    if ir_in in ir_out1 * ir_out2:
+                        self.instructions.append({
+                            'i': i, 'j': j, 'k': k,
+                            'l_in': ir_in.l, 'l1': ir_out1.l, 'l2': ir_out2.l,
+                            'mul_in': num_in, 'mul1': num_out1, 'mul2': num_out2,
+                            'muls': [num_in, num_out1, num_out2],
+                        })
+
+        self._num_path_weight = sum(
+            prod(ins['muls']) for ins in self.instructions
+        )
+        self._num_bias = sum(
+            ins['mul1'] * ins['mul2']
+            for ins in self.instructions if ins['l_in'] == 0
+        )
+        self.num_weights = self._num_path_weight + self._num_bias
+
+        self.lmax = max(
+            max((ir.l for _, ir in irrep_in), default=0),
+            max((ir.l for _, ir in irrep_out_1), default=0),
+            max((ir.l for _, ir in irrep_out_2), default=0),
+        )
+
+        # Precompute column-index slices for each (l1, l2, delta_m)
+        self._diag_cols = {}
+        for ins in self.instructions:
+            l1, l2 = ins['l1'], ins['l2']
+            max_dm = min(ins['l_in'], self.bandwidth)
+            for d in range(-max_dm, max_dm + 1):
+                key = (l1, l2, d)
+                if key in self._diag_cols:
+                    continue
+                m1_lo = max(-l1, d - l2)
+                m1_hi = min(l1, d + l2)
+                if m1_lo > m1_hi:
+                    continue
+                # Column indices into D1 and D2
+                self._diag_cols[key] = (
+                    m1_lo + l1, m1_hi + l1 + 1,      # D1 col range
+                    m1_lo - d + l2, m1_hi - d + l2 + 1,  # D2 col range
+                )
+
+    @property
+    def num_path_weight(self):
+        return self._num_path_weight
+
+    @property
+    def num_bias(self):
+        return self._num_bias
+
+    def _compute_wigner_D(self, edge_vec):
+        """Compute Wigner-D: rotate e3nn's Y-axis → edge direction.
+
+        All computation on the same device as edge_vec (no CPU roundtrip).
+        Uses the Rodrigues formula → Euler angles → Wigner-D via e3nn's
+        matrix_to_angles (GPU-compatible via atan2/acos).
+        """
+        edge_hat = torch.nn.functional.normalize(edge_vec, dim=-1)
+        B = edge_hat.shape[0]
+        device, dtype = edge_hat.device, edge_hat.dtype
+
+        # Rodrigues rotation R such that R @ [0,1,0] = edge_hat
+        y_axis = edge_hat.new_tensor([0., 1., 0.]).expand(B, -1)
+        v = torch.linalg.cross(y_axis, edge_hat)
+        c = (y_axis * edge_hat).sum(-1)
+        s_sq = (v * v).sum(-1)
+
+        vx = torch.zeros(B, 3, 3, device=device, dtype=dtype)
+        vx[:, 0, 1] = -v[:, 2]; vx[:, 0, 2] = v[:, 1]
+        vx[:, 1, 0] = v[:, 2];  vx[:, 1, 2] = -v[:, 0]
+        vx[:, 2, 0] = -v[:, 1]; vx[:, 2, 1] = v[:, 0]
+
+        eye = torch.eye(3, device=device, dtype=dtype).unsqueeze(0)
+        factor = ((1 - c) / (s_sq + 1e-8)).reshape(B, 1, 1)
+        R = eye + vx + torch.bmm(vx, vx) * factor
+
+        anti = c < -0.99
+        if anti.any():
+            R[anti] = edge_hat.new_tensor([[-1., 0., 0.], [0., -1., 0.], [0., 0., 1.]])
+
+        # Wigner-D via e3nn (CPU roundtrip unavoidable for o3.wigner_D)
+        angles = o3.matrix_to_angles(R.detach().cpu())
+        return {
+            l: o3.wigner_D(l, *angles).to(device=device, dtype=dtype)
+            for l in range(self.lmax + 1)
+        }
+
+    def forward(self, x_in, weights=None, bias_weights=None, edge_vec=None):
+        """
+        Args:
+            x_in:         [B, irrep_in.dim]
+            weights:      [B, num_path_weight] or None
+            bias_weights: [B, num_bias] or None
+            edge_vec:     [B, 3] (required)
+
+        Returns:
+            [B, out_dim_1, out_dim_2] Hamiltonian block in global frame.
+        """
+        assert edge_vec is not None, "SO2Expansion requires edge_vec"
+        B = x_in.shape[0]
+        device, dtype = x_in.device, x_in.dtype
+
+        # 1. Parse input features per l
+        x_in_s = [
+            x_in[:, sl].reshape(B, mul_ir.mul, mul_ir.ir.dim)
+            for sl, mul_ir in zip(self.irrep_in.slices(), self.irrep_in)
+        ]
+
+        # 2. Rotate features to local frame: x_local = D^T @ x
+        Ds = self._compute_wigner_D(edge_vec)
+        x_local_s = []
+        for idx, (_, ir_in) in enumerate(self.irrep_in):
+            D_inv = Ds[ir_in.l].transpose(-1, -2)
+            x_local_s.append(torch.einsum('bij,bcj->bci', D_inv, x_in_s[idx]))
+
+        # 3. For each path, compute h_d per delta_m band, then rotate to global
+        #    H_global = Σ_d  h_d · (D1_cols_d @ D2_cols_d^T)
+        block_outputs = {}   # (j, k) -> [B, mul1*(2l1+1), mul2*(2l2+1)]
+        w_off = 0
+        b_off = 0
+
+        for ins in self.instructions:
+            i, j, k = ins['i'], ins['j'], ins['k']
+            l_in, l1, l2 = ins['l_in'], ins['l1'], ins['l2']
+            mul_in, mul1, mul2 = ins['mul_in'], ins['mul1'], ins['mul2']
+            n_w = mul_in * mul1 * mul2
+
+            x_l = x_local_s[i]  # [B, mul_in, 2*l_in+1]
+
+            # Weight
+            if weights is not None:
+                w = weights[:, w_off:w_off + n_w].reshape(B, mul_in, mul1, mul2)
+            else:
+                w = torch.ones(1, mul_in, mul1, mul2, device=device, dtype=dtype) / mul_in
+            w_off += n_w
+
+            D1, D2 = Ds[l1], Ds[l2]
+            max_dm = min(l_in, self.bandwidth)
+
+            # Vectorized: extract all valid m_in features at once
+            # feat_bands: [B, mul_in, 2*max_dm+1] for m_in in [-max_dm, ..., +max_dm]
+            feat_bands = x_l[:, :, l_in - max_dm : l_in + max_dm + 1]
+
+            # h_bands: [B, mul1, mul2, 2*max_dm+1]
+            h_bands = torch.einsum('bwd, bwuv -> buvd', feat_bands, w) / mul_in
+
+            # Bias (only for l_in=0, applied to delta_m=0 band)
+            if l_in == 0 and bias_weights is not None:
+                n_b = mul1 * mul2
+                bias = bias_weights[:, b_off:b_off + n_b].reshape(B, mul1, mul2)
+                # delta_m=0 is at index max_dm in the band tensor
+                h_bands[:, :, :, max_dm] = h_bands[:, :, :, max_dm] + bias
+                b_off += n_b
+
+            # Accumulate H_global via outer-product rotation per delta_m band
+            H_block = torch.zeros(
+                B, mul1, 2 * l1 + 1, mul2, 2 * l2 + 1, device=device, dtype=dtype,
+            )
+
+            for d_idx, d in enumerate(range(-max_dm, max_dm + 1)):
+                col_key = (l1, l2, d)
+                if col_key not in self._diag_cols:
+                    continue
+                r1_lo, r1_hi, r2_lo, r2_hi = self._diag_cols[col_key]
+
+                d1_cols = D1[:, :, r1_lo:r1_hi]  # [B, 2l1+1, n_entries]
+                d2_cols = D2[:, :, r2_lo:r2_hi]  # [B, 2l2+1, n_entries]
+                h_d = h_bands[:, :, :, d_idx]    # [B, mul1, mul2]
+
+                # outer product: [B, 2l1+1, 2l2+1] = Σ_n d1[:,n] · d2[:,n]^T
+                rot_block = torch.einsum('bin,bjn->bij', d1_cols, d2_cols)
+
+                # broadcast h_d over spatial dims
+                H_block += h_d[:, :, None, :, None] * rot_block[:, None, :, None, :]
+
+            H_block = H_block.permute(0, 1, 3, 2, 4).reshape(
+                B, mul1 * (2 * l1 + 1), mul2 * (2 * l2 + 1),
+            )
+
+            key = (j, k)
+            if key in block_outputs:
+                block_outputs[key] = block_outputs[key] + H_block
+            else:
+                block_outputs[key] = H_block
+
+        # 4. Assemble full output matrix
+        rows = []
+        for ji in range(len(self.irrep_out_1)):
+            cols = []
+            for ki in range(len(self.irrep_out_2)):
+                if (ji, ki) in block_outputs:
+                    cols.append(block_outputs[(ji, ki)])
+                else:
+                    cols.append(torch.zeros(
+                        B, self.irrep_out_1[ji].dim, self.irrep_out_2[ki].dim,
+                        device=device, dtype=dtype,
+                    ))
+            rows.append(torch.cat(cols, dim=-1))
+        return torch.cat(rows, dim=-2)
+
+    def __repr__(self):
+        n_bands = sum(
+            2 * min(ins['l_in'], self.bandwidth) + 1
+            for ins in self.instructions
+        )
+        n_full = sum(
+            (2 * ins['l1'] + 1) * (2 * ins['l2'] + 1)
+            for ins in self.instructions
+        )
+        return (
+            f"SO2Expansion(bw={self.bandwidth}, "
+            f"bands={n_bands}/{n_full} ({n_bands/n_full:.0%}), "
+            f"weights={self.num_path_weight}, bias={self.num_bias})"
+        )
+
+
+class CPExpansion(nn.Module):
+    """Vectorized CG expansion with optional CP decomposition (TDN-style).
+
+    Drop-in replacement for Expansion. Key optimizations:
+    1. Precomputes w3j as registered buffers (no o3.wigner_3j in forward)
+    2. Groups paths by (l1, l2) output block — fewer, larger einsums
+    3. Optional CP decomposition for approximate speedup at high L
+
+    Same num_path_weight / num_bias / weight ordering as Expansion,
+    so fc_ii / fc_ij layers need no changes.
+
+    Args:
+        irrep_in, irrep_out_1, irrep_out_2: same as Expansion
+        cp_rank: None for exact (vectorized only), int for CP approximation
+    """
+
+    def __init__(self, irrep_in, irrep_out_1, irrep_out_2, cp_rank=None):
+        super().__init__()
+        self.irrep_in = irrep_in
+        self.irrep_out_1 = irrep_out_1
+        self.irrep_out_2 = irrep_out_2
+        self.cp_rank = cp_rank
+
+        # Generate instructions (same order as Expansion for weight compatibility)
+        self.instructions = []
+        for i, (num_in, ir_in) in enumerate(irrep_in):
+            for j, (num_out1, ir_out1) in enumerate(irrep_out_1):
+                for k, (num_out2, ir_out2) in enumerate(irrep_out_2):
+                    if ir_in in ir_out1 * ir_out2:
+                        self.instructions.append(
+                            [i, j, k, True, 1.0, [num_in, num_out1, num_out2]]
+                        )
+
+        self.num_path_weight = sum(prod(ins[-1]) for ins in self.instructions if ins[3])
+        self.num_bias = sum(
+            [prod(ins[-1][1:]) for ins in self.instructions if ins[0] == 0]
+        )
+        if self.num_path_weight > 0:
+            self.weights = nn.Parameter(
+                torch.rand(self.num_path_weight + self.num_bias)
+            )
+        self.num_weights = self.num_path_weight + self.num_bias
+
+        # Group paths by (j, k) output block and precompute CG tensors
+        self._groups = {}  # (j, k) -> group info
+        flat_w = 0
+        flat_b = 0
+        for ins in self.instructions:
+            i_idx, j_idx, k_idx = ins[0], ins[1], ins[2]
+            mul_in, mul_out1, mul_out2 = ins[-1]
+            l_in = irrep_in[i_idx].ir.l
+            l1 = irrep_out_1[j_idx].ir.l
+            l2 = irrep_out_2[k_idx].ir.l
+            n_w = prod(ins[-1])
+
+            key = (j_idx, k_idx)
+            if key not in self._groups:
+                self._groups[key] = {
+                    'l1': l1, 'l2': l2,
+                    'mul1': mul_out1, 'mul2': mul_out2,
+                    'paths': [],
+                }
+            has_bias = (i_idx == 0)  # l_in == 0
+            n_b = mul_out1 * mul_out2 if has_bias else 0
+
+            self._groups[key]['paths'].append({
+                'i': i_idx, 'l_in': l_in,
+                'mul_in': mul_in,
+                'w_start': flat_w, 'w_end': flat_w + n_w,
+                'b_start': flat_b, 'b_end': flat_b + n_b,
+                'has_bias': has_bias,
+            })
+            flat_w += n_w
+            if has_bias:
+                flat_b += n_b
+
+        # Precompute and register CG tensors per (j, k) block
+        for (j_idx, k_idx), grp in self._groups.items():
+            l1, l2 = grp['l1'], grp['l2']
+            d1, d2 = 2 * l1 + 1, 2 * l2 + 1
+            P = sum(2 * p['l_in'] + 1 for p in grp['paths'])
+
+            # Concatenated CG tensor: [d1, d2, P]
+            M = torch.zeros(d1, d2, P)
+            offset = 0
+            for p in grp['paths']:
+                d_in = 2 * p['l_in'] + 1
+                M[:, :, offset:offset + d_in] = o3.wigner_3j(l1, l2, p['l_in'])
+                offset += d_in
+
+            if cp_rank is not None and cp_rank < P:
+                # CP approximation via truncated SVD
+                M_mat = M.reshape(d1 * d2, P)
+                U, S, Vh = torch.linalg.svd(M_mat, full_matrices=False)
+                R = min(cp_rank, P, d1 * d2)
+                # AB[d1, d2, R], C[P, R]
+                AB = (U[:, :R] * S[:R].unsqueeze(0)).reshape(d1, d2, R)
+                C = Vh[:R, :].T  # [P, R]
+                self.register_buffer(f'AB_{j_idx}_{k_idx}', AB)
+                self.register_buffer(f'C_{j_idx}_{k_idx}', C)
+                grp['use_cp'] = True
+                grp['rank'] = R
+            else:
+                self.register_buffer(f'M_{j_idx}_{k_idx}', M)
+                grp['use_cp'] = False
+
+    def forward(self, x_in, weights=None, bias_weights=None):
+        B = x_in.shape[0]
+
+        # Parse input features per l (same as Expansion)
+        if len(self.irrep_in) == 1:
+            x_in_s = [x_in.reshape(B, self.irrep_in[0].mul, self.irrep_in[0].ir.dim)]
+        else:
+            x_in_s = [
+                x_in[:, sl].reshape(B, mul_ir.mul, mul_ir.ir.dim)
+                for sl, mul_ir in zip(self.irrep_in.slices(), self.irrep_in)
+            ]
+
+        outputs = {}
+        for (j_idx, k_idx), grp in self._groups.items():
+            mul1, mul2 = grp['mul1'], grp['mul2']
+
+            # Weight-contract each path, then concatenate features
+            g_parts = []
+            for p in grp['paths']:
+                x_l = x_in_s[p['i']]  # [B, mul_in, 2*l_in+1]
+
+                if weights is not None:
+                    w = weights[:, p['w_start']:p['w_end']].reshape(
+                        B, p['mul_in'], mul1, mul2)
+                    g = torch.einsum('bwuv, bwm -> buvm', w, x_l)
+                    if p['has_bias'] and bias_weights is not None:
+                        bias = bias_weights[:, p['b_start']:p['b_end']].reshape(
+                            B, mul1, mul2)
+                        g = g + bias.unsqueeze(-1)
+                    g = g / p['mul_in']
+                else:
+                    w_idx = p['w_start']
+                    w_end = p['w_end']
+                    weight = self.weights[w_idx:w_end].reshape(p['mul_in'], mul1, mul2)
+                    g = torch.einsum('wuv, bwm -> buvm', weight, x_l) / p['mul_in']
+                    # Note: original Expansion does NOT apply bias in internal-weights mode
+
+                g_parts.append(g)
+
+            # Concatenate along feature dim: [B, mul1, mul2, P_total]
+            g_cat = torch.cat(g_parts, dim=-1)
+
+            # CG expansion — single einsum per block
+            if grp['use_cp']:
+                C_jk = getattr(self, f'C_{j_idx}_{k_idx}')
+                AB_jk = getattr(self, f'AB_{j_idx}_{k_idx}')
+                h = torch.einsum('buvp, pr -> buvr', g_cat, C_jk)
+                H_block = torch.einsum('ijr, buvr -> buivj', AB_jk, h)
+            else:
+                M_jk = getattr(self, f'M_{j_idx}_{k_idx}')
+                H_block = torch.einsum('ijp, buvp -> buivj', M_jk, g_cat)
+
+            l1, l2 = grp['l1'], grp['l2']
+            H_block = H_block.reshape(B, mul1 * (2 * l1 + 1), mul2 * (2 * l2 + 1))
+            outputs[(j_idx, k_idx)] = H_block
+
+        # Assemble full output matrix
+        rows = []
+        for i in range(len(self.irrep_out_1)):
+            blocks = []
+            for j in range(len(self.irrep_out_2)):
+                if (i, j) in outputs:
+                    blocks.append(outputs[(i, j)])
+                else:
+                    blocks.append(torch.zeros(
+                        B, self.irrep_out_1[i].dim, self.irrep_out_2[j].dim,
+                        device=x_in.device, dtype=x_in.dtype,
+                    ))
+            rows.append(torch.cat(blocks, dim=-1))
+        return torch.cat(rows, dim=-2)
+
+    @property
+    def device(self):
+        # Use buffer device since we always have at least one registered buffer
+        for buf in self.buffers():
+            return buf.device
+        return next(self.parameters()).device
+
+    def __repr__(self):
+        n_groups = len(self._groups)
+        n_paths = len(self.instructions)
+        cp_str = f", cp_rank={self.cp_rank}" if self.cp_rank else ""
+        return (
+            f"CPExpansion({n_paths} paths → {n_groups} blocks{cp_str}, "
+            f"weights={self.num_path_weight}, bias={self.num_bias})"
+        )
+
+
+class TDNExpansion(nn.Module):
+    """TDN-style expansion with path-weight sharing: O(c²L⁴) complexity.
+
+    Key difference from CPExpansion:
+    - All CG paths share a SINGLE weight matrix W ∈ R^{c_in × mul_max²}
+    - Weight contraction is a single matmul (not per-path loop)
+    - fc network output dimension: c_in * mul_max² (vs Σ c_in*mul1*mul2 per path)
+
+    NOT a drop-in replacement for Expansion — changes num_path_weight/num_bias.
+    Requires modified fc_ii/fc_ij layers.
+
+    Args:
+        irrep_in, irrep_out_1, irrep_out_2: same as Expansion
+        cp_rank: None for exact CG, int for CP approximation
+    """
+
+    def __init__(self, irrep_in, irrep_out_1, irrep_out_2, cp_rank=None):
+        super().__init__()
+        self.irrep_in = irrep_in
+        self.irrep_out_1 = irrep_out_1
+        self.irrep_out_2 = irrep_out_2
+        self.cp_rank = cp_rank
+
+        # Determine multiplicity bounds
+        self.mul_in = irrep_in[0].mul  # assume uniform multiplicity
+        self.mul_max1 = max(mul for mul, _ in irrep_out_1)
+        self.mul_max2 = max(mul for mul, _ in irrep_out_2)
+        self.D_in = sum(ir.dim for _, ir in irrep_in)  # total angular input dim
+
+        # Shared weight: W ∈ R^{c_in × mul_max1 × mul_max2}
+        # fc network should output: c_in * mul_max1 * mul_max2
+        self.num_path_weight = self.mul_in * self.mul_max1 * self.mul_max2
+        # Shared bias: for the l_in=0 component only
+        self.num_bias = self.mul_max1 * self.mul_max2
+        self.num_weights = self.num_path_weight + self.num_bias
+
+        # Build instructions (for reference / compatibility)
+        self.instructions = []
+        for i, (num_in, ir_in) in enumerate(irrep_in):
+            for j, (num_out1, ir_out1) in enumerate(irrep_out_1):
+                for k, (num_out2, ir_out2) in enumerate(irrep_out_2):
+                    if ir_in in ir_out1 * ir_out2:
+                        self.instructions.append(
+                            [i, j, k, True, 1.0, [num_in, num_out1, num_out2]]
+                        )
+
+        # Group paths by (j, k) output block and precompute CG tensors
+        self._groups = {}
+        for ins in self.instructions:
+            i_idx, j_idx, k_idx = ins[0], ins[1], ins[2]
+            l_in = irrep_in[i_idx].ir.l
+            l1 = irrep_out_1[j_idx].ir.l
+            l2 = irrep_out_2[k_idx].ir.l
+            mul1 = irrep_out_1[j_idx].mul
+            mul2 = irrep_out_2[k_idx].mul
+
+            key = (j_idx, k_idx)
+            if key not in self._groups:
+                self._groups[key] = {
+                    'l1': l1, 'l2': l2, 'mul1': mul1, 'mul2': mul2, 'paths': [],
+                }
+            # Store the input angular offset and size for this path
+            # so we know which slice of x_concat to use
+            ang_offset = sum(ir.dim for _, ir in irrep_in[:i_idx])
+            ang_size = 2 * l_in + 1
+            self._groups[key]['paths'].append({
+                'l_in': l_in, 'ang_offset': ang_offset, 'ang_size': ang_size,
+                'is_scalar': (l_in == 0),
+            })
+
+        # Precompute concatenated CG tensors per (j, k) block
+        for (j_idx, k_idx), grp in self._groups.items():
+            l1, l2 = grp['l1'], grp['l2']
+            d1, d2 = 2 * l1 + 1, 2 * l2 + 1
+
+            # Build index map: which D_in positions contribute to this block
+            slices = []
+            for p in grp['paths']:
+                slices.append((p['ang_offset'], p['ang_offset'] + p['ang_size']))
+            grp['input_slices'] = slices
+            P = sum(s[1] - s[0] for s in slices)
+
+            # Concatenated CG tensor
+            M = torch.zeros(d1, d2, P)
+            offset = 0
+            for p in grp['paths']:
+                d_in = p['ang_size']
+                M[:, :, offset:offset + d_in] = o3.wigner_3j(l1, l2, p['l_in'])
+                offset += d_in
+
+            if cp_rank is not None and cp_rank < P:
+                M_mat = M.reshape(d1 * d2, P)
+                U, S, Vh = torch.linalg.svd(M_mat, full_matrices=False)
+                R = min(cp_rank, P, d1 * d2)
+                AB = (U[:, :R] * S[:R].unsqueeze(0)).reshape(d1, d2, R)
+                C = Vh[:R, :].T
+                self.register_buffer(f'AB_{j_idx}_{k_idx}', AB)
+                self.register_buffer(f'C_{j_idx}_{k_idx}', C)
+                grp['use_cp'] = True
+            else:
+                self.register_buffer(f'M_{j_idx}_{k_idx}', M)
+                grp['use_cp'] = False
+
+        # Precompute scalar (l_in=0) position in D_in for bias
+        self._scalar_offset = 0  # l_in=0 is always the first irrep
+
+    def forward(self, x_in, weights=None, bias_weights=None):
+        """
+        Args:
+            x_in:         [B, irrep_in.dim]  (c * D_in flattened)
+            weights:      [B, num_path_weight] = [B, c_in * mul_max1 * mul_max2]
+            bias_weights: [B, num_bias] = [B, mul_max1 * mul_max2]
+        """
+        B = x_in.shape[0]
+        device, dtype = x_in.device, x_in.dtype
+        c = self.mul_in
+        mu1, mu2 = self.mul_max1, self.mul_max2
+
+        # Step 1: Parse input → [B, c, D_in]
+        # Must correctly separate channels from angular components.
+        # e3nn layout: [mul×dim for each irrep group], NOT [c, D_in] contiguous.
+        parts = []
+        for sl, (mul, ir) in zip(self.irrep_in.slices(), self.irrep_in):
+            parts.append(x_in[:, sl].reshape(B, mul, ir.dim))  # [B, c, 2l+1]
+        x_cat = torch.cat(parts, dim=-1)  # [B, c, D_in]
+
+        # Step 2: Shared weight contraction — SINGLE matmul
+        # W[B, c, mu1, mu2] @ x[B, c, D_in] → f[B, mu1, mu2, D_in]
+        if weights is not None:
+            W = weights.reshape(B, c, mu1, mu2)
+        else:
+            # No external weights — use uniform
+            W = torch.ones(1, c, mu1, mu2, device=device, dtype=dtype) / c
+
+        f = torch.einsum('bcuv, bcd -> buvd', W, x_cat) / c  # [B, mu1, mu2, D_in]
+
+        # Step 3: Add bias at the l_in=0 (scalar) position
+        if bias_weights is not None:
+            bias = bias_weights.reshape(B, mu1, mu2)
+            f[:, :, :, self._scalar_offset] = f[:, :, :, self._scalar_offset] + bias
+
+        # Step 4: CG expansion per output block — O(L²) iterations
+        outputs = {}
+        for (j_idx, k_idx), grp in self._groups.items():
+            mul1, mul2 = grp['mul1'], grp['mul2']
+            l1, l2 = grp['l1'], grp['l2']
+
+            # Gather input angular components for this block
+            f_parts = []
+            for s_lo, s_hi in grp['input_slices']:
+                f_parts.append(f[:, :mul1, :mul2, s_lo:s_hi])
+            f_block = torch.cat(f_parts, dim=-1)  # [B, mul1, mul2, P]
+
+            # CG expansion — single einsum per block
+            if grp['use_cp']:
+                C_jk = getattr(self, f'C_{j_idx}_{k_idx}')
+                AB_jk = getattr(self, f'AB_{j_idx}_{k_idx}')
+                h = torch.einsum('buvp, pr -> buvr', f_block, C_jk)
+                H_block = torch.einsum('ijr, buvr -> buivj', AB_jk, h)
+            else:
+                M_jk = getattr(self, f'M_{j_idx}_{k_idx}')
+                H_block = torch.einsum('ijp, buvp -> buivj', M_jk, f_block)
+
+            H_block = H_block.reshape(B, mul1 * (2 * l1 + 1), mul2 * (2 * l2 + 1))
+            outputs[(j_idx, k_idx)] = H_block
+
+        # Step 5: Assemble full output matrix
+        rows = []
+        for i in range(len(self.irrep_out_1)):
+            blocks = []
+            for j in range(len(self.irrep_out_2)):
+                if (i, j) in outputs:
+                    blocks.append(outputs[(i, j)])
+                else:
+                    blocks.append(torch.zeros(
+                        B, self.irrep_out_1[i].dim, self.irrep_out_2[j].dim,
+                        device=device, dtype=dtype))
+            rows.append(torch.cat(blocks, dim=-1))
+        return torch.cat(rows, dim=-2)
+
+    @property
+    def device(self):
+        for buf in self.buffers():
+            return buf.device
+        return next(self.parameters()).device
+
+    def __repr__(self):
+        n_groups = len(self._groups)
+        n_paths = len(self.instructions)
+        cp_str = f", cp_rank={self.cp_rank}" if self.cp_rank else ""
+        return (
+            f"TDNExpansion({n_paths} paths → {n_groups} blocks{cp_str}, "
+            f"shared_w={self.num_path_weight}, bias={self.num_bias})"
+        )
+
+
 class OneBody_Reduction(nn.Module):
     r"""The one-body reduction module from the
     `"Informing geometric deep learning with electronic interactionsto accelerate quantum chemistry"

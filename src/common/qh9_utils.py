@@ -19,6 +19,23 @@ def load_qh9_dataset(conf: DictConfig, root_path: str):
     dataset_name = conf.dataset.dataset_name
     logger.info(f"Loading {dataset_name} dataset...")
 
+    # ── Preprocessed single LMDB (fastest) ──
+    if conf.dataset.get("use_preprocessed", False):
+        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        lmdb_path = conf.dataset.get("preprocessed_lmdb", "")
+        if not lmdb_path:
+            # Auto-detect: look for <dataset_dir>_shard_preprocessed.lmdb
+            lmdb_path = os.path.join(
+                root_path, "dataset", f"{dataset_name}_shard_preprocessed.lmdb"
+            )
+        logger.info(f"Using preprocessed LMDB: {lmdb_path}")
+        dataset = QH9PreprocessedDataset(
+            lmdb_path=lmdb_path,
+            split=conf.dataset.split,
+            mode=conf.get("mode", "train"),
+        )
+        return dataset
+
     if conf.dataset.get("use_shard", False):
         logger.info("Using shard dataset")
         shard_feature_kwargs = dict(

@@ -2,6 +2,7 @@
 """
 Common training utilities for experiments.
 """
+import torch
 import pytorch_lightning as pl
 from pytorch_lightning.loggers.wandb import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, RichProgressBar
@@ -37,7 +38,12 @@ def setup_callbacks(conf: DictConfig, output_dir: Path, loss_format: str = ".7f"
     rich_progress_bar_theme = RichProgressBarTheme(metrics_format=".7f")
     rich_progress_bar = RichProgressBar(leave=False, theme=rich_progress_bar_theme)
     callbacks.append(rich_progress_bar)
-    
+
+    # TFLOPS measurement (opt-out via log_tflops: false)
+    if conf.get("log_tflops", True):
+        tflops_interval = conf.get("tflops_log_interval", 50)
+        callbacks.append(TFLOPSCallback(log_interval=tflops_interval))
+
     return callbacks
 
 
@@ -129,6 +135,91 @@ def setup_warmup_trainer(conf: DictConfig, callbacks, loggers, output_dir: Path)
     trainer = pl.Trainer(**trainer_kwargs)
     return trainer
 
+
+
+class TFLOPSCallback(pl.Callback):
+    """Measure and log TFLOPS to wandb during training.
+
+    전략:
+      1) on_fit_start: FlopCounterMode로 forward FLOPs 1회 측정 (deterministic)
+      2) 매 step: cuda.Event로 GPU 시간 측정 → TFLOPS 계산
+      3) wandb에 perf/tflops, perf/gpu_ms, perf/mfu 로그
+
+    FLOPs = forward only. TFLOPS = (3 × FLOPs) / GPU시간.
+    3× = forward(1) + backward(2)의 standard approximation.
+
+    Args:
+        log_interval: 몇 step마다 로깅할지 (default: 50)
+        peak_tflops: GPU peak TFLOPS (MFU 계산용, default: H200 TF32 = 494.7)
+    """
+
+    def __init__(self, log_interval: int = 50, peak_tflops: float = 494.7):
+        super().__init__()
+        self.log_interval = log_interval
+        self.peak_tflops = peak_tflops
+        self._flops_fwd: int | None = None
+        self._start_event: torch.cuda.Event | None = None
+        self._end_event: torch.cuda.Event | None = None
+        self._measured = False
+
+    def on_fit_start(self, trainer, pl_module):
+        """모델의 forward FLOPs를 1회 측정."""
+        try:
+            from torch.utils.flop_counter import FlopCounterMode
+        except ImportError:
+            logger.warning("FlopCounterMode unavailable (PyTorch 2.1+ required). TFLOPS logging disabled.")
+            return
+
+        device = next(pl_module.parameters()).device
+        model = pl_module.model
+
+        # 첫 번째 배치를 가져와서 FLOPs 측정
+        try:
+            batch = next(iter(trainer.train_dataloader))
+            batch = batch.to(device)
+            batch = pl_module.post_processing(batch, pl_module.default_type)
+            batch = pl_module.corrupt(batch, mul=1)
+
+            flop_counter = FlopCounterMode(display=False)
+            with flop_counter:
+                with torch.no_grad():
+                    model(batch, batch.init_ham_t, keep_blocks=True)
+            self._flops_fwd = flop_counter.get_total_flops()
+            self._measured = True
+            logger.info(f"[TFLOPSCallback] Forward FLOPs: {self._flops_fwd / 1e9:.2f} GFLOPs")
+        except Exception as e:
+            logger.warning(f"[TFLOPSCallback] FLOP measurement failed: {e}")
+            self._measured = False
+
+    def on_train_batch_start(self, trainer, pl_module, batch, batch_idx):
+        if not self._measured or batch_idx % self.log_interval != 0:
+            return
+        self._start_event = torch.cuda.Event(enable_timing=True)
+        self._end_event = torch.cuda.Event(enable_timing=True)
+        self._start_event.record()
+
+    def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        if not self._measured or self._start_event is None:
+            return
+        if batch_idx % self.log_interval != 0:
+            return
+
+        self._end_event.record()
+        torch.cuda.synchronize()
+        gpu_ms = self._start_event.elapsed_time(self._end_event)
+        gpu_s = gpu_ms / 1000.0
+
+        # 3× forward = forward + backward approximation
+        flops_total = self._flops_fwd * 3
+        tflops = (flops_total / 1e12) / gpu_s if gpu_s > 0 else 0
+        mfu = (tflops / self.peak_tflops) * 100 if self.peak_tflops > 0 else 0
+
+        pl_module.log("perf/tflops", tflops, on_step=True, on_epoch=False, prog_bar=False)
+        pl_module.log("perf/gpu_ms", gpu_ms, on_step=True, on_epoch=False, prog_bar=False)
+        pl_module.log("perf/mfu_pct", mfu, on_step=True, on_epoch=False, prog_bar=False)
+        pl_module.log("perf/gflops_fwd", self._flops_fwd / 1e9, on_step=False, on_epoch=True, prog_bar=False)
+
+        self._start_event = None
 
 
 def log_training_config(conf: DictConfig):
