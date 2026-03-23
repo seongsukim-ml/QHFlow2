@@ -9,7 +9,7 @@ Extends MLDFTCalculator with QHFlow2-specific features:
 - gpu4pyscf support
 
 Usage:
-    from md.qhflow_calculator import QHFlowCalculator
+    from qhflow2.md.qhflow_calculator import QHFlowCalculator
 
     def predict_H(pyscf_mol, S, H_init):
         # model-specific: convention transform, forward, transform back

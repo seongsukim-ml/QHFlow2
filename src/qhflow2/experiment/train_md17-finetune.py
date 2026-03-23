@@ -67,7 +67,7 @@ def main(conf):
         setattr(lit_model, "test_mode", "test")
         
         # Import checkpoint utilities
-        from common.checkpoint_utils import setup_wandb_logger
+        from qhflow2.common.checkpoint_utils import setup_wandb_logger
         
         # Setup wandb logger
         wandb_logger = setup_wandb_logger(conf, output_dir)

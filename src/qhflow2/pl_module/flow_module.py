@@ -2248,8 +2248,8 @@ class LitModel_flow(LitModel):
             Tuple of (energy_tensor [batch_size, 1], valid_mask [batch_size]),
             or None if computation fails entirely.
         """
-        from common.matrix_transforms import _reconstruct_full_matrix
-        from common.metric import cal_orbital_and_energies as _cal_orb_eng
+        from qhflow2.common.matrix_transforms import _reconstruct_full_matrix
+        from qhflow2.common.metric import cal_orbital_and_energies as _cal_orb_eng
 
         device = outputs["hamiltonian_diagonal_blocks"].device
         dtype = outputs["hamiltonian_diagonal_blocks"].dtype
@@ -3413,7 +3413,7 @@ def _save_prediction_result(lit_model, output_dir):
     from prediction import PredictionResult
     from pipeline import properties_from_hamiltonian
     import numpy as np
-    from common.custom_logger import get_logger
+    from qhflow2.common.custom_logger import get_logger
     logger = get_logger(__name__)
 
     collector = lit_model._pred_collector

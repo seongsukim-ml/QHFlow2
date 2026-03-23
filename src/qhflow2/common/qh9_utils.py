@@ -14,14 +14,14 @@ logger = get_logger(__file__)
 
 def load_qh9_dataset(conf: DictConfig, root_path: str):
     """Load QH9 dataset based on configuration."""
-    from dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
-    from dataset_module.qh9_datasets_shard import QH9Stable as QH9Stable_shard, QH9Dynamic as QH9Dynamic_shard
+    from qhflow2.dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
+    from qhflow2.dataset_module.qh9_datasets_shard import QH9Stable as QH9Stable_shard, QH9Dynamic as QH9Dynamic_shard
     dataset_name = conf.dataset.dataset_name
     logger.info(f"Loading {dataset_name} dataset...")
 
     # ── Preprocessed single LMDB (fastest) ──
     if conf.dataset.get("use_preprocessed", False):
-        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
         lmdb_path = conf.dataset.get("preprocessed_lmdb", "")
         if not lmdb_path:
             # Auto-detect: look for <dataset_dir>_shard_preprocessed.lmdb

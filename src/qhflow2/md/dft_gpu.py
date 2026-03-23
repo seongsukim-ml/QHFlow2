@@ -13,7 +13,7 @@ except:
 
 import sys
 sys.path.append("/root/limlab01/kaistai/25DFT/QHFlow/src")
-# from common.dft_utils import *
+# from qhflow2.common.dft_utils import *
 import os
 # os.environ["OMP_NUM_THREADS"] = "8"
 # os.environ["MKL_NUM_THREADS"] = "8"
@@ -22,7 +22,7 @@ import os
 # os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 # os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from qhflow2.dft_process.dft_process_utils import *
-# from common.draw_util import *
+# from qhflow2.common.draw_util import *
 import torch
 from torch_geometric.loader import DataLoader
 from qhflow2.common.units import *
@@ -263,7 +263,7 @@ class MLRKS(RKS):
         else:
             ham_transformed = torch.tensor(ham_transformed, dtype=dtype).unsqueeze(0)
         
-        from common.metric import cal_orbital_and_energies
+        from qhflow2.common.metric import cal_orbital_and_energies
         orbital_energies, orbital_coefficients = cal_orbital_and_energies(
             overlap, ham_transformed, tol=tol, pad_eigval=pad_eigval
         )
@@ -649,7 +649,7 @@ class MLRKS_qh9(RKS):
         else:
             ham_transformed = torch.tensor(ham_transformed, dtype=dtype).unsqueeze(0)
         
-        from common.metric import cal_orbital_and_energies
+        from qhflow2.common.metric import cal_orbital_and_energies
         orbital_energies, orbital_coefficients = cal_orbital_and_energies(
             overlap, ham_transformed, tol=tol, pad_eigval=pad_eigval
         )

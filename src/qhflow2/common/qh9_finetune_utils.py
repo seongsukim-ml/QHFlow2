@@ -10,7 +10,7 @@ logger = get_logger(__file__)
 
 def load_qh9_finetune_dataset(conf: DictConfig, root_path: str):
     """Load QH9 dataset for fine-tuning with orbital and energies calculation."""
-    from dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
+    from qhflow2.dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
     
     dataset_name = conf.dataset.dataset_name
     logger.info(f"Loading {dataset_name} dataset for fine-tuning...")
@@ -36,7 +36,7 @@ def load_qh9_finetune_dataset(conf: DictConfig, root_path: str):
 
 def setup_qh9_finetune_model(conf: DictConfig, pl_model_cls, output_dir):
     """Setup QH9 fine-tuning model with pretrained weights."""
-    from common.checkpoint_utils import _find_best_checkpoint
+    from qhflow2.common.checkpoint_utils import _find_best_checkpoint
     
     # Get original checkpoint
     original_ckpt = conf.get("original_ckpt")

@@ -489,6 +489,13 @@ class Onsite_3idx_Overlap_Integral:
         self.basis = basis
 
     def calc_Q(self, atom: str):
+        global psi4
+        if psi4 is None:
+            try:
+                import psi4 as _psi4
+                psi4 = _psi4
+            except ImportError:
+                raise ImportError("psi4 required for Q tensor calculation. Install psi4 first.")
         psi4.core.be_quiet()
 
         # NOTE: prevent Psi4 from moving the molecule in space.
@@ -522,6 +529,7 @@ class Onsite_3idx_Overlap_Integral:
         return torch.from_numpy(Q.np.T).double()
 
     def Q_table(self):
+        _ensure_pyscf()
         Q_dict = {}
         for atom in tqdm(
             self.atom_list, desc="Building on-site three-index overlap integral table"

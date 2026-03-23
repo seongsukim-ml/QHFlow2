@@ -64,7 +64,7 @@ except:
     print("gpu4pyscf is not installed. Please install it using 'pip install gpu4pyscf'.")
 
 from pyscf import gto, dft
-# from common.units import HA2eV, BOHR2ANG
+# from qhflow2.common.units import HA2eV, BOHR2ANG
 
 HA2eV = 27.211396641308  
 BOHR2ANG = 0.5291772105638411 
