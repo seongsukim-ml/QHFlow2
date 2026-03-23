@@ -278,6 +278,14 @@ class LitModel_flow(LitModel):
         else:
             self.non_diagonal_hamiltonian_scale = 1.0
 
+        # Energy loss configuration
+        energy_loss_conf = conf.get("energy_loss", {})
+        self.energy_loss_enabled = energy_loss_conf.get("enabled", False) if energy_loss_conf else False
+        self.energy_eigval_gap_threshold = energy_loss_conf.get("eigval_gap_threshold", 1e-6) if energy_loss_conf else 1e-6
+        self.energy_loss_mode = energy_loss_conf.get("mode", "variational") if energy_loss_conf else "variational"
+        if self.energy_loss_enabled:
+            logger.info(f"Energy loss enabled (mode={self.energy_loss_mode}, eigval_gap_threshold={self.energy_eigval_gap_threshold})")
+
     # ==========================================
     # Prediction bookkeeping
     # ==========================================
@@ -1632,7 +1640,8 @@ class LitModel_flow(LitModel):
 
                 elif key == "energy":
                     if key not in outputs.keys():
-                        raise NotImplementedError(f"Energy is not in outputs")
+                        # Energy is computed in training_step, skip if not available
+                        continue
                     
                     energy_diff = outputs[key] - target[key]
                     mse = torch.mean(energy_diff**2)
@@ -1650,7 +1659,7 @@ class LitModel_flow(LitModel):
 
                 elif key == "force":
                     if key not in outputs.keys():
-                        raise NotImplementedError(f"Force is not in outputs")
+                        continue
                     
                     force_diff = torch.norm(outputs[key] - target[key], dim=1)
                     mse = torch.mean(force_diff**2)
@@ -2226,17 +2235,147 @@ class LitModel_flow(LitModel):
         return output
 
     # ==========================================
+    # Energy Computation from Predicted Hamiltonian
+    # ==========================================
+
+    def _compute_energy_from_outputs(self, outputs, target, apply_scale=True):
+        """
+        Compute one-electron energy E = Tr[H·P] from predicted Hamiltonian blocks.
+
+        Pipeline: H_pred (blocks) → full matrix → eigensolve → P → Tr[H·P]
+        All operations are differentiable through torch.linalg.eigh.
+
+        Returns:
+            Tuple of (energy_tensor [batch_size, 1], valid_mask [batch_size]),
+            or None if computation fails entirely.
+        """
+        from common.matrix_transforms import _reconstruct_full_matrix
+        from common.metric import cal_orbital_and_energies as _cal_orb_eng
+
+        device = outputs["hamiltonian_diagonal_blocks"].device
+        dtype = outputs["hamiltonian_diagonal_blocks"].dtype
+
+        edge_index_full = getattr(target, "edge_index_full", None)
+        if edge_index_full is None:
+            edge_index_full = getattr(target, "full_edge_index", None)
+        if edge_index_full is None:
+            return None
+
+        edge_index_full = edge_index_full.to(device=device, dtype=torch.long)
+        node_ptr = target.ptr.to(torch.long).cpu()
+        batch_size = node_ptr.numel() - 1
+        node_batch = target.batch
+
+        edge_batch = node_batch[edge_index_full[0]]
+        target_node_batch = node_batch[edge_index_full[1]]
+
+        diagonal_overlap_attr = getattr(target, "diagonal_overlap", None)
+        non_diagonal_overlap_attr = getattr(target, "non_diagonal_overlap", None)
+        if diagonal_overlap_attr is None:
+            return None
+
+        energies = []
+        for graph_idx in range(batch_size):
+            node_start = int(node_ptr[graph_idx].item())
+            node_end = int(node_ptr[graph_idx + 1].item())
+            node_slice = slice(node_start, node_end)
+
+            diag_pred = outputs["hamiltonian_diagonal_blocks"][node_slice]
+            edge_mask = (edge_batch == graph_idx) & (target_node_batch == graph_idx)
+            edge_indices = torch.nonzero(edge_mask, as_tuple=False).view(-1)
+
+            if edge_indices.numel() > 0:
+                off_pred = outputs["hamiltonian_non_diagonal_blocks"].index_select(0, edge_indices)
+                local_edges = edge_index_full[:, edge_indices] - node_start
+            else:
+                full_size = diag_pred.shape[-1]
+                off_pred = diag_pred.new_zeros((0, full_size, full_size))
+                local_edges = edge_index_full.new_zeros((2, 0), device=device, dtype=torch.long)
+
+            if apply_scale and self.use_non_diagonal_hamiltonian_scale and off_pred.numel() > 0:
+                off_pred = off_pred / self.non_diagonal_hamiltonian_scale
+
+            atoms = target.atoms[node_slice].view(-1).to(device=device, dtype=torch.long)
+            mask_list = [self.qh9_orbital_mask[int(z.item())].to(device) for z in atoms]
+
+            diag_overlap = diagonal_overlap_attr[node_slice].to(device=device, dtype=dtype)
+            if non_diagonal_overlap_attr is not None and edge_indices.numel() > 0:
+                off_overlap = non_diagonal_overlap_attr.index_select(0, edge_indices).to(
+                    device=device, dtype=dtype
+                )
+            else:
+                off_overlap = diag_pred.new_zeros((0, diag_pred.shape[-1], diag_pred.shape[-1]))
+
+            try:
+                # Build full H and S using _reconstruct_full_matrix (works per-graph)
+                H_full = _reconstruct_full_matrix(diag_pred, off_pred, local_edges, mask_list)
+                S_full = _reconstruct_full_matrix(diag_overlap, off_overlap, local_edges, mask_list)
+
+                # Apply convention transform
+                H_full = self.matrix_transform_single(
+                    H_full.unsqueeze(0), atoms, "e3nn_to_pyscf_def2svp"
+                ).squeeze(0)
+                S_full = self.matrix_transform_single(
+                    S_full.unsqueeze(0), atoms, "e3nn_to_pyscf_def2svp"
+                ).squeeze(0)
+
+                # Promote to float64 for numerical stability
+                H_full = ((H_full + H_full.T) / 2).to(dtype=torch.float64)
+                S_full = ((S_full + S_full.T) / 2).to(dtype=torch.float64)
+
+                # Generalized eigenvalue problem: HC = SCε
+                orbital_energies, orbital_coefficients = _cal_orb_eng(
+                    S_full.unsqueeze(0), H_full.unsqueeze(0), method="eigh"
+                )
+                orbital_energies = orbital_energies.squeeze(0)
+                orbital_coefficients = orbital_coefficients.squeeze(0)
+
+                # Check eigenvalue gap for numerical safety
+                eigval_gaps = torch.diff(orbital_energies).abs()
+                min_gap = eigval_gaps.min().item()
+                if min_gap < self.energy_eigval_gap_threshold:
+                    energies.append(None)
+                    continue
+
+                # Density matrix: P = 2 * C_occ @ C_occ^T
+                num_electrons = int(atoms.sum().item())
+                num_occ = num_electrons // 2
+                C_occ = orbital_coefficients[:, :num_occ]
+                P = 2.0 * C_occ @ C_occ.T
+
+                # One-electron energy: E = Tr[H · P]
+                E = torch.sum(H_full * P)
+                energies.append(E.to(dtype=dtype))
+
+            except Exception as e:
+                logger.debug(f"Energy computation failed for graph {graph_idx}: {e}")
+                energies.append(None)
+
+        # Stack valid energies, fill None with 0 (will be masked in loss)
+        if all(e is None for e in energies):
+            return None
+
+        energy_tensor = torch.zeros(batch_size, 1, device=device, dtype=dtype)
+        valid_mask = torch.zeros(batch_size, dtype=torch.bool, device=device)
+        for i, e in enumerate(energies):
+            if e is not None:
+                energy_tensor[i, 0] = e
+                valid_mask[i] = True
+
+        return energy_tensor, valid_mask
+
+    # ==========================================
     # Training, Validation, and Testing Steps
     # ==========================================
 
     def training_step(self, batch, batch_idx):
         """
         Single training step for the flow model.
-        
+
         Args:
             batch: Training batch data
             batch_idx: Batch index
-            
+
         Returns:
             Training loss
         """
@@ -2246,22 +2385,73 @@ class LitModel_flow(LitModel):
             batch = self.corrupt_mul(batch)
         else:
             batch = self.corrupt(batch, mul=self.batch_mul)
-            
+
         # Forward pass
         outputs = self(batch, batch.init_ham_t)
         self.cur_batch_size = len(batch)
-        
-        # Compute losses based on mode (finetune or not)
+
+        # Remove "energy" from loss_weights for criterion (we compute it separately)
+        criterion_loss_weights = {
+            k: v for k, v in self.loss_weights.items() if k != "energy"
+        }
+
+        # Compute standard losses (hamiltonian, waloss, etc.)
         errors = self.criterion(
             outputs,
             batch,
-            loss_weights=self.loss_weights,
+            loss_weights=criterion_loss_weights,
             loss_weights_detail=self.loss_weights_detail,
             use_t_scale=self.use_t_scale,
             use_mse_and_mae=self.use_mse_and_mae,
         )
-        
-        loss = errors["loss"]        
+
+        loss = errors["loss"]
+
+        # Compute energy loss if enabled
+        # mode="mse":         L = loss_H + λ * (E_pred - E_ref)²
+        # mode="variational": L = loss_H + λ * E_pred  (requires strong H constraint)
+        if self.energy_loss_enabled and self.loss_weights.get("energy", 0) > 0:
+            energy_result = self._compute_energy_from_outputs(outputs, batch)
+            if energy_result is not None:
+                energy_pred, valid_mask = energy_result
+
+                if valid_mask.any():
+                    energy_weight = self.loss_weights["energy"]
+                    mean_energy = torch.mean(energy_pred[valid_mask])
+
+                    if self.energy_loss_mode == "mse":
+                        # MSE against reference energy from ground truth Hamiltonian
+                        # Compute E_ref = Tr[H_ref · P_ref] using same pipeline
+                        target_outputs = {
+                            "hamiltonian_diagonal_blocks": batch.diagonal_hamiltonian,
+                            "hamiltonian_non_diagonal_blocks": batch.non_diagonal_hamiltonian,
+                        }
+                        with torch.no_grad():
+                            energy_ref_result = self._compute_energy_from_outputs(
+                                target_outputs, batch, apply_scale=False
+                            )
+                        if energy_ref_result is not None:
+                            energy_ref_tensor, ref_valid = energy_ref_result
+                            # Use intersection of valid masks
+                            both_valid = valid_mask & ref_valid
+                            if both_valid.any():
+                                energy_pred_flat = energy_pred[both_valid].view(-1)
+                                energy_ref_flat = energy_ref_tensor[both_valid].view(-1)
+                                energy_mse = torch.mean((energy_pred_flat - energy_ref_flat) ** 2)
+                                energy_mae = torch.mean((energy_pred_flat - energy_ref_flat).abs())
+                                loss = loss + energy_weight * energy_mse
+                                errors["energy_mse"] = energy_mse
+                                errors["energy_mae"] = energy_mae
+                                errors["energy_ref_mean"] = energy_ref_flat.mean()
+                    else:
+                        # Variational: minimize mean predicted energy
+                        loss = loss + energy_weight * mean_energy
+
+                    # Log energy metrics
+                    errors["energy_mean"] = mean_energy
+                    errors["energy_valid_ratio"] = valid_mask.float().mean()
+                    errors["loss"] = loss
+
         self._log_error(errors, "train")
         return loss
 
