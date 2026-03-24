@@ -16,34 +16,34 @@ import torch
 import torch.nn as nn
 from torch.profiler import record_function
 
-from fairchem.core.common import gp_utils
-from fairchem.core.common.distutils import get_device_for_local_rank
-from fairchem.core.common.registry import registry
-from fairchem.core.common.utils import conditional_grad
-from fairchem.core.graph.compute import generate_graph
-from fairchem.core.models.base import HeadInterface
-from fairchem.core.models.uma.common.rotation import (
+from qhflow2._vendor_fairchem import common as gp_utils
+from qhflow2._vendor_fairchem.common import get_device_for_local_rank
+from qhflow2._vendor_fairchem.common import registry
+from qhflow2._vendor_fairchem.common import conditional_grad
+from qhflow2._vendor_fairchem.graph.compute import generate_graph
+from qhflow2._vendor_fairchem.base import HeadInterface
+from qhflow2._vendor_fairchem.uma.rotation import (
     eulers_to_wigner,
     init_edge_rot_euler_angles,
 )
-from fairchem.core.models.uma.common.rotation_cuda_graph import RotMatWignerCudaGraph
-from fairchem.core.models.uma.common.so3 import CoefficientMapping, SO3_Grid
-from fairchem.core.models.uma.nn.embedding_dev import (
+from qhflow2._vendor_fairchem.uma.rotation_cuda_graph import RotMatWignerCudaGraph
+from qhflow2._vendor_fairchem.uma.so3 import CoefficientMapping, SO3_Grid
+from qhflow2._vendor_fairchem.uma.nn.embedding import (
     ChgSpinEmbedding,
     DatasetEmbedding,
     EdgeDegreeEmbedding,
 )
-from fairchem.core.models.uma.nn.layer_norm import (
+from qhflow2._vendor_fairchem.uma.nn.layer_norm import (
     EquivariantLayerNormArray,
     EquivariantLayerNormArraySphericalHarmonics,
     EquivariantRMSNormArraySphericalHarmonics,
     EquivariantRMSNormArraySphericalHarmonicsV2,
     get_normalization_layer,
 )
-from fairchem.core.models.uma.nn.mole_utils import MOLEInterface
-from fairchem.core.models.uma.nn.radial import GaussianSmearing
-from fairchem.core.models.uma.nn.so3_layers import SO3_Linear
-from fairchem.core.models.utils.irreps import cg_change_mat, irreps_sum
+from qhflow2._vendor_fairchem.uma.nn.mole_utils import MOLEInterface
+from qhflow2._vendor_fairchem.uma.nn.radial import GaussianSmearing
+from qhflow2._vendor_fairchem.uma.nn.so3_layers import SO3_Linear
+from qhflow2._vendor_fairchem.irreps import cg_change_mat, irreps_sum
 
 from .escn_md_block import eSCNMD_Block, GridAtomwise, Edgewise, NodeNodeInteraction
 from .escn_md_block import eSCNMD_Block_xy2
@@ -51,10 +51,6 @@ from e3nn.io import SphericalTensor
 from e3nn.o3 import Irreps
 from e3nn import o3
 from torch.cuda.amp import autocast
-
-if TYPE_CHECKING:
-    from fairchem.core.datasets.atomic_data import AtomicData
-
 
 ESCNMD_DEFAULT_EDGE_CHUNK_SIZE = 1024 * 128
 
@@ -107,6 +103,7 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
         use_block_H: bool = True,
         use_time_embedding: bool = True,
         num_ham_gnn_layers: int = 2,
+        use_functional_embedding: bool = False,
     ) -> None:
         super().__init__()
         self.max_num_elements = max_num_elements
@@ -128,6 +125,7 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
         self.use_block_S = use_block_S
         self.use_block_H = use_block_H
         self.use_time_embedding = use_time_embedding
+        self.use_functional_embedding = use_functional_embedding
         self.num_ham_gnn_layers = num_ham_gnn_layers
 
         # NOTE: graph construction related, to remove, except for cutoff
@@ -198,6 +196,8 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
         if self.use_block_H:
             matrix_mix_cnt += 1
         if self.use_block_S:
+            matrix_mix_cnt += 1
+        if self.use_functional_embedding:
             matrix_mix_cnt += 1
         self.mix_matrix = nn.Linear(matrix_mix_cnt * self.sphere_channels, self.sphere_channels)
         
@@ -497,7 +497,11 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
         data_dict["spin"] = torch.zeros(len(data_dict), dtype=torch.long).to(data_dict["pos"].device)
         # data_dict["dataset"] = None
 
-        _, node_feats_H, node_feats_H_init, node_feats_S = ham_features
+        if len(ham_features) == 5:
+            _, node_feats_H, node_feats_H_init, node_feats_S, func_emb = ham_features
+        else:
+            _, node_feats_H, node_feats_H_init, node_feats_S = ham_features
+            func_emb = None
 
         csd_mixed_emb = self.csd_embedding(
             charge=data_dict["charge"],
@@ -581,6 +585,8 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
             x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_S[data_dict["batch"]][:,0:matrix_l_len,:]
         if self.use_time_embedding:
             matrix_mix_list.append(time_message)
+        if self.use_functional_embedding and func_emb is not None:
+            matrix_mix_list.append(func_emb)
 
         node_feats_matrix = self.mix_matrix(torch.cat(matrix_mix_list, dim=1))
         x_message[:, 0, :] = x_message[:, 0, :] + node_feats_matrix
@@ -1314,7 +1320,7 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
 #         return set(no_wd_list)
 
 
-class MLP_EFS_Head(nn.Module, HeadInterface):
+class MLP_EFS_Head(HeadInterface):
     def __init__(
         self,
         backbone: eSCNMDBackbone_ham,
@@ -1420,7 +1426,7 @@ class MLP_EFS_Head(nn.Module, HeadInterface):
         return outputs
 
 
-class MLP_Energy_Head(nn.Module, HeadInterface):
+class MLP_Energy_Head(HeadInterface):
     def __init__(self, backbone: eSCNMDBackbone_ham, reduce: str = "sum") -> None:
         super().__init__()
         self.reduce = reduce
@@ -1464,7 +1470,7 @@ class MLP_Energy_Head(nn.Module, HeadInterface):
             )
 
 
-class Linear_Energy_Head(nn.Module, HeadInterface):
+class Linear_Energy_Head(HeadInterface):
     def __init__(self, backbone: eSCNMDBackbone_ham, reduce: str = "sum") -> None:
         super().__init__()
         self.reduce = reduce
@@ -1500,7 +1506,7 @@ class Linear_Energy_Head(nn.Module, HeadInterface):
             )
 
 
-class Linear_Force_Head(nn.Module, HeadInterface):
+class Linear_Force_Head(HeadInterface):
     def __init__(self, backbone: eSCNMDBackbone_ham) -> None:
         super().__init__()
         self.linear = SO3_Linear(backbone.sphere_channels, 1, lmax=1)
@@ -1554,7 +1560,7 @@ def compose_tensor(
     return r2_tensor
 
 
-class MLP_Stress_Head(nn.Module, HeadInterface):
+class MLP_Stress_Head(HeadInterface):
     def __init__(self, backbone: eSCNMDBackbone_ham, reduce: str = "mean") -> None:
         super().__init__()
         """

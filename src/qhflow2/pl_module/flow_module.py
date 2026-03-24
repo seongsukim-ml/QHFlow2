@@ -198,7 +198,8 @@ class LitModel_flow(LitModel):
         # Set default initialization type based on dataset
         if self.qh9:
             default_init_type = DEFAULT_INIT_P0_TYPE_QH9
-            mask_dict = _get_orbital_mask("def2-svp")
+            basis_name = conf.model.get("basis", "def2-svp")
+            mask_dict = _get_orbital_mask(basis_name)
             self.qh9_orbital_mask = {k: v.clone() for k, v in mask_dict.items()}
             self.qh9_full_orbitals = max(mask.numel() for mask in self.qh9_orbital_mask.values())
         else:
@@ -213,17 +214,26 @@ class LitModel_flow(LitModel):
         # logger.info(f"prior_full_structure: {self.prior_full_structure}")
 
         # Initialize expansion module for equivariant initialization if needed
+        # Use model's output_irrep if available, otherwise fall back to DEFAULT_IRREPS
+        self._flow_irreps = str(self.model.output_irrep) if hasattr(self.model, 'output_irrep') else DEFAULT_IRREPS
         if self.init_p0_type in ["expand", "expand_sym"]:
             self.expand = Expansion(
-                o3.Irreps(DEFAULT_IRREPS),
-                o3.Irreps(DEFAULT_IRREPS),
-                o3.Irreps(DEFAULT_IRREPS),
+                o3.Irreps(self._flow_irreps),
+                o3.Irreps(self._flow_irreps),
+                o3.Irreps(self._flow_irreps),
             )
         
         # Test mode for inference (can be "inference", "test", "predict", or "predict-mul")
         self.mode = conf.get("mode", "train")
         self.test_mode = conf.get("test_mode", "test")
         
+        # Transfer mode configuration
+        # "none": standard training
+        # "cond_only": freeze all except conditioning (FiLM/adaLN params)
+        # "cond_and_heads": freeze backbone, unfreeze conditioning + output heads
+        # "full": unfreeze everything (same as none, but loads from pretrained ckpt)
+        self.transfer_mode = conf.get("transfer_mode", "none")
+
         # Finetune mode configuration
         self.finetune_mode = conf.get("finetune_mode", False)
         if self.finetune_mode:
@@ -442,10 +452,10 @@ class LitModel_flow(LitModel):
                     
             elif self.init_p0_type == "expand":
                 # Use equivariant expansion for structured initialization
-                random_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.atoms.shape[0], -1, device=batch.hamiltonian.device
                 )
-                random_non_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_non_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.full_edge_index.shape[1], -1, device=batch.hamiltonian.device
                 )
                 random_diag_ham = self.expand(random_diag_tensor)
@@ -458,10 +468,10 @@ class LitModel_flow(LitModel):
                 
             elif self.init_p0_type == "expand_sym":
                 # Symmetric expansion initialization
-                random_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.atoms.shape[0], -1, device=batch.hamiltonian.device
                 )
-                random_non_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_non_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.full_edge_index.shape[1], -1, device=batch.hamiltonian.device
                 )
                 random_diag_ham = self.expand(random_diag_tensor)
@@ -536,7 +546,7 @@ class LitModel_flow(LitModel):
                     
             elif self.init_p0_type == "expand":
                 # Equivariant initialization for QH9
-                random_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.atoms.shape[0], -1, device=self.device
                 )
                 random_diag_ham = self.expand(random_diag_tensor)
@@ -2934,10 +2944,10 @@ class LitModel_flow(LitModel):
                     
             elif self.init_p0_type == "expand":
                 # Equivariant expansion initialization
-                random_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.atoms.shape[0], -1, device=batch.atoms.device
                 )
-                random_non_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_non_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.full_edge_index.shape[1], -1, device=batch.full_edge_index.device
                 )
                 random_diag_ham = self.expand(random_diag_tensor)
@@ -3047,7 +3057,7 @@ class LitModel_flow(LitModel):
                     
             elif self.init_p0_type == "expand":
                 # Equivariant initialization for QH9
-                random_diag_tensor = o3.Irreps(DEFAULT_IRREPS).randn(
+                random_diag_tensor = o3.Irreps(self._flow_irreps).randn(
                     batch.atoms.shape[0], -1, device=self.device
                 )
                 random_diag_ham = self.expand(random_diag_tensor)

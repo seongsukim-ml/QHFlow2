@@ -2,34 +2,45 @@ import torch
 import math
 import torch.nn.functional as F
 
+# ── Functional / Basis Registry ──────────────────────────────────────────────
+FUNCTIONAL_REGISTRY = {"pbe": 0, "pbe0": 1, "b3lyp": 2, "r2scan": 3}
+BASIS_REGISTRY = {"def2-svp": 0, "def2-tzvp": 1, "def2-svp-nabla": 2}
+NUM_FUNCTIONALS = len(FUNCTIONAL_REGISTRY)
+NUM_BASIS = len(BASIS_REGISTRY)
+
 def get_orbital_mask(basis):
     """Get orbital masks for different atomic numbers.
     
     Returns:
         dict: Mapping from atomic number to orbital indices
     """
-    assert basis in ["def2-svp", "def2-tzvp"], f"Invalid basis: {basis}"
+    assert basis in ["def2-svp", "def2-svp-nabla", "def2-tzvp"], f"Invalid basis: {basis}"
+
+    orbital_mask = {}
 
     if basis == "def2-svp":
-        # Define orbital indices for different shell types
-        idx_1s_2s = torch.tensor([0, 1])  # s orbitals
-        idx_2p = torch.tensor([3, 4, 5])  # p orbitals
-        
-        # Combine s and p orbitals for light elements (H, He)
-        orbital_mask_light = torch.cat([idx_1s_2s, idx_2p])
-        
-        # Full orbital set for heavier elements (includes d orbitals)
+        orbital_mask_light = torch.tensor([0, 1, 3, 4, 5])  # ssp
         orbital_mask_heavy = torch.arange(14)
-        
-        # Create mapping: atomic numbers 1,2 use light mask, others use heavy mask
-        orbital_mask = {}
         for atomic_num in range(1, 11):
             orbital_mask[atomic_num] = (
                 orbital_mask_light if atomic_num <= 2 else orbital_mask_heavy
             )
+
+    elif basis == "def2-svp-nabla":
+        # nablaDFT: def2-SVP with S, Cl, Br (max 32 orbitals)
+        # Block layout: [5 s-slots | 12 p-slots (4×3) | 15 d-slots (3×5)] = 32
+        orbital_mask[1]  = torch.tensor([0, 1, 5, 6, 7])  # H: ssp (5)
+        orbital_mask[6]  = torch.tensor([0,1,2, 5,6,7,8,9,10, 17,18,19,20,21])  # C: sssppd (14)
+        orbital_mask[7]  = orbital_mask[6]  # N
+        orbital_mask[8]  = orbital_mask[6]  # O
+        orbital_mask[9]  = orbital_mask[6]  # F
+        orbital_mask[16] = torch.tensor([0,1,2,3, 5,6,7,8,9,10,11,12,13, 17,18,19,20,21])  # S: sssspppd (18)
+        orbital_mask[17] = orbital_mask[16]  # Cl
+        orbital_mask[35] = torch.arange(32)  # Br: sssssppppddd (32)
+
     elif basis == "def2-tzvp":
         raise ValueError(f"def2-tzvp is not supported yet")
-    
+
     return orbital_mask
 
 def calculate_transpose_indices(data, radius_edges):

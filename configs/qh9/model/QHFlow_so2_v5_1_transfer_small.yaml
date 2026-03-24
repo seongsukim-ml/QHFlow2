@@ -1,0 +1,15 @@
+model_name: QHFlow_so2_v5_1_transfer
+version: QHFlow_so2_v5_1_transfer
+
+hidden_size: 64
+bottle_hidden_size: 32
+use_block_S: True
+use_block_H: True
+num_gnn_layers: 3
+num_ham_gnn_layers: 2
+
+# ── Functional/Basis Transfer ──
+num_functionals: 4       # pbe=0, pbe0=1, b3lyp=2, r2scan=3
+cond_method: film        # film | adaln | none
+heads:                   # output heads (default: [hamiltonian])
+  - hamiltonian

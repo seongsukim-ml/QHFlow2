@@ -107,7 +107,33 @@ class LitModel(pl.LightningModule):
         self.loss_weights = conf.loss_weights
         self.model = get_model(conf.model)
         self.model.set(device)
-        
+
+        # Load pretrained weights (before freeze, so all params are populated)
+        pretrained_ckpt = getattr(conf, "pretrained_ckpt", None)
+        if pretrained_ckpt and hasattr(self.model, "load_pretrained"):
+            logger.info(f"Loading pretrained weights from: {pretrained_ckpt}")
+            missing, unexpected = self.model.load_pretrained(pretrained_ckpt)
+            trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+            total = sum(p.numel() for p in self.model.parameters())
+            logger.info(f"After load: {len(missing)} new params, {total:,} total, {trainable:,} trainable")
+
+        # Transfer mode: freeze parameters based on config
+        transfer_mode = getattr(conf, "transfer_mode", "none")
+        if transfer_mode == "cond_only" and hasattr(self.model, "freeze_all_except_conditioning"):
+            self.model.freeze_all_except_conditioning()
+            logger.info(f"Transfer mode '{transfer_mode}': frozen all except conditioning")
+        elif transfer_mode == "cond_and_heads" and hasattr(self.model, "freeze_all_except_conditioning_and_heads"):
+            self.model.freeze_all_except_conditioning_and_heads()
+            logger.info(f"Transfer mode '{transfer_mode}': frozen backbone, conditioning + heads trainable")
+        elif transfer_mode == "backbone_only" and hasattr(self.model, "freeze_backbone"):
+            self.model.freeze_backbone()
+            logger.info(f"Transfer mode '{transfer_mode}': frozen backbone")
+
+        if transfer_mode != "none":
+            trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+            total = sum(p.numel() for p in self.model.parameters())
+            logger.info(f"After freeze: {trainable:,} / {total:,} params trainable ({100*trainable/total:.1f}%)")
+
         # EMA setup
         self.ema = None
         self.ema_start_epoch = getattr(conf, "ema_start_epoch", -1)
@@ -624,21 +650,21 @@ class LitModel(pl.LightningModule):
     @staticmethod
     def post_processing(batch, default_type):
         """Post-process batch data to ensure correct tensor shapes and types."""
-        if "hamiltonian" in batch.keys:
+        if "hamiltonian" in batch.keys():
             if batch.hamiltonian.dim() == 2:
                 batch.hamiltonian = batch.hamiltonian.view(
                     batch.hamiltonian.shape[0] // batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                 )
-        if "overlap" in batch.keys:
+        if "overlap" in batch.keys():
             if batch.overlap.dim() == 2:
                 batch.overlap = batch.overlap.view(
                     batch.overlap.shape[0] // batch.overlap.shape[1],
                     batch.overlap.shape[1],
                     batch.overlap.shape[1],
                 )
-        for key in batch.keys:
+        for key in batch.keys():
             if type(batch[key]) == torch.Tensor:
                 if torch.is_floating_point(batch[key]):
                     batch[key] = batch[key].type(default_type)

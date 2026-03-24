@@ -4,13 +4,13 @@
 
 ## Current — 실험 모니터링
 
-- [ ] 6개 실험 완료 대기 및 결과 비교
-  - baseline (GPU 0, 99h79r7e) — 83K step, loss 0.00028
-  - energy_mse λ=0.01 (GPU 1, 73kin396) — 20K step, loss 0.0074
-  - energy_mse_strong λ=0.1 (GPU 2, s1g3ozza) — 21K step, loss 0.008
-  - so2exp bw=1 (GPU 3, okungs4t) — 83K step, loss 0.006
-  - bf16 bs32 (GPU 5, xocgo3z9) — 14K step, loss 0.0013
-  - bf16+bs128 (GPU 6, 5t511xch) — 3.4K step, loss 0.0015
+- [ ] baseline 실험 완료 대기
+  - baseline — 계속 실행 중
+- [x] 불필요 실험 중지 (2026-03-25)
+  - ~~energy_mse_strong~~ — 중지
+  - ~~cpexp~~ — 중지
+  - ~~perl~~ — 중지
+  - 사유: baseline만 남기고 GPU 자원 확보
 
 ## Throughput 개선 (즉시 적용 가능)
 
@@ -62,6 +62,27 @@
   - LDA/PBE/SCAN 전체 PyTorch 구현 완료, JAX와 수치 일치 검증됨
   - Grid + AO 데이터 필요 → dataset에 추가 또는 PySCF에서 on-the-fly 계산
 - [ ] Learnable XC functional (Dick2021/Nagai2020) 실험 설계
+
+## Functional/Basis Transfer (Phase 1 구현 완료)
+
+- [x] Conditioning 모듈 구현 (FiLM + AdaLN) → `models/modules/conditioning.py`
+- [x] Multi-head output 구조 → `_predict_head()`, configurable heads
+- [x] Freeze 유틸리티 → `freeze_backbone()`, `freeze_all_except_conditioning_and_heads()`, etc.
+- [x] Dataset에 `functional_id`/`basis_id` 필드 추가
+- [x] Config 지원 (`cond_method`, `num_functionals`, `heads`, `transfer_mode`)
+- [x] 사용 가이드 작성 → `docs/2026-03-25_functional_transfer_guide.md`
+- [ ] EdgeDegreeEmbedding 호환 수정 후 full forward pass 검증
+- [ ] QH9Stable baseline regression 테스트 (`cond_method=film` vs 기존)
+- [ ] dft-dataset으로 multi-functional 데이터 생성 (PBE, PBE0 for QH9 geometries)
+- [ ] Multi-task training 실험
+- [ ] Fine-tuning transfer 실험 (PBE pre-train → PBE0 fine-tune)
+
+## Functional/Basis Transfer (Phase 2 — 미착수)
+
+- [ ] Superset output_irrep (def2-tzvp 기준 37dim)
+- [ ] Input padding + output masking
+- [ ] Orbital mask 확장 (`get_orbital_mask` → superset dim)
+- [ ] def2-tzvp 데이터 생성 + 혼합 학습 검증
 
 ## Backlog
 
