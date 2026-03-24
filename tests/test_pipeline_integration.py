@@ -19,11 +19,7 @@ import shutil
 import numpy as np
 import pytest
 
-# Setup paths
-_PROJECT = os.path.join(os.path.dirname(__file__), "..")
-sys.path.insert(0, os.path.join(_PROJECT, "src"))
-sys.path.insert(0, os.path.join(_PROJECT, "src", "qhflow2"))
-sys.path.insert(0, "/home1/irteam/data-vol1/projects/dft-dataset/src")
+# No sys.path hacks needed — both packages installed via pip install -e
 
 
 # ── Fixtures ─────────────────────────────────────────────────────
@@ -32,7 +28,7 @@ sys.path.insert(0, "/home1/irteam/data-vol1/projects/dft-dataset/src")
 @pytest.fixture
 def water_system():
     """Water molecule (O, H, H) with random symmetric matrices."""
-    from molecule import BasisInfo
+    from dft_dataset.molecule import BasisInfo
 
     atoms = np.array([8, 1, 1], dtype=np.int32)
     basis = BasisInfo.from_name("def2-svp", convention="pyscf")
@@ -50,7 +46,7 @@ def water_system():
 @pytest.fixture
 def ch4_system():
     """CH4 molecule (C, H, H, H, H)."""
-    from molecule import BasisInfo
+    from dft_dataset.molecule import BasisInfo
 
     atoms = np.array([6, 1, 1, 1, 1], dtype=np.int32)
     basis = BasisInfo.from_name("def2-svp", convention="pyscf")
@@ -78,7 +74,7 @@ class TestOrbitalMatrix:
     """OrbitalMatrix convention conversion and block decomposition."""
 
     def test_creation(self, water_system):
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -91,7 +87,7 @@ class TestOrbitalMatrix:
 
     def test_convention_roundtrip(self, water_system):
         """pyscf → e3nn → pyscf should be lossless."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -106,7 +102,7 @@ class TestOrbitalMatrix:
         np.testing.assert_allclose(om.data, om_back.data, atol=1e-14)
 
     def test_same_convention_returns_self(self, water_system):
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -118,7 +114,7 @@ class TestOrbitalMatrix:
 
     def test_block_roundtrip_shell(self, water_system):
         """matrix → to_blocks(shell) → to_dense should be lossless."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -131,7 +127,7 @@ class TestOrbitalMatrix:
 
     def test_block_roundtrip_contiguous(self, water_system):
         """matrix → to_blocks(contiguous) → to_dense should be lossless."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -144,7 +140,7 @@ class TestOrbitalMatrix:
 
     def test_block_shapes(self, ch4_system):
         """Check block shapes for CH4 (5 atoms)."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=ch4_system["H"],
@@ -161,8 +157,8 @@ class TestOrbitalMatrix:
     def test_matches_qhflow2_cut_matrix(self, water_system):
         """OrbitalMatrix.to_blocks() should match QHFlow2's _cut_matrix_3d."""
         import torch
-        from orbital_matrix import OrbitalMatrix
-        from common.matrix_transforms import _cut_matrix_3d
+        from dft_dataset.orbital_matrix import OrbitalMatrix
+        from qhflow2.common.matrix_transforms import _cut_matrix_3d
 
         atoms = water_system["atoms"]
         H = water_system["H"]
@@ -193,7 +189,7 @@ class TestOrbitalMatrix:
 
     def test_serialization(self, water_system):
         """OrbitalMatrix to_dict/from_dict roundtrip."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -207,7 +203,7 @@ class TestOrbitalMatrix:
 
     def test_blocks_serialization(self, water_system):
         """OrbitalBlocks to_dict/from_dict roundtrip."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -216,7 +212,7 @@ class TestOrbitalMatrix:
         )
         blocks = om.to_blocks(pad_to=14)
         d = blocks.to_dict()
-        from orbital_matrix import OrbitalBlocks
+        from dft_dataset.orbital_matrix import OrbitalBlocks
 
         blocks2 = OrbitalBlocks.from_dict(d)
         np.testing.assert_allclose(blocks.diagonal, blocks2.diagonal, atol=1e-14)
@@ -226,7 +222,7 @@ class TestOrbitalMatrix:
 
     def test_atom_block(self, water_system):
         """atom_block() extracts correct submatrix."""
-        from orbital_matrix import OrbitalMatrix
+        from dft_dataset.orbital_matrix import OrbitalMatrix
 
         om = OrbitalMatrix(
             data=water_system["H"],
@@ -312,7 +308,7 @@ class TestPreprocessedDataset:
         return lmdb_path
 
     def test_load_train_mode(self, small_lmdb):
-        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
 
         ds = QH9PreprocessedDataset(small_lmdb, split="random", mode="train")
         assert len(ds) == 5
@@ -321,7 +317,7 @@ class TestPreprocessedDataset:
         assert len(ds.test_mask) == 1
 
     def test_getitem_returns_data(self, small_lmdb):
-        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
         import torch
 
         ds = QH9PreprocessedDataset(small_lmdb, split="random", mode="train")
@@ -336,7 +332,7 @@ class TestPreprocessedDataset:
         assert data.atoms.dtype == torch.int64
 
     def test_eval_mode_has_packed(self, small_lmdb):
-        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
 
         ds = QH9PreprocessedDataset(small_lmdb, split="random", mode="eval")
         data = ds.get(0)
@@ -346,7 +342,7 @@ class TestPreprocessedDataset:
         assert hasattr(data, "init_ham_packed")
 
     def test_train_mode_no_packed(self, small_lmdb):
-        from dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+        from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
 
         ds = QH9PreprocessedDataset(small_lmdb, split="random", mode="train")
         data = ds.get(0)
@@ -364,7 +360,7 @@ class TestPredictionResult:
     """PredictionResult save/load/compare."""
 
     def test_save_load_roundtrip(self, tmp_dir):
-        from prediction import PredictionResult
+        from dft_dataset.prediction import PredictionResult
 
         rng = np.random.RandomState(42)
         n = 10
@@ -394,7 +390,7 @@ class TestPredictionResult:
         assert len(loaded.matrices["hamiltonian"]) == n
 
     def test_compare_hamiltonians(self, tmp_dir):
-        from prediction import PredictionResult
+        from dft_dataset.prediction import PredictionResult
 
         rng = np.random.RandomState(42)
         n = 5
@@ -416,7 +412,7 @@ class TestPredictionResult:
         assert report.matrix_errors["hamiltonian"]["mae"] < 0.1  # noise was 0.01
 
     def test_describe(self):
-        from prediction import PredictionResult
+        from dft_dataset.prediction import PredictionResult
 
         rng = np.random.RandomState(42)
         result = PredictionResult(
@@ -436,7 +432,7 @@ class TestPropertiesFromHamiltonian:
     """properties_from_hamiltonian eigenvalue extraction."""
 
     def test_eigenvalues_from_identity_overlap(self):
-        from pipeline import properties_from_hamiltonian
+        from dft_dataset.pipeline import properties_from_hamiltonian
 
         rng = np.random.RandomState(42)
         nao = 10
@@ -458,7 +454,7 @@ class TestPropertiesFromHamiltonian:
         assert props["gap_eV"] >= 0
 
     def test_homo_lumo_consistency(self):
-        from pipeline import properties_from_hamiltonian
+        from dft_dataset.pipeline import properties_from_hamiltonian
 
         nao = 10
         H = np.diag(np.arange(nao, dtype=np.float64))
@@ -471,7 +467,7 @@ class TestPropertiesFromHamiltonian:
 
     def test_pred_vs_gt_comparison(self):
         """Comparing predicted H vs GT H should give small errors if close."""
-        from pipeline import properties_from_hamiltonian
+        from dft_dataset.pipeline import properties_from_hamiltonian
 
         rng = np.random.RandomState(42)
         nao = 20
