@@ -1350,6 +1350,189 @@ class TDNExpansion(nn.Module):
         )
 
 
+class PerLExpansion(nn.Module):
+    """CG expansion with per-l_in shared weights.
+
+    Middle ground between Expansion (19 per-path W) and TDN (1 shared W).
+    Uses one W per input angular momentum l_in: 5 weight matrices for lmax=4.
+
+    This preserves angular selectivity (the main thing TDN loses)
+    while still reducing the weight contraction from 19 to 5 matmuls.
+
+    num_path_weight = n_l_in * c_in * mul_max1 * mul_max2
+    For def2-svp: 5 * 32 * 3 * 3 = 1440 (vs CG=1792, TDN=288)
+    """
+
+    def __init__(self, irrep_in, irrep_out_1, irrep_out_2, cp_rank=None):
+        super().__init__()
+        self.irrep_in = irrep_in
+        self.irrep_out_1 = irrep_out_1
+        self.irrep_out_2 = irrep_out_2
+        self.cp_rank = cp_rank
+
+        self.mul_in = irrep_in[0].mul
+        self.mul_max1 = max(mul for mul, _ in irrep_out_1)
+        self.mul_max2 = max(mul for mul, _ in irrep_out_2)
+        self.n_l_in = len(irrep_in)  # number of distinct l_in values
+        self.D_in = sum(ir.dim for _, ir in irrep_in)
+
+        # Per-l_in weight: W_{l_in} ∈ R^{c_in × mul_max1 × mul_max2} each
+        # fc outputs: n_l_in * c_in * mul_max1 * mul_max2
+        self.num_path_weight = self.n_l_in * self.mul_in * self.mul_max1 * self.mul_max2
+        self.num_bias = self.mul_max1 * self.mul_max2  # only for l_in=0
+        self.num_weights = self.num_path_weight + self.num_bias
+
+        # Build instructions for compatibility
+        self.instructions = []
+        for i, (num_in, ir_in_i) in enumerate(irrep_in):
+            for j, (num_out1, ir_out1) in enumerate(irrep_out_1):
+                for k, (num_out2, ir_out2) in enumerate(irrep_out_2):
+                    if ir_in_i in ir_out1 * ir_out2:
+                        self.instructions.append(
+                            [i, j, k, True, 1.0, [num_in, num_out1, num_out2]]
+                        )
+
+        # Group paths by (j, k) output block
+        self._groups = {}
+        for ins in self.instructions:
+            i_idx, j_idx, k_idx = ins[0], ins[1], ins[2]
+            l_in = irrep_in[i_idx].ir.l
+            l1 = irrep_out_1[j_idx].ir.l
+            l2 = irrep_out_2[k_idx].ir.l
+            mul1 = irrep_out_1[j_idx].mul
+            mul2 = irrep_out_2[k_idx].mul
+
+            key = (j_idx, k_idx)
+            if key not in self._groups:
+                self._groups[key] = {
+                    'l1': l1, 'l2': l2, 'mul1': mul1, 'mul2': mul2, 'paths': [],
+                }
+            self._groups[key]['paths'].append({
+                'l_in': l_in, 'l_in_idx': i_idx,
+                'ang_size': 2 * l_in + 1,
+            })
+
+        # Precompute: input angular slices per l_in
+        self._l_in_slices = []
+        offset = 0
+        for _, ir in irrep_in:
+            self._l_in_slices.append((offset, offset + ir.dim))
+            offset += ir.dim
+
+        # Precompute concatenated CG tensors per (j, k) block
+        for (j_idx, k_idx), grp in self._groups.items():
+            l1, l2 = grp['l1'], grp['l2']
+            d1, d2 = 2 * l1 + 1, 2 * l2 + 1
+            P = sum(p['ang_size'] for p in grp['paths'])
+
+            M = torch.zeros(d1, d2, P)
+            offset = 0
+            for p in grp['paths']:
+                d_in = p['ang_size']
+                M[:, :, offset:offset + d_in] = o3.wigner_3j(l1, l2, p['l_in'])
+                p['cg_offset'] = offset
+                p['cg_end'] = offset + d_in
+                offset += d_in
+
+            if cp_rank is not None and cp_rank < P:
+                M_mat = M.reshape(d1 * d2, P)
+                U, S, Vh = torch.linalg.svd(M_mat, full_matrices=False)
+                R = min(cp_rank, P, d1 * d2)
+                AB = (U[:, :R] * S[:R].unsqueeze(0)).reshape(d1, d2, R)
+                C = Vh[:R, :].T
+                self.register_buffer(f'AB_{j_idx}_{k_idx}', AB)
+                self.register_buffer(f'C_{j_idx}_{k_idx}', C)
+                grp['use_cp'] = True
+            else:
+                self.register_buffer(f'M_{j_idx}_{k_idx}', M)
+                grp['use_cp'] = False
+
+    def forward(self, x_in, weights=None, bias_weights=None):
+        B = x_in.shape[0]
+        device, dtype = x_in.device, x_in.dtype
+        c = self.mul_in
+        mu1, mu2 = self.mul_max1, self.mul_max2
+        n_l = self.n_l_in
+
+        # Step 1: Parse input → per-l_in features [B, c, 2l+1]
+        x_per_l = []
+        for sl, (mul, ir) in zip(self.irrep_in.slices(), self.irrep_in):
+            x_per_l.append(x_in[:, sl].reshape(B, mul, ir.dim))
+
+        # Step 2: Per-l_in weight contraction — 5 matmuls (not 19)
+        # weights layout: [B, n_l_in * c * mu1 * mu2]
+        # Split into n_l_in chunks of [B, c, mu1, mu2]
+        if weights is not None:
+            W_all = weights.reshape(B, n_l, c, mu1, mu2)
+        else:
+            W_all = torch.ones(1, n_l, c, mu1, mu2, device=device, dtype=dtype) / c
+
+        # f_per_l[l_idx] = W_{l} @ x_{l} → [B, mu1, mu2, 2l+1]
+        f_per_l = []
+        for l_idx in range(n_l):
+            W_l = W_all[:, l_idx]  # [B, c, mu1, mu2]
+            x_l = x_per_l[l_idx]  # [B, c, 2l+1]
+            f_l = torch.einsum('bcuv, bcd -> buvd', W_l, x_l) / c
+            f_per_l.append(f_l)
+
+        # Step 3: Bias for l_in=0
+        if bias_weights is not None:
+            bias = bias_weights.reshape(B, mu1, mu2)
+            f_per_l[0] = f_per_l[0] + bias.unsqueeze(-1)
+
+        # Step 4: CG expansion per output block
+        outputs = {}
+        for (j_idx, k_idx), grp in self._groups.items():
+            mul1, mul2 = grp['mul1'], grp['mul2']
+            l1, l2 = grp['l1'], grp['l2']
+
+            # Gather per-l_in features for this block's paths, concatenate
+            f_parts = []
+            for p in grp['paths']:
+                f_l = f_per_l[p['l_in_idx']][:, :mul1, :mul2, :]  # [B, mul1, mul2, 2l+1]
+                f_parts.append(f_l)
+            f_block = torch.cat(f_parts, dim=-1)  # [B, mul1, mul2, P]
+
+            if grp['use_cp']:
+                C_jk = getattr(self, f'C_{j_idx}_{k_idx}')
+                AB_jk = getattr(self, f'AB_{j_idx}_{k_idx}')
+                h = torch.einsum('buvp, pr -> buvr', f_block, C_jk)
+                H_block = torch.einsum('ijr, buvr -> buivj', AB_jk, h)
+            else:
+                M_jk = getattr(self, f'M_{j_idx}_{k_idx}')
+                H_block = torch.einsum('ijp, buvp -> buivj', M_jk, f_block)
+
+            H_block = H_block.reshape(B, mul1 * (2*l1+1), mul2 * (2*l2+1))
+            outputs[(j_idx, k_idx)] = H_block
+
+        # Step 5: Assemble
+        rows = []
+        for i in range(len(self.irrep_out_1)):
+            blocks = []
+            for j in range(len(self.irrep_out_2)):
+                if (i, j) in outputs:
+                    blocks.append(outputs[(i, j)])
+                else:
+                    blocks.append(torch.zeros(
+                        B, self.irrep_out_1[i].dim, self.irrep_out_2[j].dim,
+                        device=device, dtype=dtype))
+            rows.append(torch.cat(blocks, dim=-1))
+        return torch.cat(rows, dim=-2)
+
+    @property
+    def device(self):
+        for buf in self.buffers():
+            return buf.device
+        return next(self.parameters()).device
+
+    def __repr__(self):
+        n_groups = len(self._groups)
+        return (
+            f"PerLExpansion({self.n_l_in} l_in groups → {n_groups} blocks, "
+            f"w={self.num_path_weight}, bias={self.num_bias})"
+        )
+
+
 class OneBody_Reduction(nn.Module):
     r"""The one-body reduction module from the
     `"Informing geometric deep learning with electronic interactionsto accelerate quantum chemistry"
