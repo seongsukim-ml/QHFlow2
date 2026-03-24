@@ -31,8 +31,12 @@ from typing import Any, Callable
 import numpy as np
 
 import sys
-sys.path.insert(0, "/home1/irteam/data-vol1/projects/dft-dataset")
-from src.calculator import MLDFTCalculator  # noqa: E402
+
+# Import dft_dataset as a proper package
+_dft_project = "/home1/irteam/data-vol1/projects/dft-dataset"
+if _dft_project not in sys.path:
+    sys.path.insert(0, _dft_project)
+from dft_dataset.calculator import MLDFTCalculator  # noqa: E402
 
 from ase.calculators.calculator import all_changes
 
@@ -201,12 +205,8 @@ class QHFlowCalculator(MLDFTCalculator):
         spin: int = 0,
     ) -> None:
         from ase.units import Hartree, Bohr
-        # Import from dft-dataset (add src/ to path for bare imports)
-        _dft_src = "/home1/irteam/data-vol1/projects/dft-dataset/src"
-        if _dft_src not in sys.path:
-            sys.path.insert(0, _dft_src)
-        from solvers import build_density_matrix
-        from molecule import Molecule
+        from dft_dataset.solvers import build_density_matrix
+        from dft_dataset.molecule import Molecule
 
         if properties is None:
             properties = self.implemented_properties

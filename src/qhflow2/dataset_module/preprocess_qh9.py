@@ -620,9 +620,9 @@ def main():
             elapsed = time.time() - t_start
             rate = (idx + 1) / elapsed
             eta = (total - idx - 1) / rate
+            q_info = f", Q cache: {len(q_cache)} keys" if q_cache is not None else ""
             logger.info(
-                f"  [{idx + 1}/{total}] {rate:.1f} samples/s, "
-                f"Q cache: {len(q_cache)} keys, ETA: {eta / 60:.1f} min"
+                f"  [{idx + 1}/{total}] {rate:.1f} samples/s{q_info}, ETA: {eta / 60:.1f} min"
             )
 
     # Flush remaining
