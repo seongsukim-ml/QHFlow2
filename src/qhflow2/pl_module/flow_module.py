@@ -3407,11 +3407,8 @@ def _save_prediction_result(lit_model, output_dir):
       - comparison_report.txt — metrics vs GT (if GT available)
       - property_metrics.npz — HOMO/LUMO/gap errors
     """
-    import sys
-    sys.path.insert(0, "/home1/irteam/data-vol1/projects/dft-dataset/src")
-
-    from prediction import PredictionResult
-    from pipeline import properties_from_hamiltonian
+    from dft_dataset.prediction import PredictionResult
+    from dft_dataset.pipeline import properties_from_hamiltonian
     import numpy as np
     from qhflow2.common.custom_logger import get_logger
     logger = get_logger(__name__)
