@@ -24,6 +24,7 @@ from qhflow2.common.matrix_transforms import (
 from qhflow2.common.metric import cal_orbital_and_energies
 from qhflow2.common.units import BOHR2ANG
 from qhflow2.dataset_module.lmdb_shard import LMDBShard_maker_db
+from qhflow2.models.utils import FUNCTIONAL_REGISTRY, BASIS_REGISTRY
 from qhflow2.utils import Onsite_3idx_Overlap_Integral
 
 
@@ -158,6 +159,8 @@ class BaseQH9Dataset(InMemoryDataset):
         include_dft_forces: bool = True,
         include_cut_orbital_coefficients: bool = True,
         cut_coeff_cache_type: str = "both",
+        functional: str = "b3lyp",
+        basis_name: str = "def2-svp",
     ) -> None:
         if not hasattr(self, "shard_cls"):
             raise AttributeError("Derived dataset must define shard_cls")
@@ -190,6 +193,10 @@ class BaseQH9Dataset(InMemoryDataset):
                 f"got '{cut_coeff_cache_type}'"
             )
         self.cut_coeff_cache_type = cut_coeff_cache_type
+
+        # Functional / basis conditioning IDs
+        self._functional_id = FUNCTIONAL_REGISTRY.get(functional, 0)
+        self._basis_id = BASIS_REGISTRY.get(basis_name, 0)
 
         self.lmdb_path_list = [
             os.path.join(
@@ -709,6 +716,10 @@ class BaseQH9Dataset(InMemoryDataset):
                 edge_index_full
             )
 
+        # Resolve functional/basis IDs from dataset-level config
+        functional_id = getattr(self, "_functional_id", FUNCTIONAL_REGISTRY.get("b3lyp", 0))
+        basis_id = getattr(self, "_basis_id", BASIS_REGISTRY.get("def2-svp", 0))
+
         data_kwargs: Dict[str, Any] = {
             "pos": pos,
             "atoms": atoms.view(-1, 1),
@@ -720,6 +731,8 @@ class BaseQH9Dataset(InMemoryDataset):
             "num_nodes": num_nodes,
             "h_dim": torch.tensor(h_dim, dtype=torch.int64),
             "idx": idx if idx is not None else None, # For debugging
+            "functional_id": torch.tensor(functional_id, dtype=torch.long),
+            "basis_id": torch.tensor(basis_id, dtype=torch.long),
         }
         
         if chc_block_trans is not None:
