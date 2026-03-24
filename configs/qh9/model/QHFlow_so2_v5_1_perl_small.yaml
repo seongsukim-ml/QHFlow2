@@ -1,0 +1,9 @@
+model_name: QHFlow_so2_v5_1_perl
+version: QHFlow_so2_v5_1_perl
+
+hidden_size: 64
+bottle_hidden_size: 32
+use_block_S: True
+use_block_H: True
+num_gnn_layers: 3
+num_ham_gnn_layers: 2
