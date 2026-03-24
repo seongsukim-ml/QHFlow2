@@ -33,14 +33,9 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import torch
 
-# Add paths
-_SRC = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_SRC))
-sys.path.insert(0, str(Path("/home1/irteam/data-vol1/projects/dft-dataset/src")))
-
-from molecule import BasisInfo, unpack_upper_triangle
-from orbital_matrix import OrbitalMatrix
-from conventions import build_reorder_indices, reorder_matrix
+from dft_dataset.molecule import BasisInfo, unpack_upper_triangle
+from dft_dataset.orbital_matrix import OrbitalMatrix
+from dft_dataset.conventions import build_reorder_indices, reorder_matrix
 
 from qhflow2.common.custom_logger import setup_global_logger, get_logger
 
@@ -59,6 +54,14 @@ BOHR2ANG = 0.529177210903
 
 def init_q_infrastructure():
     """Q tensor 계산에 필요한 Q_dict와 convention 로드."""
+    import shutil
+
+    # PSI4 needs auxiliary.gbs in cwd
+    aux_src = os.path.join(os.path.dirname(__file__), "..", "experiment", "auxiliary.gbs")
+    aux_dst = os.path.join(os.getcwd(), "auxiliary.gbs")
+    if os.path.exists(aux_src) and not os.path.exists(aux_dst):
+        shutil.copy(aux_src, aux_dst)
+
     from qhflow2.utils import Onsite_3idx_Overlap_Integral
     from qhflow2.common.matrix_transforms import get_convention_dict, matrix_transform_single
 
@@ -184,9 +187,10 @@ def cut_q_tensor(
 def process_sample(
     raw_dict: Dict[str, Any],
     idx: int,
-    Q_dict: dict,
-    convention_dict: dict,
-    q_cache: Dict[tuple, Tuple[np.ndarray, np.ndarray]],
+    Q_dict: dict = None,
+    convention_dict: dict = None,
+    q_cache: Dict[tuple, Tuple[np.ndarray, np.ndarray]] = None,
+    include_q_tensor: bool = False,
 ) -> Dict[str, Any]:
     """단일 샘플 전처리.
 
@@ -195,7 +199,6 @@ def process_sample(
     """
     atoms = np.frombuffer(raw_dict["atoms"], np.int32).copy()
     num_nodes = raw_dict["num_nodes"]
-    h_dim = raw_dict["h_dim"]
 
     # Positions
     pos = np.frombuffer(raw_dict["pos"], np.float64).reshape(-1, 3).copy()
@@ -203,14 +206,25 @@ def process_sample(
     if pos_unit.lower() == "bohr":
         pos = pos * BOHR2ANG
 
-    # Unpack matrices
-    packed_H = np.frombuffer(raw_dict["packed_hamiltonian"], np.float64)
-    packed_S = np.frombuffer(raw_dict["packed_overlap"], np.float64)
-    packed_H_init = np.frombuffer(raw_dict["packed_initial_hamiltonian"], np.float64)
-
-    H_full = unpack_upper_triangle(packed_H, h_dim)
-    S_full = unpack_upper_triangle(packed_S, h_dim)
-    H_init_full = unpack_upper_triangle(packed_H_init, h_dim)
+    # Unpack matrices — support both shard format and split format
+    if "packed_hamiltonian" in raw_dict:
+        # Shard format: packed upper triangle
+        packed_H = np.frombuffer(raw_dict["packed_hamiltonian"], np.float64)
+        packed_S = np.frombuffer(raw_dict["packed_overlap"], np.float64)
+        packed_H_init = np.frombuffer(raw_dict["packed_initial_hamiltonian"], np.float64)
+        h_dim = raw_dict["h_dim"]
+        H_full = unpack_upper_triangle(packed_H, h_dim)
+        S_full = unpack_upper_triangle(packed_S, h_dim)
+        H_init_full = unpack_upper_triangle(packed_H_init, h_dim)
+    else:
+        # Split format (keys: Ham, ovlp, init_ham) — full n×n matrices
+        H_raw = np.frombuffer(raw_dict["Ham"], np.float64)
+        S_raw = np.frombuffer(raw_dict["ovlp"], np.float64)
+        H_init_raw = np.frombuffer(raw_dict["init_ham"], np.float64)
+        h_dim = int(round(len(H_raw) ** 0.5))
+        H_full = H_raw.reshape(h_dim, h_dim).copy()
+        S_full = S_raw.reshape(h_dim, h_dim).copy()
+        H_init_full = H_init_raw.reshape(h_dim, h_dim).copy()
 
     # Convention: pyscf → e3nn via OrbitalMatrix
     basis_pyscf = BasisInfo.from_name("def2-svp", convention="pyscf")
@@ -229,14 +243,16 @@ def process_sample(
     S_blocks = S_e3nn.to_blocks(pad_to=PAD_TO, align="shell")
     Hi_blocks = Hi_e3nn.to_blocks(pad_to=PAD_TO, align="shell")
 
-    # Q tensor (cached by atom types)
-    atom_key = tuple(int(z) for z in atoms)
-    if atom_key in q_cache:
-        diag_Q, offdiag_Q = q_cache[atom_key]
-    else:
-        Q = build_q_tensor(atoms, Q_dict, convention_dict)
-        diag_Q, offdiag_Q = cut_q_tensor(Q, atoms, basis_e3nn)
-        q_cache[atom_key] = (diag_Q, offdiag_Q)
+    # Q tensor (cached by atom types) — optional, very large (~2.3 MB/sample)
+    diag_Q, offdiag_Q = None, None
+    if include_q_tensor and Q_dict is not None and q_cache is not None:
+        atom_key = tuple(int(z) for z in atoms)
+        if atom_key in q_cache:
+            diag_Q, offdiag_Q = q_cache[atom_key]
+        else:
+            Q = build_q_tensor(atoms, Q_dict, convention_dict)
+            diag_Q, offdiag_Q = cut_q_tensor(Q, atoms, basis_e3nn)
+            q_cache[atom_key] = (diag_Q, offdiag_Q)
 
     # Energy/forces (optional)
     dft_energy = raw_dict.get("dft_energy", None)
@@ -246,6 +262,12 @@ def process_sample(
         if dft_forces_raw is not None else None
     )
 
+    # Pack upper triangle for eval storage
+    iu = np.triu_indices(h_dim)
+    packed_H = H_full[iu]
+    packed_S = S_full[iu]
+    packed_H_init = H_init_full[iu]
+
     # Build output dict
     result = {
         # ── Raw (eval용) ──
@@ -253,9 +275,9 @@ def process_sample(
         "pos": pos,
         "num_nodes": num_nodes,
         "h_dim": h_dim,
-        "hamiltonian_packed": packed_H.copy(),
-        "overlap_packed": packed_S.copy(),
-        "init_ham_packed": packed_H_init.copy(),
+        "hamiltonian_packed": packed_H,
+        "overlap_packed": packed_S,
+        "init_ham_packed": packed_H_init,
 
         # ── Preprocessed (train용, e3nn convention) ──
         "diagonal_hamiltonian": H_blocks.diagonal,
@@ -267,9 +289,11 @@ def process_sample(
         "diagonal_hamiltonian_mask": H_blocks.diagonal_mask,
         "non_diagonal_hamiltonian_mask": H_blocks.off_diagonal_mask,
         "edge_index_full": H_blocks.edge_index,
-        "diagonal_Q": diag_Q,
-        "non_diagonal_Q": offdiag_Q,
     }
+
+    if diag_Q is not None:
+        result["diagonal_Q"] = diag_Q
+        result["non_diagonal_Q"] = offdiag_Q
 
     if dft_energy is not None:
         result["dft_energy"] = float(dft_energy)
@@ -457,51 +481,140 @@ def verify_samples(
 
 # ── Main ─────────────────────────────────────────────────────────
 
+def read_split_lmdb(lmdb_path: str) -> Tuple[lmdb.Environment, int, dict]:
+    """단일 split LMDB를 열고 총 샘플 수와 split 정보를 반환.
+
+    Split LMDB 포맷: key = idx (4 bytes big-endian), value = pickled dict
+    with keys: id, num_nodes, atoms, pos, Ham, ovlp, init_ham.
+
+    Returns:
+        (env, total_samples, split_info)
+    """
+    env = lmdb.open(lmdb_path, readonly=True, lock=False, readahead=True, max_readers=4)
+    total = env.stat()["entries"]
+
+    # Load split info from adjacent JSON files
+    split_info = {}
+    lmdb_dir = os.path.dirname(lmdb_path)
+    for fname in os.listdir(lmdb_dir):
+        if fname.startswith("processed_QH9Stable") and fname.endswith(".json"):
+            with open(os.path.join(lmdb_dir, fname)) as f:
+                split_info[fname.replace(".json", "")] = json.load(f)
+        elif fname.startswith("processed_QH9Stable") and fname.endswith(".pt"):
+            import torch as _torch
+            data = _torch.load(os.path.join(lmdb_dir, fname), weights_only=False)
+            # .pt format: (train_mask, val_mask, test_mask)
+            if isinstance(data, (list, tuple)) and len(data) == 3:
+                split_name = fname.replace(".pt", "")
+                split_info[split_name] = {
+                    "train": data[0].tolist(),
+                    "val": data[1].tolist(),
+                    "test": data[2].tolist(),
+                }
+
+    return env, total, split_info
+
+
 def main():
     parser = argparse.ArgumentParser(description="Preprocess QH9 dataset")
-    parser.add_argument("--source", required=True,
+    parser.add_argument("--source", default=None,
                         help="Source shard dataset dir (e.g., dataset/QH9Stable_shard)")
+    parser.add_argument("--source-lmdb", default=None,
+                        help="Source split LMDB path (e.g., dataset/QH9Stable/processed/QH9Stable.lmdb)")
     parser.add_argument("--output", default=None,
-                        help="Output LMDB path (default: <source>_preprocessed.lmdb)")
+                        help="Output LMDB path (default: auto-detected)")
     parser.add_argument("--num-workers", type=int, default=1,
                         help="Number of parallel workers (for future use)")
     parser.add_argument("--verify", type=int, default=0,
                         help="Number of samples to verify (0 = skip)")
     parser.add_argument("--max-samples", type=int, default=None,
                         help="Max samples to process (for testing)")
+    parser.add_argument("--include-q-tensor", action="store_true",
+                        help="Include Q tensor in output (adds ~2.3 MB/sample)")
     args = parser.parse_args()
 
     setup_global_logger()
 
-    source_dir = args.source
-    output_path = args.output or source_dir.rstrip("/") + "_preprocessed.lmdb"
+    if not args.source and not args.source_lmdb:
+        parser.error("Either --source (shard dir) or --source-lmdb (split LMDB) is required")
 
-    logger.info(f"Source: {source_dir}")
-    logger.info(f"Output: {output_path}")
+    use_split_lmdb = args.source_lmdb is not None
 
-    # Load source
-    shard_paths, index_info, split_info = read_source_shards(source_dir)
-    index_list = index_info["index"]
-    total = len(index_list)
-    if args.max_samples:
-        total = min(total, args.max_samples)
-    logger.info(f"Total samples: {total}, Shards: {len(shard_paths)}")
+    if use_split_lmdb:
+        source_lmdb_path = args.source_lmdb
+        output_path = args.output or os.path.join(
+            os.path.dirname(os.path.dirname(source_lmdb_path)),
+            "QH9Stable_preprocessed.lmdb",
+        )
+        logger.info(f"Source (split LMDB): {source_lmdb_path}")
+        logger.info(f"Output: {output_path}")
 
-    # Init Q tensor infrastructure
-    logger.info("Initializing Q tensor infrastructure...")
-    Q_dict, convention_dict = init_q_infrastructure()
-    q_cache: Dict[tuple, Tuple[np.ndarray, np.ndarray]] = {}
+        src_env, total, split_info = read_split_lmdb(source_lmdb_path)
+        if args.max_samples:
+            total = min(total, args.max_samples)
+        logger.info(f"Total samples: {total}")
+    else:
+        source_dir = args.source
+        output_path = args.output or source_dir.rstrip("/") + "_preprocessed.lmdb"
+        logger.info(f"Source (shard): {source_dir}")
+        logger.info(f"Output: {output_path}")
 
-    # Process samples
-    logger.info("Processing samples...")
+        shard_paths, index_info, split_info = read_source_shards(source_dir)
+        index_list = index_info["index"]
+        total = len(index_list)
+        if args.max_samples:
+            total = min(total, args.max_samples)
+        logger.info(f"Total samples: {total}, Shards: {len(shard_paths)}")
+
+    # Init Q tensor infrastructure (only if needed)
+    include_q = args.include_q_tensor
+    Q_dict, convention_dict, q_cache = None, None, None
+    if include_q:
+        logger.info("Initializing Q tensor infrastructure...")
+        Q_dict, convention_dict = init_q_infrastructure()
+        q_cache = {}
+    else:
+        logger.info("Skipping Q tensor (use --include-q-tensor to include)")
+
+    # Process + write in streaming fashion (no full dataset in memory)
+    logger.info("Processing and writing samples (streaming)...")
     shard_envs: Dict[int, lmdb.Environment] = {}
-    samples = []
     t_start = time.time()
 
+    # Open output LMDB directly at target path
+    if os.path.exists(output_path):
+        import shutil
+        shutil.rmtree(output_path)
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    map_size = 1 << 42 if include_q else 1 << 36  # 4 TB with Q, 64 GB without
+    out_env = lmdb.open(output_path, map_size=map_size, readonly=False, lock=True)
+
+    count = 0
+    write_batch = []
+    write_batch_size = 100
+
     for idx in range(total):
-        raw_dict = read_sample_from_shards(idx, shard_envs, shard_paths, index_list)
-        result = process_sample(raw_dict, idx, Q_dict, convention_dict, q_cache)
-        samples.append(result)
+        if use_split_lmdb:
+            key = idx.to_bytes(4, "big")
+            with src_env.begin() as txn:
+                raw = txn.get(key)
+                if raw is None:
+                    logger.warning(f"Sample {idx} not found, skipping")
+                    continue
+            raw_dict = pickle.loads(raw)
+        else:
+            raw_dict = read_sample_from_shards(idx, shard_envs, shard_paths, index_list)
+
+        result = process_sample(raw_dict, idx, Q_dict, convention_dict, q_cache, include_q_tensor=include_q)
+        write_batch.append((idx, result))
+
+        if len(write_batch) >= write_batch_size:
+            with out_env.begin(write=True) as txn:
+                for widx, sample in write_batch:
+                    key = widx.to_bytes(4, "big")
+                    txn.put(key, pickle.dumps(sample, protocol=pickle.HIGHEST_PROTOCOL))
+            count += len(write_batch)
+            write_batch.clear()
 
         if (idx + 1) % 1000 == 0:
             elapsed = time.time() - t_start
@@ -512,22 +625,40 @@ def main():
                 f"Q cache: {len(q_cache)} keys, ETA: {eta / 60:.1f} min"
             )
 
+    # Flush remaining
+    if write_batch:
+        with out_env.begin(write=True) as txn:
+            for widx, sample in write_batch:
+                key = widx.to_bytes(4, "big")
+                txn.put(key, pickle.dumps(sample, protocol=pickle.HIGHEST_PROTOCOL))
+        count += len(write_batch)
+
+    # Write metadata
+    with out_env.begin(write=True) as txn:
+        txn.put(b"__len__", count.to_bytes(4, "big"))
+        txn.put(b"__format__", b"pickle")
+        if split_info:
+            txn.put(b"__splits__", pickle.dumps(split_info))
+
+    out_env.close()
+
     # Close source envs
-    for env in shard_envs.values():
-        env.close()
+    if use_split_lmdb:
+        src_env.close()
+    else:
+        for env in shard_envs.values():
+            env.close()
 
     elapsed = time.time() - t_start
-    logger.info(f"Processing done: {total} samples in {elapsed:.1f}s ({total / elapsed:.1f} samples/s)")
-    logger.info(f"Q tensor cache: {len(q_cache)} unique atom keys")
+    logger.info(f"Processing done: {count} samples in {elapsed:.1f}s ({count / elapsed:.1f} samples/s)")
+    if q_cache is not None:
+        logger.info(f"Q tensor cache: {len(q_cache)} unique atom keys")
 
-    # Write output LMDB
-    logger.info(f"Writing to {output_path}...")
-    count = write_preprocessed_lmdb(output_path, samples, split_info)
-    logger.info(f"Written {count} samples")
+    logger.info(f"Output: {output_path}")
 
     # Verify
-    if args.verify > 0:
-        verify_samples(source_dir, output_path, n_verify=args.verify)
+    if args.verify > 0 and args.source:
+        verify_samples(args.source, output_path, n_verify=args.verify)
 
     logger.info("Done!")
 
