@@ -39,3 +39,6 @@ debug_outputs/
 *.pt
 *.ckpt
 lightning_logs/
+# Large eval outputs
+eval_results/**/*.npz
+eval_results/**/*.pt
