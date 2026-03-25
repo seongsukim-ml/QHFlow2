@@ -1,0 +1,6 @@
+model_name: QHNet
+version: Real_QHNet
+
+hidden_size: 512
+bottle_hidden_size: 128
+num_gnn_layers: 7

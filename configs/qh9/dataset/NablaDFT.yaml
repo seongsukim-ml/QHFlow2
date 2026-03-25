@@ -1,0 +1,39 @@
+dataset_full_name: nablaDFT-${dataset.split}
+dataset_name: NablaDFT
+version: ''
+split: train
+
+# ── LMDB paths ──
+# Preprocessed by: scripts/preprocess_nabladft.py
+# Available splits: test_2k_conformers, train_100k (when ready)
+source_lmdb: /home1/irteam/data-vol1/datasets/nablaDFT/qhflow2_processed/train_5k.lmdb
+
+# ── Dataset params ──
+split_ratio: [0.8, 0.1, 0.1]
+split_seed: 42
+full_orbitals: 32       # Br uses all 32 slots
+basis: def2-svp-nabla
+convention: pyscf_def2svp_nabla_to_e3nn
+include_overlap: true
+include_initial_hamiltonian: true
+include_dft_energy: false
+include_dft_forces: false
+
+# ── DataLoader ──
+# LMDB uses lazy open (fork-safe), num_workers>0 OK
+batch_size: 16
+train_batch_size: ${dataset.batch_size}
+valid_batch_size: ${dataset.batch_size}
+test_batch_size: ${dataset.batch_size}
+num_workers: 8
+pin_memory: true
+
+# ── QH9 compat fields (unused but referenced by hydra) ──
+use_shard: false
+use_preprocessed: false
+compute_q_tensor: false
+include_cut_orbital_coefficients: false
+use_ref_hamiltonian_as_init_ham: false
+return_orbital_and_energies: false
+
+total_steps: 100000
