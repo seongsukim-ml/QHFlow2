@@ -73,6 +73,8 @@ def get_model(args):
         model_args["cond_method"] = args.cond_method
     if hasattr(args, "heads"):
         model_args["heads"] = args.heads
+    if hasattr(args, "predict_targets"):
+        model_args["predict_targets"] = list(args.predict_targets)
 
     if args == None:
         print("args is None, using QHFlow for default")
