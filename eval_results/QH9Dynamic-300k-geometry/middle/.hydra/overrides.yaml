@@ -1,0 +1,6 @@
+- mode=predict
+- dataset=QH9Dynamic
+- dataset.split=geometry
+- model=QHFlow_so2_v5_1_middle
+- wandb.mode=disabled
+- ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-geometry_middle.ckpt

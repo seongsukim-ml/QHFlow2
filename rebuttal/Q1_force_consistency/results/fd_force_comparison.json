@@ -1,0 +1,35 @@
+[
+  {
+    "mol_idx": 0,
+    "n_atoms": 21,
+    "E_pred": -423.53674458031315,
+    "E_gt": -423.53678876536884,
+    "F_anal_vs_fd_pred_d1e-03_mae": 0.008855266902706205,
+    "F_anal_vs_fd_gt_d1e-03_mae": 0.008635702142816903,
+    "F_anal_pred_vs_gt_mae": 6.221097227145728e-05,
+    "F_anal_vs_fd_pred_d1e-04_mae": 0.00887574232093104,
+    "F_anal_vs_fd_gt_d1e-04_mae": 0.008656616970859007
+  },
+  {
+    "mol_idx": 1,
+    "n_atoms": 21,
+    "E_pred": -423.5296890548867,
+    "E_gt": -423.5297494699522,
+    "F_anal_vs_fd_pred_d1e-03_mae": 0.009761951308679365,
+    "F_anal_vs_fd_gt_d1e-03_mae": 0.009138669973836172,
+    "F_anal_pred_vs_gt_mae": 9.713732172524642e-05,
+    "F_anal_vs_fd_pred_d1e-04_mae": 0.00977722635166382,
+    "F_anal_vs_fd_gt_d1e-04_mae": 0.009152419487696043
+  },
+  {
+    "mol_idx": 2,
+    "n_atoms": 19,
+    "E_pred": -459.3721460671173,
+    "E_gt": -459.3722496877634,
+    "F_anal_vs_fd_pred_d1e-03_mae": 0.010255536603285214,
+    "F_anal_vs_fd_gt_d1e-03_mae": 0.008033584684088331,
+    "F_anal_pred_vs_gt_mae": 0.0003274319352388219,
+    "F_anal_vs_fd_pred_d1e-04_mae": 0.01027949114782927,
+    "F_anal_vs_fd_gt_d1e-04_mae": 0.008049800555496945
+  }
+]
