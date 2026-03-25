@@ -1,0 +1,49 @@
+hydra:
+  run:
+    dir: outputs/${dataset.dataset_full_name}/${wandb.run_name}
+
+defaults:
+  - model: QHNet_large
+  - dataset: QH9Stable
+devices: 1
+strategy: Null
+ckpt_dir: 'checkpoints'
+split_seed: 42
+check_val_every_n_epoch: 1
+
+optimizer: adamW
+decay_factor: 0.5
+decay_patience: 5
+ema_start_epoch: -1
+# warmup_step disabled: QHNet warmup uses lr=1e-3 which diverges at large hidden_size
+num_training_steps: ${dataset.total_steps}
+end_lr: 1e-7
+scheduler_power: 3.5
+
+use_init_hamiltonian_residue: False
+gradient_clip_val: 1.0
+
+qh9: True
+seed: 0
+
+data_type: float32
+precision: 32
+
+loss_weights: {"hamiltonian": 1.0}
+
+prefix: "-scaling"
+mode: train
+
+wandb:
+  mode: online
+  project: "DFT-25-QH9"
+  entity: "kaist-korea"
+  run_id: Null
+  run_name: ${model.version}${prefix}-${model.hidden_size}h-${dataset.dataset_full_name}
+  tags: ["qh9","qhnet","scaling"]
+
+ckpt: ''
+use_last_ckpt: False
+
+partial_val: 0.25
+num_sanity_val_steps: 0
