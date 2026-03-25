@@ -7,4 +7,5 @@ use_block_S: True
 use_block_H: True
 num_gnn_layers: 3
 num_ham_gnn_layers: 2
+expand_lmax: 4
 # dataset_type: "md17"

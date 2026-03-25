@@ -6,6 +6,6 @@ bottle_hidden_size: 128
 use_block_S: True
 use_block_H: True # unused
 use_block_H_fix: True
-num_gnn_layers: 4
+num_gnn_layers: 5
 num_ham_gnn_layers: 3
 # dataset_type: "md17"

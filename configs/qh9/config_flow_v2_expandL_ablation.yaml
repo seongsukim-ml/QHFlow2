@@ -3,7 +3,7 @@ hydra:
     dir: outputs/${dataset.dataset_full_name}/${wandb.run_name}
 
 defaults:
-  - model: QHFlow_so2_v5_1_tdn_middle
+  - model: QHFlow_so2_v5_1_middle
   - dataset: QH9Stable
 devices: 1
 strategy: Null
@@ -32,7 +32,7 @@ use_init_hamiltonian: True
 use_init_hamiltonian_residue: True
 use_mse_and_mae: True
 
-prefix: "-tdn-mid"
+prefix: "-expandL-ablation"
 mode: train
 
 wandb:
@@ -40,8 +40,8 @@ wandb:
   project: "DFT-25-QH9"
   entity: "kaist-korea"
   run_id: Null
-  run_name: ${model.version}${prefix}-${dataset.dataset_full_name}
-  tags: ["qh9","flow","tdn","path-weight-sharing","dim-sweep"]
+  run_name: ${model.version}${prefix}-expandL${model.expand_lmax}-${dataset.dataset_full_name}
+  tags: ["qh9","flow","expand_lmax_ablation"]
 
 # resume / inference
 ckpt: ''

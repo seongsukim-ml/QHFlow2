@@ -3,8 +3,8 @@ hydra:
     dir: outputs/${dataset.dataset_full_name}/${wandb.run_name}
 
 defaults:
-  - model: QHFlow_so2_v5_1_tdn_middle
-  - dataset: QH9Stable
+  - model: QHFlow_so2_v5_1_nabla_small
+  - dataset: NablaDFT
 devices: 1
 strategy: Null
 ckpt_dir: 'checkpoints'
@@ -20,6 +20,7 @@ num_training_steps: ${dataset.total_steps}
 end_lr: 1e-7
 scheduler_power: 1.0
 
+basis: "def2-svp-nabla"
 qh9: True
 pl_type: flow
 
@@ -32,18 +33,17 @@ use_init_hamiltonian: True
 use_init_hamiltonian_residue: True
 use_mse_and_mae: True
 
-prefix: "-tdn-mid"
+prefix: "-nabla"
 mode: train
 
 wandb:
   mode: online
-  project: "DFT-25-QH9"
+  project: "DFT-25-nablaDFT"
   entity: "kaist-korea"
   run_id: Null
   run_name: ${model.version}${prefix}-${dataset.dataset_full_name}
-  tags: ["qh9","flow","tdn","path-weight-sharing","dim-sweep"]
+  tags: ["nabladft","flow","def2-svp-nabla"]
 
-# resume / inference
 ckpt: ''
 use_last_ckpt: True
 
@@ -51,15 +51,15 @@ partial_val: 0.25
 seed: 0
 
 flow:
-  batch_mul : 1
+  batch_mul: 1
   use_t_scale: False
   init_gauss: True
   init_gauss_center: False
   use_mse_and_mae: ${use_mse_and_mae}
   use_res_target: True
-  error_threshold: 0  # 0 = disable ODE sampling during val (loss is always > 0)
+  error_threshold: 1e-3
   sigma: 0.1
   num_ode_steps: 3
-  num_ode_steps_val: 3
+  num_ode_steps_val: 1
   num_ode_steps_test: 3
   init_p0_type: "expand"

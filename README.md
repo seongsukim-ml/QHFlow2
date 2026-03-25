@@ -111,21 +111,40 @@ python -m qhflow2.experiment.train_md17 dataset=ethanol
 # QH9
 python -m qhflow2.experiment.train_qh9 dataset=QH9Stable dataset.split=random
 
+# NablaDFT
+python -m qhflow2.experiment.train_qh9 --config-name config_flow_v2_nabla
+
 # With W&B logging
 python -m qhflow2.experiment.train_qh9 dataset=QH9Stable dataset.split=random wandb.mode=online
-
-# Multi-GPU
-CUDA_VISIBLE_DEVICES=0,1,2,3 python -m qhflow2.experiment.train_qh9 dataset=QH9Stable strategy=ddp devices=4
 ```
+
+### Multi-GPU (DDP)
+
+```bash
+# QH9 — 4 GPU
+CUDA_VISIBLE_DEVICES=0,1,2,3 python -m qhflow2.experiment.train_qh9 \
+  dataset=QH9Stable strategy=ddp_find_unused_parameters_true devices=4
+
+# NablaDFT — 2 GPU
+CUDA_VISIBLE_DEVICES=6,7 python -m qhflow2.experiment.train_qh9 \
+  --config-name config_flow_v2_nabla \
+  strategy=ddp_find_unused_parameters_true devices=2 dataset.batch_size=8
+```
+
+> **Note:** `ddp_find_unused_parameters_true` 사용 필수 (conditioning 모듈의 unused parameters).
+> Effective batch size = `batch_size × num_gpus`.
 
 ### Available Datasets & Splits
 
-| Dataset | Names | Splits |
-|---------|-------|--------|
-| MD17 | `ethanol`, `malondialdehyde`, `uracil`, `water` | — |
-| rMD17 | `rmd-aspirin`, `rmd-naphthalene`, `rmd-salicylic_acid` | — |
-| QH9Stable | `QH9Stable` | `random`, `size_ood` |
-| QH9Dynamic | `QH9Dynamic` | `geometry`, `mol` |
+| Dataset | Names | Splits | Config |
+|---------|-------|--------|--------|
+| MD17 | `ethanol`, `malondialdehyde`, `uracil`, `water` | — | `config_flow_v2_simple` |
+| rMD17 | `rmd-aspirin`, `rmd-naphthalene`, `rmd-salicylic_acid` | — | `config_flow_v2_simple` |
+| QH9Stable | `QH9Stable` | `random`, `size_ood` | `config_flow_v2_simple` |
+| QH9Dynamic | `QH9Dynamic` | `geometry`, `mol` | `config_flow_v2_simple` |
+| NablaDFT | `NablaDFT` | train (80/10/10 split) | `config_flow_v2_nabla` |
+
+NablaDFT 학습 상세: [docs/nabladft_training.md](docs/nabladft_training.md)
 
 ### Available Models
 

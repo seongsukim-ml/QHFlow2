@@ -129,6 +129,9 @@ BASIS_TEMPLATES = {
             7: 'sssppd',
             8: 'sssppd',
             9: 'sssppd',
+            16: 'sssspppd',     # S: 18 orbitals
+            17: 'sssspppd',     # Cl: 18 orbitals
+            35: 'sssssppppddd', # Br: 32 orbitals
         }
     ),
     
@@ -262,7 +265,21 @@ def get_all_conventions():
     
     # For MD17 dataset (ORCA convention, similar to e3nn_to_pyscf_def2svp)
     conventions['orca_to_e3nn'] = conventions['e3nn_to_pyscf_def2svp']
-    
+
+    # nablaDFT conventions (def2-SVP with S, Cl, Br)
+    conventions['psi4_def2svp_to_pyscf'] = build_convention(
+        BASIS_TEMPLATES['def2svp'],
+        'psi4_to_pyscf'
+    )
+    conventions['pyscf_def2svp_nabla_to_e3nn'] = build_convention(
+        BASIS_TEMPLATES['def2svp'],
+        'pyscf_to_e3nn'
+    )
+    conventions['e3nn_to_pyscf_def2svp_nabla'] = build_convention(
+        BASIS_TEMPLATES['def2svp'],
+        'e3nn_to_pyscf'
+    )
+
     return conventions
 
 
