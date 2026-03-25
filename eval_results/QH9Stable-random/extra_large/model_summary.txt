@@ -1,0 +1,29 @@
+   | Name                           | Type                                     | Params | Mode  | FLOPs
+-------------------------------------------------------------------------------------------------------------
+0  | model                          | QHFlow_escn_v5_1                         | 990 M  | train | 0    
+1  | model.distance_expansion       | ExponentialBernsteinRadialBasisFunctions | 1      | train | 0    
+2  | model.contraction_layer_H      | ParamContraction                         | 8.7 K  | train | 0    
+3  | model.contraction_layer_S      | ParamContraction                         | 8.7 K  | train | 0    
+4  | model.contraction_layer_H_init | ParamContraction                         | 8.7 K  | train | 0    
+5  | model.node_attr_backbone       | eSCNMDBackbone_ham                       | 648 M  | train | 0    
+6  | model.e3_gnn_node_pair_layer   | ModuleList                               | 201 M  | train | 0    
+7  | model.e3_gnn_node_layer        | ModuleList                               | 129 M  | train | 0    
+8  | model.norm                     | EquivariantLayerNormV2                   | 3.1 K  | train | 0    
+9  | model.expand_ii                | ModuleDict                               | 7.2 K  | train | 0    
+10 | model.expand_ij                | ModuleDict                               | 7.2 K  | train | 0    
+11 | model.fc_ii                    | ModuleDict                               | 3.9 M  | train | 0    
+12 | model.fc_ij                    | ModuleDict                               | 4.2 M  | train | 0    
+13 | model.fc_ii_bias               | ModuleDict                               | 269 K  | train | 0    
+14 | model.fc_ij_bias               | ModuleDict                               | 531 K  | train | 0    
+15 | model.output_ii                | Linear                                   | 327 K  | train | 0    
+16 | model.pre_output_ij            | TensorProduct                            | 21.5 K | train | 0    
+17 | model.output_ij                | Linear                                   | 327 K  | train | 0    
+18 | expand                         | Expansion                                | 0      | train | 0    
+-------------------------------------------------------------------------------------------------------------
+990 M     Trainable params
+512       Non-trainable params
+990 M     Total params
+3,960.364 Total estimated model params size (MB)
+768       Modules in train mode
+0         Modules in eval mode
+0         Total Flops

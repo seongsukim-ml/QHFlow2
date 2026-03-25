@@ -1,0 +1,18 @@
+{
+  "small": {
+    "params": 12138169,
+    "error": "'NoneType' object has no attribute 'shape'"
+  },
+  "middle": {
+    "params": 43305785,
+    "error": "'NoneType' object has no attribute 'shape'"
+  },
+  "large": {
+    "params": 183523129,
+    "error": "'NoneType' object has no attribute 'shape'"
+  },
+  "extra_large": {
+    "params": 909328441,
+    "error": "'NoneType' object has no attribute 'shape'"
+  }
+}

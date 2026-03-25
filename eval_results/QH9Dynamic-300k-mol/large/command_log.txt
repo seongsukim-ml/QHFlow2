@@ -1,0 +1,1 @@
+[2026-03-25 03:55:42.371527] /home1/irteam/data-vol1/projects/QHFlow2/src/qhflow2/experiment/train_qh9.py mode=predict dataset=QH9Dynamic dataset.split=mol model=QHFlow_so2_v5_1_large wandb.mode=disabled ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-mol_large.ckpt hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-mol/large

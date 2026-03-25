@@ -1,0 +1,7 @@
+- mode=predict
+- dataset=QH9Stable
+- dataset.split=size_ood
+- dataset.batch_size=4
+- model=QHFlow_so2_v5_1_extra_large
+- wandb.mode=disabled
+- ckpt=/tmp/qhflow2_xl_sizeood.ckpt

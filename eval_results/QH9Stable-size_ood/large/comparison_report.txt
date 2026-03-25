@@ -1,0 +1,3 @@
+ComparisonReport (n=9335)
+  model: QHFlow_escn_v5_1
+  hamiltonian: MAE=0.000005  RMSE=0.000005  max=0.000017

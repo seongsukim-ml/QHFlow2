@@ -1,0 +1,114 @@
+[
+  {
+    "split": "QH9Stable-random",
+    "size": "small",
+    "elapsed_s": 1053.3891973495483,
+    "hamiltonian_mae_ha": 1.6e-05,
+    "hamiltonian_mae_mev": 0.43538217599999995,
+    "homo_errors_mean": 4.316574155142725,
+    "lumo_errors_mean": 6.346386309398567,
+    "gap_errors_mean": 9.536632299424666
+  },
+  {
+    "split": "QH9Stable-random",
+    "size": "middle",
+    "elapsed_s": 1124.2724168300629,
+    "hamiltonian_mae_ha": 9e-06,
+    "hamiltonian_mae_mev": 0.24490247399999998,
+    "homo_errors_mean": 2.664604620133817,
+    "lumo_errors_mean": 3.9845494509356723,
+    "gap_errors_mean": 5.701087060625023
+  },
+  {
+    "split": "QH9Stable-random",
+    "size": "large",
+    "elapsed_s": 1230.017335176468,
+    "hamiltonian_mae_ha": 6e-06,
+    "hamiltonian_mae_mev": 0.163268316,
+    "homo_errors_mean": 1.1695976876116994,
+    "lumo_errors_mean": 2.2929140164491026,
+    "gap_errors_mean": 2.8666500145372322
+  },
+  {
+    "split": "QH9Stable-random",
+    "size": "extra_large",
+    "elapsed_s": 35.75790548324585,
+    "error": "conv_2.so2_m_conv.2.fc.weight\", \"model.node_attr_backbone.blocks.4.edge_wise.so2_conv_2.so2_m_conv.3.fc.weight\", \"model.node_attr_backbone.blocks.4.norm_2.affine_weight\", \"model.node_attr_backbone.blocks.4.norm_2.affine_bias\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.0.weight\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.2.weight\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.4.weight\". \n\nSet the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.\n"
+  },
+  {
+    "split": "QH9Stable-size_ood",
+    "size": "small",
+    "elapsed_s": 1091.0444848537445,
+    "hamiltonian_mae_ha": 1.3e-05,
+    "hamiltonian_mae_mev": 0.35374801799999994,
+    "homo_errors_mean": 1.9741746670889855,
+    "lumo_errors_mean": 8.598903733518018,
+    "gap_errors_mean": 7.891225490435021
+  },
+  {
+    "split": "QH9Stable-size_ood",
+    "size": "middle",
+    "elapsed_s": 1121.0195598602295,
+    "hamiltonian_mae_ha": 8e-06,
+    "hamiltonian_mae_mev": 0.21769108799999998,
+    "homo_errors_mean": 1.5187713775690195,
+    "lumo_errors_mean": 6.980676637434694,
+    "gap_errors_mean": 6.436828619606782
+  },
+  {
+    "split": "QH9Stable-size_ood",
+    "size": "large",
+    "elapsed_s": 1286.7910747528076,
+    "hamiltonian_mae_ha": 5e-06,
+    "hamiltonian_mae_mev": 0.13605693,
+    "homo_errors_mean": 0.9796208018236755,
+    "lumo_errors_mean": 3.000932980902065,
+    "gap_errors_mean": 3.200758731054142
+  },
+  {
+    "split": "QH9Stable-size_ood",
+    "size": "extra_large",
+    "elapsed_s": 36.14332151412964,
+    "error": "conv_2.so2_m_conv.2.fc.weight\", \"model.node_attr_backbone.blocks.4.edge_wise.so2_conv_2.so2_m_conv.3.fc.weight\", \"model.node_attr_backbone.blocks.4.norm_2.affine_weight\", \"model.node_attr_backbone.blocks.4.norm_2.affine_bias\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.0.weight\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.2.weight\", \"model.node_attr_backbone.blocks.4.atom_wise.grid_mlp.4.weight\". \n\nSet the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.\n"
+  },
+  {
+    "split": "QH9Dynamic-300k-geometry",
+    "size": "small",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=geometry', 'model=QHFlow_so2_v5_1_small', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-geometry_small.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-geometry/small']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-geometry",
+    "size": "middle",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=geometry', 'model=QHFlow_so2_v5_1_middle', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-geometry_middle.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-geometry/middle']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-geometry",
+    "size": "large",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=geometry', 'model=QHFlow_so2_v5_1_large', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-geometry_large.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-geometry/large']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-geometry",
+    "size": "extra_large",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=geometry', 'model=QHFlow_so2_v5_1_extra_large', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-geometry_extra_large.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-geometry/extra_large']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-mol",
+    "size": "small",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=mol', 'model=QHFlow_so2_v5_1_small', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-mol_small.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-mol/small']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-mol",
+    "size": "middle",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=mol', 'model=QHFlow_so2_v5_1_middle', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-mol_middle.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-mol/middle']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-mol",
+    "size": "large",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=mol', 'model=QHFlow_so2_v5_1_large', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-mol_large.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-mol/large']' timed out after 1800 seconds"
+  },
+  {
+    "split": "QH9Dynamic-300k-mol",
+    "size": "extra_large",
+    "error": "Command '['/home1/irteam/data-vol1/conda/envs/qhflow/bin/python', '-m', 'qhflow2.experiment.train_qh9', 'mode=predict', 'dataset=QH9Dynamic', 'dataset.split=mol', 'model=QHFlow_so2_v5_1_extra_large', 'wandb.mode=disabled', 'ckpt=/tmp/qhflow2_eval_QH9Dynamic-300k-mol_extra_large.ckpt', 'hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Dynamic-300k-mol/extra_large']' timed out after 1800 seconds"
+  }
+]

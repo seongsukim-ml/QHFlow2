@@ -1,0 +1,1 @@
+[2026-03-24 23:16:02.245180] /home1/irteam/data-vol1/projects/QHFlow2/src/qhflow2/experiment/train_qh9.py mode=predict dataset=QH9Stable dataset.split=random model=QHFlow_so2_v5_1_middle wandb.mode=disabled ckpt=/tmp/qhflow2_eval_QH9Stable-random_middle.ckpt hydra.run.dir=/home1/irteam/data-vol1/projects/QHFlow2/eval_results/QH9Stable-random/middle

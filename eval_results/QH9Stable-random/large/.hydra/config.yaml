@@ -1,0 +1,95 @@
+model:
+  model_name: QHFlow_so2_v5_1
+  version: QHFlow_so2_v5_1
+  hidden_size: 256
+  bottle_hidden_size: 64
+  use_block_S: true
+  use_block_H: true
+  use_block_H_fix: true
+  num_gnn_layers: 4
+  num_ham_gnn_layers: 2
+dataset:
+  dataset_full_name: ${dataset.dataset_name}-${dataset.split}
+  dataset_name: QH9Stable
+  version: ''
+  split: random
+  use_shard: false
+  use_preprocessed: false
+  preprocessed_lmdb: ''
+  use_ref_hamiltonian_as_init_ham: false
+  return_orbital_and_energies: false
+  compute_q_tensor: true
+  include_initial_hamiltonian: true
+  include_overlap: true
+  include_dft_energy: false
+  include_dft_forces: false
+  include_cut_orbital_coefficients: true
+  batch_size: 32
+  train_batch_size: ${dataset.batch_size}
+  valid_batch_size: ${dataset.batch_size}
+  test_batch_size: ${dataset.batch_size}
+  learning_rate: 0.0005
+  validation_interval: 1
+  use_gradient_clipping: true
+  clip_norm: 1.0
+  pin_memory: true
+  num_workers: 8
+  warmup_steps: 1000
+  total_steps: 260000
+  lr_end: 1.0e-07
+  train_batch_interval: 100
+  validation_batch_interval: 1000
+devices: 1
+strategy: null
+ckpt_dir: checkpoints
+split_seed: 42
+check_val_every_n_epoch: 1
+optimizer: adamW
+decay_factor: 0.5
+decay_patience: 5
+ema_start_epoch: -1
+warmup_step: 1000
+num_training_steps: ${dataset.total_steps}
+end_lr: 1.0e-07
+scheduler_power: 1.0
+qh9: true
+pl_type: flow
+data_type: float32
+precision: 32
+loss_weights:
+  hamiltonian: 10.0
+loss_weights_detail:
+  hamiltonian:
+    mae: 1.0
+    mse: 1.0
+use_init_hamiltonian: true
+use_init_hamiltonian_residue: true
+use_mse_and_mae: true
+prefix: ''
+mode: predict
+wandb:
+  mode: disabled
+  project: DFT-25-QH9
+  entity: kaist-korea
+  run_id: null
+  run_name: ${model.version}${prefix}-${dataset.dataset_full_name}
+  tags:
+  - qh9
+  - flow
+ckpt: /tmp/qhflow2_eval_QH9Stable-random_large.ckpt
+use_last_ckpt: true
+partial_val: 0.25
+seed: 0
+flow:
+  batch_mul: 1
+  use_t_scale: false
+  init_gauss: true
+  init_gauss_center: false
+  use_mse_and_mae: ${use_mse_and_mae}
+  use_res_target: true
+  error_threshold: 10000000000.0
+  sigma: 0.1
+  num_ode_steps: 3
+  num_ode_steps_val: 3
+  num_ode_steps_test: 3
+  init_p0_type: expand
