@@ -4,12 +4,12 @@ version: ''
 split: random  #[random, size_ood]
 
 use_shard: false
-use_preprocessed: false  # true → single LMDB preprocessed dataset (fast)
+use_preprocessed: true   # single LMDB preprocessed dataset (14x faster dataloader)
 preprocessed_lmdb: ''    # path to preprocessed LMDB (auto-detected if empty)
 # Sharding dataset specific parameters
 use_ref_hamiltonian_as_init_ham: false
 return_orbital_and_energies: false
-compute_q_tensor: true
+compute_q_tensor: false  # Q tensor not used by current model (OneBody_Reduction commented out)
 include_initial_hamiltonian: true
 include_overlap: true
 include_dft_energy: false
@@ -28,7 +28,7 @@ validation_interval: 1
 use_gradient_clipping: true
 clip_norm: 1.0
 pin_memory: true
-num_workers: 8
+num_workers: 8  # preprocessed LMDB + workers: 20x faster than nw=0
 
 warmup_steps: 1000
 total_steps: 260000 # 260000

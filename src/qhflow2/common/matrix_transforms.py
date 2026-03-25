@@ -163,7 +163,7 @@ def _get_orbital_mask(basis = "def2-svp"):
     Returns:
         dict: Dictionary mapping atomic numbers to their orbital masks.
     """
-    assert basis in ["def2-svp", "def2-tzvp"], f"Invalid basis: {basis}, only def2-svp and def2-tzvp are supported now"
+    assert basis in ["def2-svp", "def2-svp-nabla", "def2-tzvp"], f"Invalid basis: {basis}, supported: def2-svp, def2-svp-nabla, def2-tzvp"
     orbital_mask = {}
     
     if basis == "631G":
@@ -179,6 +179,19 @@ def _get_orbital_mask(basis = "def2-svp"):
         orbital_mask[8] = DEFAULT_ORBITAL_INDICES
         orbital_mask[9] = DEFAULT_ORBITAL_INDICES
         
+    elif basis == "def2-svp-nabla":
+        # nablaDFT: def2-SVP with S, Cl, Br (max 32 orbitals)
+        # Block layout: [5 s-slots | 12 p-slots (4×3) | 15 d-slots (3×5)] = 32
+        MAX_ORBITAL_LENGTH = 32
+        orbital_mask[1]  = torch.tensor([0, 1, 5, 6, 7])  # H: ssp (5)
+        orbital_mask[6]  = torch.tensor([0,1,2, 5,6,7,8,9,10, 17,18,19,20,21])  # C: sssppd (14)
+        orbital_mask[7]  = orbital_mask[6]  # N
+        orbital_mask[8]  = orbital_mask[6]  # O
+        orbital_mask[9]  = orbital_mask[6]  # F
+        orbital_mask[16] = torch.tensor([0,1,2,3, 5,6,7,8,9,10,11,12,13, 17,18,19,20,21])  # S: sssspppd (18)
+        orbital_mask[17] = orbital_mask[16]  # Cl
+        orbital_mask[35] = torch.arange(MAX_ORBITAL_LENGTH)  # Br: sssssppppddd (32)
+
     elif basis == "def2-tzvp":
         MAX_ORBITAL_LENGTH = 37
         MAX_ATOMIC_NUMBER = 17

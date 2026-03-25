@@ -15,21 +15,21 @@ import torch.nn as nn
 from torch.profiler import record_function
 from typing_extensions import Literal
 
-from fairchem.core.common import gp_utils
-from fairchem.core.models.uma.nn.activation import (
+from qhflow2._vendor_fairchem import common as gp_utils
+from qhflow2._vendor_fairchem.uma.nn.activation import (
     GateActivation,
     SeparableS2Activation_M,
 )
-from fairchem.core.models.uma.nn.layer_norm import (
+from qhflow2._vendor_fairchem.uma.nn.layer_norm import (
     get_normalization_layer,
 )
-from fairchem.core.models.uma.nn.mole import MOLE
-from fairchem.core.models.uma.nn.radial import PolynomialEnvelope
-from fairchem.core.models.uma.nn.so2_layers import SO2_Convolution, SO2_Linear
-from fairchem.core.models.uma.nn.so3_layers import SO3_Linear
+from qhflow2._vendor_fairchem.uma.nn.mole import MOLE
+from qhflow2._vendor_fairchem.uma.nn.radial import PolynomialEnvelope
+from qhflow2._vendor_fairchem.uma.nn.so2_layers import SO2_Convolution, SO2_Linear
+from qhflow2._vendor_fairchem.uma.nn.so3_layers import SO3_Linear
 
 if TYPE_CHECKING:
-    from fairchem.core.models.uma.common.so3 import CoefficientMapping, SO3_Grid
+    from qhflow2._vendor_fairchem.uma.so3 import CoefficientMapping, SO3_Grid
 
 
 def set_mole_ac_start_index(module: nn.Module, index: int) -> None:

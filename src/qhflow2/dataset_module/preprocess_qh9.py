@@ -586,7 +586,7 @@ def main():
         import shutil
         shutil.rmtree(output_path)
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    map_size = 1 << 42 if include_q else 1 << 36  # 4 TB with Q, 64 GB without
+    map_size = 1 << 42 if include_q else 1 << 39  # 4 TB with Q, 512 GB without
     out_env = lmdb.open(output_path, map_size=map_size, readonly=False, lock=True)
 
     count = 0

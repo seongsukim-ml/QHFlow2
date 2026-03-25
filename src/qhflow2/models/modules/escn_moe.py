@@ -16,15 +16,15 @@ import torch
 import torch.nn as nn
 from matplotlib import pyplot as plt
 
-from fairchem.core.common.registry import registry
-from fairchem.core.common.utils import conditional_grad
-from fairchem.core.models.base import HeadInterface
+from qhflow2._vendor_fairchem.common import registry
+from qhflow2._vendor_fairchem.common import conditional_grad
+from qhflow2._vendor_fairchem.base import HeadInterface
 # from fairchem.core.models.uma.escn_md import eSCNMDBackbone
 from .escn_backbone_v2 import eSCNMDBackbone_ham
-from fairchem.core.models.uma.nn.mole import (
+from qhflow2._vendor_fairchem.uma.nn.mole import (
     MOLEGlobals,
 )
-from fairchem.core.models.uma.nn.mole_utils import (
+from qhflow2._vendor_fairchem.uma.nn.mole_utils import (
     MOLEInterface,
     convert_model_to_MOLE_model,
     model_search_and_replace,

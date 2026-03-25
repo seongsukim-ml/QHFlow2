@@ -63,7 +63,7 @@ flow:
   init_gauss_center: False
   use_mse_and_mae: ${use_mse_and_mae}
   use_res_target: True
-  error_threshold: 1e10  # disabled: ODE sampling skipped during val
+  error_threshold: 0  # 0 = disable ODE sampling during val (loss is always > 0)
   sigma: 0.1
   num_ode_steps: 3
   num_ode_steps_val: 3

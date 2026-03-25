@@ -16,44 +16,40 @@ import torch
 import torch.nn as nn
 from torch.profiler import record_function
 
-from fairchem.core.common import gp_utils
-from fairchem.core.common.distutils import get_device_for_local_rank
-from fairchem.core.common.registry import registry
-from fairchem.core.common.utils import conditional_grad
-from fairchem.core.graph.compute import generate_graph
-from fairchem.core.models.base import HeadInterface
-from fairchem.core.models.uma.common.rotation import (
+from qhflow2._vendor_fairchem import common as gp_utils
+from qhflow2._vendor_fairchem.common import get_device_for_local_rank
+from qhflow2._vendor_fairchem.common import registry
+from qhflow2._vendor_fairchem.common import conditional_grad
+from qhflow2._vendor_fairchem.graph.compute import generate_graph
+from qhflow2._vendor_fairchem.base import HeadInterface
+from qhflow2._vendor_fairchem.uma.rotation import (
     eulers_to_wigner,
     init_edge_rot_euler_angles,
 )
-from fairchem.core.models.uma.common.rotation_cuda_graph import RotMatWignerCudaGraph
-from fairchem.core.models.uma.common.so3 import CoefficientMapping, SO3_Grid
-from fairchem.core.models.uma.nn.embedding_dev import (
+from qhflow2._vendor_fairchem.uma.rotation_cuda_graph import RotMatWignerCudaGraph
+from qhflow2._vendor_fairchem.uma.so3 import CoefficientMapping, SO3_Grid
+from qhflow2._vendor_fairchem.uma.nn.embedding import (
     ChgSpinEmbedding,
     DatasetEmbedding,
     EdgeDegreeEmbedding,
 )
-from fairchem.core.models.uma.nn.layer_norm import (
+from qhflow2._vendor_fairchem.uma.nn.layer_norm import (
     EquivariantLayerNormArray,
     EquivariantLayerNormArraySphericalHarmonics,
     EquivariantRMSNormArraySphericalHarmonics,
     EquivariantRMSNormArraySphericalHarmonicsV2,
     get_normalization_layer,
 )
-from fairchem.core.models.uma.nn.mole_utils import MOLEInterface
-from fairchem.core.models.uma.nn.radial import GaussianSmearing
-from fairchem.core.models.uma.nn.so3_layers import SO3_Linear
-from fairchem.core.models.utils.irreps import cg_change_mat, irreps_sum
+from qhflow2._vendor_fairchem.uma.nn.mole_utils import MOLEInterface
+from qhflow2._vendor_fairchem.uma.nn.radial import GaussianSmearing
+from qhflow2._vendor_fairchem.uma.nn.so3_layers import SO3_Linear
+from qhflow2._vendor_fairchem.irreps import cg_change_mat, irreps_sum
 
 from .escn_md_block import eSCNMD_Block, GridAtomwise, Edgewise, NodeNodeInteraction
 
 from e3nn.io import SphericalTensor
 from e3nn.o3 import Irreps
 from e3nn import o3
-
-if TYPE_CHECKING:
-    from fairchem.core.datasets.atomic_data import AtomicData
-
 
 ESCNMD_DEFAULT_EDGE_CHUNK_SIZE = 1024 * 128
 
