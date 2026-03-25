@@ -1566,8 +1566,8 @@ class LitModel_flow(LitModel):
                     error_dict[key + "_order_violation_mse"] = order_violation_sq / order_violation_count
                     error_dict[key + "_order_violation_rmse"] = torch.sqrt(order_violation_sq / order_violation_count)
 
-                elif key in ["hamiltonian", "hamiltonian_full"]:
-                    target_key = "hamiltonian"
+                elif key in ["hamiltonian", "hamiltonian_full", "density_matrix"]:
+                    target_key = key if key != "hamiltonian_full" else "hamiltonian"
                     row = target.edge_index[0]
                     edge_batch = target.batch[row]
                     
@@ -1578,7 +1578,8 @@ class LitModel_flow(LitModel):
 
                     pred_non_diagonal = outputs[f"{key}_non_diagonal_blocks"]
                     non_diagonal_target = target[f"non_diagonal_{target_key}"]
-                    non_diagonal_target = non_diagonal_target * self.non_diagonal_hamiltonian_scale
+                    if target_key == "hamiltonian":
+                        non_diagonal_target = non_diagonal_target * self.non_diagonal_hamiltonian_scale
                     non_diagonal_mask = target[f"non_diagonal_{target_key}_mask"]
 
                     # Diagonal blocks loss computation

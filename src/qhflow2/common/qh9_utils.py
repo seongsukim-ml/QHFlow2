@@ -5,34 +5,63 @@ Common QH9 utilities for experiments.
 import os
 from torch_geometric.loader import DataLoader
 from omegaconf import DictConfig
-from torch.utils.data import DistributedSampler
-import torch.distributed as dist
 from qhflow2.common.custom_logger import get_logger
 
 logger = get_logger(__file__)
 
 
 def load_qh9_dataset(conf: DictConfig, root_path: str):
-    """Load QH9 dataset based on configuration."""
+    """Load QH9 or nablaDFT dataset based on configuration."""
     from qhflow2.dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
     from qhflow2.dataset_module.qh9_datasets_shard import QH9Stable as QH9Stable_shard, QH9Dynamic as QH9Dynamic_shard
     dataset_name = conf.dataset.dataset_name
     logger.info(f"Loading {dataset_name} dataset...")
+
+    # ── QH9 Density dataset ──
+    # Handled in create_qh9_data_loaders (split-per-dataset, like NablaDFT)
+    if dataset_name == "QH9Density":
+        logger.info(f"Loading QH9Density from: {conf.dataset.source_lmdb}")
+        return None  # dataset created per-split in create_qh9_data_loaders
+
+    # ── nablaDFT dataset ──
+    if dataset_name == "NablaDFT":
+        from qhflow2.dataset_module.nabladft_dataset import NablaDFTDataset
+        lmdb_path = conf.dataset.source_lmdb
+        logger.info(f"Loading NablaDFT from: {lmdb_path}")
+        dataset = NablaDFTDataset(
+            lmdb_path=lmdb_path,
+            split=conf.dataset.split,
+            split_ratio=list(conf.dataset.get("split_ratio", [0.8, 0.1, 0.1])),
+            seed=conf.dataset.get("split_seed", 42),
+            full_orbitals=conf.dataset.get("full_orbitals", 32),
+            basis=conf.dataset.get("basis", "def2-svp-nabla"),
+            convention=conf.dataset.get("convention", "pyscf_def2svp_nabla_to_e3nn"),
+            include_overlap=conf.dataset.get("include_overlap", True),
+            include_initial_hamiltonian=conf.dataset.get("include_initial_hamiltonian", True),
+            include_dft_energy=conf.dataset.get("include_dft_energy", False),
+            include_dft_forces=conf.dataset.get("include_dft_forces", False),
+        )
+        return dataset
 
     # ── Preprocessed single LMDB (fastest) ──
     if conf.dataset.get("use_preprocessed", False):
         from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
         lmdb_path = conf.dataset.get("preprocessed_lmdb", "")
         if not lmdb_path:
-            # Auto-detect: look for <dataset_dir>_shard_preprocessed.lmdb
-            lmdb_path = os.path.join(
-                root_path, "dataset", f"{dataset_name}_shard_preprocessed.lmdb"
-            )
+            # Auto-detect: try <name>_preprocessed.lmdb, then <name>_shard_preprocessed.lmdb
+            for suffix in ["_preprocessed.lmdb", "_shard_preprocessed.lmdb"]:
+                candidate = os.path.join(root_path, "dataset", f"{dataset_name}{suffix}")
+                if os.path.exists(candidate):
+                    lmdb_path = candidate
+                    break
+            if not lmdb_path:
+                lmdb_path = os.path.join(root_path, "dataset", f"{dataset_name}_preprocessed.lmdb")
         logger.info(f"Using preprocessed LMDB: {lmdb_path}")
         dataset = QH9PreprocessedDataset(
             lmdb_path=lmdb_path,
             split=conf.dataset.split,
             mode=conf.get("mode", "train"),
+            compute_q_tensor=conf.dataset.get("compute_q_tensor", True),
         )
         return dataset
 
@@ -88,14 +117,68 @@ def load_qh9_dataset(conf: DictConfig, root_path: str):
         return dataset
 
 def _create_qh9_dataset(dataset, conf: DictConfig):
-    train_dataset = dataset[dataset.train_mask]
-    valid_dataset = dataset[dataset.val_mask]
-    test_dataset = dataset[dataset.test_mask]
-    
+    from qhflow2.dataset_module.qh9_preprocessed import QH9PreprocessedDataset
+    if isinstance(dataset, QH9PreprocessedDataset):
+        # Preprocessed dataset uses torch Subset (not InMemoryDataset slicing)
+        from torch.utils.data import Subset
+        train_dataset = Subset(dataset, dataset.train_mask.tolist())
+        valid_dataset = Subset(dataset, dataset.val_mask.tolist())
+        test_dataset = Subset(dataset, dataset.test_mask.tolist())
+    else:
+        train_dataset = dataset[dataset.train_mask]
+        valid_dataset = dataset[dataset.val_mask]
+        test_dataset = dataset[dataset.test_mask]
+
     return train_dataset, valid_dataset, test_dataset
 
 def create_qh9_data_loaders(dataset, conf: DictConfig, batch_size=[None, None, None]):
-    """Create train, validation, and test data loaders for QH9."""
+    """Create train, validation, and test data loaders for QH9 or nablaDFT."""
+    # nablaDFT: dataset is already split, load each split separately
+    if conf.dataset.dataset_name == "NablaDFT":
+        from qhflow2.dataset_module.nabladft_dataset import NablaDFTDataset
+        lmdb_path = conf.dataset.source_lmdb
+        common_kwargs = dict(
+            lmdb_path=lmdb_path,
+            split_ratio=list(conf.dataset.get("split_ratio", [0.8, 0.1, 0.1])),
+            seed=conf.dataset.get("split_seed", 42),
+            full_orbitals=conf.dataset.get("full_orbitals", 32),
+            basis=conf.dataset.get("basis", "def2-svp-nabla"),
+            convention=conf.dataset.get("convention", "pyscf_def2svp_nabla_to_e3nn"),
+            include_overlap=conf.dataset.get("include_overlap", True),
+            include_initial_hamiltonian=conf.dataset.get("include_initial_hamiltonian", True),
+            include_dft_energy=conf.dataset.get("include_dft_energy", False),
+            include_dft_forces=conf.dataset.get("include_dft_forces", False),
+        )
+        train_dataset = NablaDFTDataset(split="train", **common_kwargs)
+        valid_dataset = NablaDFTDataset(split="val", **common_kwargs)
+        test_dataset = NablaDFTDataset(split="test", **common_kwargs)
+        return _create_qh9_data_loaders(
+            train_dataset, valid_dataset, test_dataset, conf, batch_size
+        )
+
+    # QH9Density: dataset is already split, load each split separately
+    if conf.dataset.dataset_name == "QH9Density":
+        from qhflow2.dataset_module.qh9_density_dataset import QH9DensityDataset
+        common_kwargs = dict(
+            lmdb_path=conf.dataset.source_lmdb,
+            split_path=conf.dataset.get("split_path", None),
+            include_density_matrix=conf.dataset.get("include_density_matrix", True),
+            include_initial_density_matrix=conf.dataset.get("include_initial_density_matrix", True),
+            include_initial_hamiltonian=conf.dataset.get("include_initial_hamiltonian", True),
+            include_overlap=conf.dataset.get("include_overlap", True),
+            include_dft_energy=conf.dataset.get("include_dft_energy", False),
+            include_dft_forces=conf.dataset.get("include_dft_forces", False),
+            compute_q_tensor=conf.dataset.get("compute_q_tensor", False),
+            functional=conf.dataset.get("functional", "b3lyp"),
+            basis_name=conf.dataset.get("basis_name", "def2-svp"),
+        )
+        train_dataset = QH9DensityDataset(split="train", **common_kwargs)
+        valid_dataset = QH9DensityDataset(split="val", **common_kwargs)
+        test_dataset = QH9DensityDataset(split="test", **common_kwargs)
+        return _create_qh9_data_loaders(
+            train_dataset, valid_dataset, test_dataset, conf, batch_size
+        )
+
     train_dataset, valid_dataset, test_dataset = _create_qh9_dataset(dataset, conf)
     return _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf, batch_size)
 
@@ -104,8 +187,15 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
     if getattr(conf, "partial_val", None) is not None:
         assert conf.partial_val > 0 and conf.partial_val <= 1
         original_valid_size = len(valid_dataset)
-        valid_dataset = valid_dataset[: int(len(valid_dataset) * conf.partial_val)]
-        print(f"Using partial validation: {conf.partial_val} ({original_valid_size} -> {len(valid_dataset)}) (for speed up)")
+        n_val = int(original_valid_size * conf.partial_val)
+        if hasattr(valid_dataset, 'index_select'):
+            # PyG InMemoryDataset
+            valid_dataset = valid_dataset[:n_val]
+        else:
+            # NablaDFTDataset or other Dataset subclass — use Subset
+            from torch.utils.data import Subset
+            valid_dataset = Subset(valid_dataset, range(n_val))
+        print(f"Using partial validation: {conf.partial_val} ({original_valid_size} -> {n_val}) (for speed up)")
     
     train_batch_size = conf.dataset.train_batch_size
     valid_batch_size = conf.dataset.valid_batch_size
@@ -130,83 +220,28 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
             test_batch_size = batch_size[2]
             print(f"Using custom test batch size: {test_batch_size} instead of config batch size {conf.dataset.test_batch_size}")
 
-    use_ddp = "ddp" in str(conf.get("strategy", "None")).lower()
-    if not use_ddp:
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size=train_batch_size,
-            shuffle=True,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-        )
-        
-        val_loader = DataLoader(
-            valid_dataset,
-            batch_size=valid_batch_size,
-            shuffle=False,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-        )
-        
-        test_loader = DataLoader(
-            test_dataset,
-            batch_size=test_batch_size,
-            shuffle=False,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-        )
-    else:
-        if not dist.is_available() or not dist.is_initialized():
-            raise RuntimeError("DDP strategy requires torch.distributed to be initialized.")
-
-        print("Using DDP")
-        print("Num workers: ", conf.dataset.num_workers)
-
-        train_sampler = DistributedSampler(
-            train_dataset,
-            shuffle=True,
-            drop_last=True,
-        )
-        val_sampler = DistributedSampler(
-            valid_dataset,
-            shuffle=False,
-            drop_last=False,
-        )
-        test_sampler = DistributedSampler(
-            test_dataset,
-            shuffle=False,
-            drop_last=False,
-        )
-
-        persistent_workers = conf.dataset.num_workers > 0 and conf.dataset.get("persistent_workers", False)
-
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size=train_batch_size,
-            shuffle=False,
-            sampler=train_sampler,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-            persistent_workers=persistent_workers,
-        )
-        val_loader = DataLoader(
-            valid_dataset,
-            batch_size=valid_batch_size,
-            shuffle=False,
-            sampler=val_sampler,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-            persistent_workers=persistent_workers,
-        )
-        test_loader = DataLoader(
-            test_dataset,
-            batch_size=test_batch_size,
-            shuffle=False,
-            sampler=test_sampler,
-            num_workers=conf.dataset.num_workers,
-            pin_memory=conf.dataset.pin_memory,
-            persistent_workers=persistent_workers,
-        )
+    # Lightning auto-injects DistributedSampler for DDP — no manual sampler needed.
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=train_batch_size,
+        shuffle=True,
+        num_workers=conf.dataset.num_workers,
+        pin_memory=conf.dataset.pin_memory,
+    )
+    val_loader = DataLoader(
+        valid_dataset,
+        batch_size=valid_batch_size,
+        shuffle=False,
+        num_workers=conf.dataset.num_workers,
+        pin_memory=conf.dataset.pin_memory,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=test_batch_size,
+        shuffle=False,
+        num_workers=conf.dataset.num_workers,
+        pin_memory=conf.dataset.pin_memory,
+    )
     
     return train_loader, val_loader, test_loader
 
@@ -307,6 +342,8 @@ def dataset_abbr(dataset_name: str):
         "QH9Stable-size_ood".lower(): "ood",
         "QH9Dynamic-300k-geometry".lower(): "geo",
         "QH9Dynamic-300k-mol".lower(): "mol",
+        "nabladft-train".lower(): "nabla",
+        "qh9density-random".lower(): "den",
     }
     if dataset_name.lower() not in qh9_abbr:
         raise ValueError(f"Unknown dataset for qh9_abbr: {dataset_name} (valid: {qh9_abbr.keys()})")

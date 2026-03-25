@@ -81,7 +81,10 @@ def main(conf):
     test_dataset = test_loader.dataset
 
     # Log dataset information
-    log_dataset_info(dataset, train_loader.dataset, val_loader.dataset, test_loader.dataset)
+    if dataset is not None:
+        log_dataset_info(dataset, train_loader.dataset, val_loader.dataset, test_loader.dataset)
+    else:
+        logger.info(f"Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}")
 
     # Initialize the LightningModule
     pl_model_cls = get_pl_model(conf)
@@ -152,7 +155,11 @@ def _run_qh9_training_or_testing(mode, trainer, lit_model, train_loader, val_loa
             )
 
         logger.info("Testing...")
-        trainer.test(lit_model, test_loader, ckpt_path="best")
+        # Use "best" if ModelCheckpoint saved one, otherwise fall back to "last"
+        _ckpt_callbacks = [c for c in trainer.callbacks
+                           if hasattr(c, 'best_model_path') and c.best_model_path]
+        _test_ckpt = "best" if _ckpt_callbacks else "last"
+        trainer.test(lit_model, test_loader, ckpt_path=_test_ckpt)
         
         # predict the model with last checkpoint
         logger.info("Predicting with last checkpoint...")

@@ -105,6 +105,11 @@ class LitModel(pl.LightningModule):
         
         # Model configuration
         self.loss_weights = conf.loss_weights
+        # Pass predict_targets from top-level config to model
+        if hasattr(conf, "predict_targets") and not hasattr(conf.model, "predict_targets"):
+            from omegaconf import OmegaConf, flag_override
+            with flag_override(conf.model, "struct", False):
+                conf.model.predict_targets = conf.predict_targets
         self.model = get_model(conf.model)
         self.model.set(device)
 
@@ -650,28 +655,38 @@ class LitModel(pl.LightningModule):
     @staticmethod
     def post_processing(batch, default_type):
         """Post-process batch data to ensure correct tensor shapes and types."""
-        if "hamiltonian" in batch.keys():
+        _keys = batch.keys() if callable(batch.keys) else batch.keys
+        if "hamiltonian" in _keys:
             if batch.hamiltonian.dim() == 2:
                 batch.hamiltonian = batch.hamiltonian.view(
                     batch.hamiltonian.shape[0] // batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                 )
-        if "overlap" in batch.keys():
+        if "overlap" in _keys:
             if batch.overlap.dim() == 2:
                 batch.overlap = batch.overlap.view(
                     batch.overlap.shape[0] // batch.overlap.shape[1],
                     batch.overlap.shape[1],
                     batch.overlap.shape[1],
                 )
-        for key in batch.keys():
+        for key in _keys:
             if type(batch[key]) == torch.Tensor:
                 if torch.is_floating_point(batch[key]):
                     batch[key] = batch[key].type(default_type)
         return batch
 
     def get_orbital_mask(self):
-        """Get orbital masks for different atomic numbers."""
+        """Get orbital masks for different atomic numbers.
+
+        Uses basis-aware _get_orbital_mask when a basis is configured,
+        falling back to the original QH9 hardcoded masks (elements 1-10).
+        """
+        basis = getattr(self, '_basis', None) or getattr(self.conf, 'basis', None)
+        if basis is not None:
+            return _get_orbital_mask(basis=basis)
+
+        # Legacy fallback: QH9 elements only (H=1 through Ne=10)
         orbital_mask_line1 = torch.cat([ORBITAL_1S_2S_INDICES, ORBITAL_2P_INDICES])
         orbital_mask_line2 = torch.arange(ORBITAL_MASK_SIZE_LINE2)
         orbital_mask = {}

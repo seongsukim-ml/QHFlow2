@@ -56,12 +56,14 @@ class QHFlow_escn_v5_1(nn.Module):
         trans_type="so2",
         esen_max_radius=5.0,
         max_num_neighbors=32,
+        expand_lmax=None,
         **kwargs,
     ):
         super(QHFlow_escn_v5_1, self).__init__()
-        
+
         # Core model parameters
         self.order = sh_lmax
+        self.expand_lmax = expand_lmax if expand_lmax is not None else sh_lmax
         self.dataset_type = dataset_type
         self.hidden_size = hidden_size
         self.bottle_hidden_size = bottle_hidden_size
@@ -75,16 +77,25 @@ class QHFlow_escn_v5_1(nn.Module):
         self.esen_max_radius = esen_max_radius 
         self.basis = basis
         self.max_num_neighbors = max_num_neighbors
-        assert basis in ["def2-svp", "def2-tzvp"], f"Invalid basis: {basis}"
+        assert basis in ["def2-svp", "def2-svp-nabla", "def2-tzvp"], f"Invalid basis: {basis}"
         if basis == "def2-svp":
             self.output_irrep = o3.Irreps("3x0e + 2x1e + 1x2e")
             self.output_matrix_dim = 14
+        elif basis == "def2-svp-nabla":
+            self.output_irrep = o3.Irreps("5x0e + 4x1e + 3x2e")
+            self.output_matrix_dim = 32
         elif basis == "def2-tzvp":
             self.output_irrep = o3.Irreps("5x0e + 5x1e + 2x2e + 1x3e")
             self.output_matrix_dim = 37
         else:
             raise ValueError(f"Invalid basis: {self.basis}")
         
+        # Multi-target prediction (default: hamiltonian only)
+        if isinstance(kwargs.get("predict_targets", None), (list, tuple)):
+            self.predict_targets = list(kwargs["predict_targets"])
+        else:
+            self.predict_targets = ["hamiltonian"]
+
         self.trans_type = trans_type
         assert trans_type in ["equiformer", "equiformerV2", "so2"], f"Invalid trans_type: {trans_type}"
         self.norm_layer = "layer"
@@ -99,6 +110,8 @@ class QHFlow_escn_v5_1(nn.Module):
         
         # Bottleneck representations
         self.hidden_bottle_irrep = o3.Irreps(construct_o3irrps(self.bottle_hidden_size, order=self.order))
+        # Expansion bottleneck (may differ from hidden_bottle_irrep if expand_lmax < order)
+        self.expand_bottle_irrep = o3.Irreps(construct_o3irrps(self.bottle_hidden_size, order=self.expand_lmax))
         
         # Base representations (all even parity)
         self.hidden_irrep_base = o3.Irreps(construct_o3irrps_base(self.hidden_size, order=self.order))
@@ -211,12 +224,12 @@ class QHFlow_escn_v5_1(nn.Module):
         self.fc_ij_bias = nn.ModuleDict()
         
         # Create expansion and FC layers for Hamiltonian prediction
-        for matrix_type in {"hamiltonian"}:
+        for matrix_type in self.predict_targets:
             self._create_matrix_prediction_layers(matrix_type)
 
         # Linear transformations to bottleneck representation
 
-        self.output_ii = Linear(self.hidden_irrep, self.hidden_bottle_irrep)
+        self.output_ii = Linear(self.hidden_irrep, self.expand_bottle_irrep)
 
         self.irrep_tp_out_node_pair, instruction_node_pair = get_feasible_irrep(
             self.hidden_irrep,
@@ -232,7 +245,7 @@ class QHFlow_escn_v5_1(nn.Module):
             shared_weights=True,
             internal_weights=True,
         )
-        self.output_ij = Linear(self.hidden_irrep, self.hidden_bottle_irrep)
+        self.output_ij = Linear(self.hidden_irrep, self.expand_bottle_irrep)
 
         # for matrix_type in {"hamiltonian_2"}:
         #     self._create_matrix_prediction_layers(matrix_type)        
@@ -242,13 +255,9 @@ class QHFlow_escn_v5_1(nn.Module):
 
     def _create_matrix_prediction_layers(self, matrix_type):
         """Create layers for predicting matrix elements."""
-        # Input irrep for expansion
+        # Input irrep for expansion (controlled by expand_lmax)
         input_expand_irrep = o3.Irreps(
-            f"{self.bottle_hidden_size}x0e + "
-            f"{self.bottle_hidden_size}x1e + "
-            f"{self.bottle_hidden_size}x2e + "
-            f"{self.bottle_hidden_size}x3e + "
-            f"{self.bottle_hidden_size}x4e"
+            " + ".join(f"{self.bottle_hidden_size}x{l}e" for l in range(self.expand_lmax + 1))
         )
         output_irrep = self.output_irrep
         # Diagonal elements (ii)
@@ -398,80 +407,37 @@ class QHFlow_escn_v5_1(nn.Module):
         full_dst, full_src = data["full_edge_index"]
         transpose_edge_index = data["transpose_edge_index"]
 
-        hamiltonian_diagonal_matrix = self.expand_ii["hamiltonian"](
-            fii,
-            self.fc_ii["hamiltonian"](node_attr_R_init),
-            self.fc_ii_bias["hamiltonian"](node_attr_R_init),
-        )
-        
-        # Generate off-diagonal matrix elements
         node_pair_embedding = torch.cat(
             [node_attr_R_init[full_dst], node_attr_R_init[full_src]],
             dim=-1
         )
-        hamiltonian_non_diagonal_matrix = self.expand_ij["hamiltonian"](
-            fij,
-            self.fc_ij["hamiltonian"](node_pair_embedding),
-            self.fc_ij_bias["hamiltonian"](node_pair_embedding),
-        )
 
-        # hamiltonian_diagonal_matrix_2 = self.expand_ii["hamiltonian_2"](
-        #     fii_2,
-        #     self.fc_ii["hamiltonian_2"](node_attr_R_init),
-        #     self.fc_ii_bias["hamiltonian_2"](node_attr_R_init),
-        # )
-        # hamiltonian_non_diagonal_matrix_2 = self.expand_ij["hamiltonian_2"](
-        #     fij_2,
-        #     self.fc_ij["hamiltonian_2"](node_pair_embedding),
-        #     self.fc_ij_bias["hamiltonian_2"](node_pair_embedding),
-        # )
-
-        if not keep_blocks:
-            # Build complete Hamiltonian matrix
-            hamiltonian_matrix = self._build_final_matrix(
-                data,
-                hamiltonian_diagonal_matrix,
-                hamiltonian_non_diagonal_matrix,
+        result = {}
+        for matrix_type in self.predict_targets:
+            diag_matrix = self.expand_ii[matrix_type](
+                fii,
+                self.fc_ii[matrix_type](node_attr_R_init),
+                self.fc_ii_bias[matrix_type](node_attr_R_init),
             )
-            # Ensure Hermitian symmetry
-            hamiltonian_matrix = (hamiltonian_matrix + hamiltonian_matrix.transpose(-1, -2)) / 2
+            offdiag_matrix = self.expand_ij[matrix_type](
+                fij,
+                self.fc_ij[matrix_type](node_pair_embedding),
+                self.fc_ij_bias[matrix_type](node_pair_embedding),
+            )
 
-            # hamiltonian_matrix_2 = self._build_final_matrix(
-            #     data,
-            #     hamiltonian_diagonal_matrix_2,
-            #     hamiltonian_non_diagonal_matrix_2,
-            # )
-            # # Ensure Hermitian symmetry
-            # hamiltonian_matrix_2 = (hamiltonian_matrix_2 + hamiltonian_matrix_2.transpose(-1, -2)) / 2
+            if not keep_blocks:
+                full_matrix = self._build_final_matrix(data, diag_matrix, offdiag_matrix)
+                result[matrix_type] = (full_matrix + full_matrix.transpose(-1, -2)) / 2
+            else:
+                ret_diag = (diag_matrix + diag_matrix.transpose(-1, -2)) / 2
+                ret_offdiag = (
+                    offdiag_matrix
+                    + offdiag_matrix[transpose_edge_index].transpose(-1, -2)
+                ) / 2
+                result[f"{matrix_type}_diagonal_blocks"] = ret_diag
+                result[f"{matrix_type}_non_diagonal_blocks"] = ret_offdiag
 
-            return {
-                "hamiltonian": hamiltonian_matrix,
-            }
-        else:
-            # Return block matrices separately
-            ret_hamiltonian_diagonal_matrix = (
-                hamiltonian_diagonal_matrix + hamiltonian_diagonal_matrix.transpose(-1, -2)
-            ) / 2 
-
-            # Apply transpose considering edge symmetry
-            ret_hamiltonian_non_diagonal_matrix = (
-                hamiltonian_non_diagonal_matrix
-                + hamiltonian_non_diagonal_matrix[transpose_edge_index].transpose(-1, -2)
-            ) / 2 
-
-            # ret_hamiltonian_diagonal_matrix_2 = (
-            #     hamiltonian_diagonal_matrix_2 + hamiltonian_diagonal_matrix_2.transpose(-1, -2)
-            # ) / 2 
-
-            # ret_hamiltonian_non_diagonal_matrix_2 = (
-            #     hamiltonian_non_diagonal_matrix_2
-            #     + hamiltonian_non_diagonal_matrix_2[transpose_edge_index].transpose(-1, -2)
-            # ) / 2 
-
-            return {
-                "hamiltonian_diagonal_blocks": ret_hamiltonian_diagonal_matrix,
-                "hamiltonian_non_diagonal_blocks": ret_hamiltonian_non_diagonal_matrix
-            }
+        return result
 
     def forward(self, data, H, keep_blocks=False):
         """Forward pass of the QHFlow model.
