@@ -1,0 +1,28 @@
+# QHFlow2 licensing
+
+QHFlow2 is a multi-license repository. No single license applies to every
+file, dataset, or model checkpoint.
+
+- Files authored specifically for QHFlow2 and marked `MIT` are available
+  under the MIT License.
+- Files derived from AIRS/QHNet and marked `GPL-3.0-only` remain under the
+  GNU General Public License version 3.
+- QHFlow2 checkpoint weight files trained on QH9 Stable or QH9 Dynamic and
+  explicitly marked `CC-BY-NC-SA-4.0` are available under the Creative
+  Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+  This CC license does not apply to QHFlow2 source code, configuration,
+  documentation, or checkpoint metadata.
+- FairChem-derived eSCN files retain their upstream MIT license and copyright
+  notices.
+- Dataset and checkpoint terms are documented separately in
+  `DATASETS.md` and `ckpts/README.md`.
+
+The authoritative file-to-license mapping is `REUSE.toml`. Full license texts
+are stored in `LICENSES/`, and upstream attribution is recorded in
+`THIRD_PARTY_NOTICES.md`.
+
+The MIT grant for QHFlow2-authored files does not relicense third-party code,
+datasets, or checkpoints. When distributing an integrated build, comply with
+every applicable upstream license. The external QH9 dataset independently
+retains its upstream CC-BY-NC-SA-4.0 terms; that dataset license is not a
+license for QHFlow2 source code.

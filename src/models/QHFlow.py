@@ -1,40 +1,12 @@
-import math
 import torch
 from torch import nn
-from torch.nn import functional as F
 from torch_cluster import radius_graph
 from e3nn import o3
 from e3nn.o3 import Linear
 
 from .layers import *
 from .modules import *
-
-def get_time_embedding(timesteps, embedding_dim, max_positions=2000):
-    """Generate sinusoidal time embeddings for diffusion timesteps.
-    
-    Args:
-        timesteps: Timestep values
-        embedding_dim: Dimension of output embedding
-        max_positions: Maximum number of positions for encoding
-        
-    Returns:
-        torch.Tensor: Time embeddings with sinusoidal encoding
-    """
-    # Code adapted from https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/nn.py
-    assert len(timesteps.shape) == 1
-    timesteps = timesteps * max_positions
-    half_dim = embedding_dim // 2
-    emb = math.log(max_positions) / (half_dim - 1)
-    emb = torch.exp(
-        torch.arange(half_dim, dtype=torch.float32, device=timesteps.device) * -emb
-    )
-    emb = timesteps.float()[:, None] * emb[None, :]
-    emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1)
-    if embedding_dim % 2 == 1:  # zero pad
-        emb = F.pad(emb, (0, 1), mode="constant")
-    assert emb.shape == (timesteps.shape[0], embedding_dim)
-    return emb
-
+from .time_embedding import get_time_embedding
 
 class QHFlow(nn.Module):
     """

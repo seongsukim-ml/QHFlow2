@@ -1,0 +1,65 @@
+schema_version: 1
+audited_at: "2026-07-28"
+source_repository: "https://github.com/seongsukim-ml/QHFlow2"
+source_branch: "chore/add-license"
+
+datasets:
+  md17_schnorb:
+    drive_url: "https://drive.google.com/drive/folders/1d3HTu0H7gdg54kirWBqN24x-s1QW6OKV"
+    upstream: "https://depositonce.tu-berlin.de/items/b25de7f8-3c7a-4e41-9ffe-6aca65ada0e5"
+    license: "MIT"
+    contents: ["ethanol", "malondialdehyde", "uracil", "water", "sharded variants"]
+    sidecar_status: "missing"
+  revised_md17:
+    drive_url: "https://drive.google.com/drive/folders/1yqxWmy2NM84Q_yjBnvQaZLO6vAAc5ghA"
+    upstream: "https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038"
+    license: "CC0-1.0"
+    contents: ["rmd-aspirin", "rmd-ethanol", "rmd-naphthalene", "rmd-salicylic_acid"]
+    sidecar_status: "missing"
+  qh9_stable:
+    drive_file_id: "1LcEJGhB8VUGkuyb0oQ_9ANJdSkky9xMS"
+    upstream: "https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9"
+    license: "CC-BY-NC-SA-4.0"
+    sidecar_status: "missing"
+  qh9_dynamic_300k:
+    drive_file_id: "1sbf-sFhh3ZmhXgTcN2ke_la39MaG0Yho"
+    upstream: "https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9"
+    license: "CC-BY-NC-SA-4.0"
+    sidecar_status: "missing"
+
+checkpoints:
+  root:
+    drive_url: "https://drive.google.com/drive/folders/14My7LuvDJiM9hvG2n4_5T9UN97wp4x9w"
+  qhflow2_qh9:
+    drive_url: "https://drive.google.com/drive/folders/1pUBhJRft6hEbBIxYCCx8ws-IK6khtQyI"
+    artifact_count: 16
+    license: "CC-BY-NC-SA-4.0"
+    license_scope: "checkpoint_weight_files_only"
+    license_status: "assigned_sidecar_pending"
+    metadata_template: "CHECKPOINT_METADATA.qh9.template.yaml"
+  qhflow2_md17:
+    drive_url: "https://drive.google.com/drive/folders/1nYg4vahVGphyZchL-OhNdMcr2aU-vpMg"
+    artifact_count: 6
+    proposed_license: "MIT"
+    license_status: "proposed_not_attached"
+  qhflow2_rmd17:
+    drive_url: "https://drive.google.com/drive/folders/1gplv2N2SGKLLWXpZ6B6iiMGCdcb9zlhI"
+    artifact_count: 6
+    proposed_license: "MIT"
+    license_status: "proposed_not_attached"
+  qhflow1_legacy:
+    drive_url: "https://drive.google.com/drive/folders/1JHOSegLBjsdQo3NZCw-3DguhuLpknzwB"
+    proposed_license: "NOASSERTION"
+    license_status: "provenance_review_required"
+
+required_sidecars:
+  datasets:
+    - "DATASET_METADATA.yaml"
+    - "LICENSE.txt"
+    - "CITATION.bib"
+    - "SHA256SUMS"
+  checkpoints:
+    - "CHECKPOINT_METADATA.yaml"
+    - "LICENSE.txt"
+    - "README.md"
+    - "SHA256SUMS"

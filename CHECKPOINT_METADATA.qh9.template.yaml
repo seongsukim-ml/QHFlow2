@@ -1,0 +1,29 @@
+schema_version: 1
+name: ""
+model_architecture: "QHFlow2"
+checkpoint_file: ""
+sha256: ""
+created_by: "Seongsu Kim"
+training_code:
+  repository: "https://github.com/seongsukim-ml/QHFlow2"
+  commit: ""
+configuration: ""
+software:
+  python: "3.12"
+  torch: "2.4.1"
+  cuda: "12.1"
+base_checkpoint:
+  name: null
+  source: null
+  license: null
+datasets:
+  - name: ""
+    source: "https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9"
+    license: "CC-BY-NC-SA-4.0"
+license: "CC-BY-NC-SA-4.0"
+license_file: "LICENSE.txt"
+license_scope: "checkpoint_file_only"
+intended_use: "Non-commercial research on molecular Hamiltonian prediction"
+metrics: {}
+limitations: ""
+created_at: ""
