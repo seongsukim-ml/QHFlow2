@@ -1,10 +1,8 @@
-import math
 import collections
 from typing import Dict
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.nn import init
 from torch_scatter import scatter
 import torch_geometric
@@ -18,6 +16,7 @@ from e3nn.math import normalize2mom, perm
 from e3nn.util.jit import compile_mode
 from .layers import *
 from .modules import *
+from .time_embedding import get_time_embedding, sinusoidal_time_embedding
 
 
 def construct_o3irrps(dim,order):
@@ -31,32 +30,6 @@ def construct_o3irrps_base(dim,order):
     for l in range(order+1):
         string.append(f"{dim}x{l}e")
     return "+".join(string)
-
-def get_time_embedding(timesteps, embedding_dim, max_positions=2000):
-    """Generate sinusoidal time embeddings for diffusion timesteps.
-    
-    Args:
-        timesteps: Timestep values
-        embedding_dim: Dimension of output embedding
-        max_positions: Maximum number of positions for encoding
-        
-    Returns:
-        torch.Tensor: Time embeddings with sinusoidal encoding
-    """
-    # Code adapted from https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/nn.py
-    assert len(timesteps.shape) == 1
-    timesteps = timesteps * max_positions
-    half_dim = embedding_dim // 2
-    emb = math.log(max_positions) / (half_dim - 1)
-    emb = torch.exp(
-        torch.arange(half_dim, dtype=torch.float32, device=timesteps.device) * -emb
-    )
-    emb = timesteps.float()[:, None] * emb[None, :]
-    emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1)
-    if embedding_dim % 2 == 1:  # zero pad
-        emb = F.pad(emb, (0, 1), mode="constant")
-    assert emb.shape == (timesteps.shape[0], embedding_dim)
-    return emb
 
 class TimestepEmbedder(nn.Module):
     """
@@ -73,24 +46,14 @@ class TimestepEmbedder(nn.Module):
 
     @staticmethod
     def timestep_embedding(t, dim, max_period=10000):
-        """
-        Create sinusoidal timestep embeddings.
-        :param t: a 1-D Tensor of N indices, one per batch element.
-                          These may be fractional.
-        :param dim: the dimension of the output.
-        :param max_period: controls the minimum frequency of the embeddings.
-        :return: an (N, D) Tensor of positional embeddings.
-        """
-        # https://github.com/openai/glide-text2im/blob/main/glide_text2im/nn.py
-        half = dim // 2
-        freqs = torch.exp(
-            -math.log(max_period) * torch.arange(start=0, end=half, dtype=torch.float32) / half
-        ).to(device=t.device)
-        args = t[:, None].float() * freqs[None]
-        embedding = torch.cat([torch.cos(args), torch.sin(args)], dim=-1)
-        if dim % 2:
-            embedding = torch.cat([embedding, torch.zeros_like(embedding[:, :1])], dim=-1)
-        return embedding
+        """Create deterministic Fourier features for scalar timesteps."""
+        return sinusoidal_time_embedding(
+            t,
+            dim,
+            max_period=max_period,
+            sin_first=False,
+            include_endpoint=False,
+        )
 
     def forward(self, t):
         t_freq = self.timestep_embedding(t, self.frequency_embedding_size)

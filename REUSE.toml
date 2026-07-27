@@ -1,0 +1,90 @@
+version = 1
+
+# Default for files authored specifically for QHFlow2.
+[[annotations]]
+path = ["**"]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Seongsu Kim"
+SPDX-License-Identifier = "MIT"
+
+# AIRS/QHNet-derived implementation and configuration.
+[[annotations]]
+path = [
+  "src/models/QHFlow.py",
+  "src/models/QHNet.py",
+  "src/models/Real_QHNet.py",
+  "src/models/Real_QHNet_qh9.py",
+  "src/models/layers.py",
+  "src/models/modules/__init__.py",
+  "src/models/modules/exponential_bernstein_radial_basis_functions.py",
+  "src/models/utils.py",
+  "src/utils.py",
+  "src/dataset_module/ori_dataset.py",
+  "src/config_md17/config_base.yaml",
+  "src/config_md17/qhnet.yaml",
+  "src/config_md17/dataset/**",
+  "src/config_md17/model/QHNet.yaml",
+  "src/config_md17/model/QHNet_rmd.yaml",
+  "src/config_qh9/qhnet.yaml",
+  "src/config_qh9/qhnet-residual.yaml",
+  "src/config_qh9/model/QHNet.yaml",
+  "src/common/orbital_conventions.py",
+  "src/dataset_module/qh9_datasets_rowan.py",
+  "src/config_qh9/dataset/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2023 AIRS/QHNet and QH9 contributors",
+  "2026 Seongsu Kim",
+]
+SPDX-License-Identifier = "GPL-3.0-only"
+
+# Only QHFlow2 checkpoint weight files trained on QH9 use CC BY-NC-SA 4.0.
+# Source code, configuration, documentation, and metadata are excluded.
+[[annotations]]
+path = [
+  "ckpts/QH9Stable/**/*.ckpt",
+  "ckpts/QH9Stable/**/*.pt",
+  "ckpts/QH9Stable/**/*.pth",
+  "ckpts/QH9Stable/**/*.safetensors",
+  "ckpts/QH9Dynamic*/**/*.ckpt",
+  "ckpts/QH9Dynamic*/**/*.pt",
+  "ckpts/QH9Dynamic*/**/*.pth",
+  "ckpts/QH9Dynamic*/**/*.safetensors",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 Seongsu Kim"
+SPDX-License-Identifier = "CC-BY-NC-SA-4.0"
+
+# FairChem/eSCN code and the byte-identical Jd.pt table.
+[[annotations]]
+path = [
+  "src/models/modules/Jd.pt",
+  "src/models/modules/escn_backbone.py",
+  "src/models/modules/escn_backbone_uma.py",
+  "src/models/modules/escn_backbone_v4.py",
+  "src/models/modules/escn_backbone_v4_1.py",
+  "src/models/modules/escn_backbone_v4_md17.py",
+  "src/models/modules/escn_backbone_v4_no_t.py",
+  "src/models/modules/escn_md_block.py",
+  "src/models/modules/escn_moe.py",
+]
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "Meta Platforms, Inc. and affiliates",
+  "2026 Seongsu Kim",
+]
+SPDX-License-Identifier = "MIT"
+
+# SchNOrb Hamiltonian data and QHFlow2-generated representations of it.
+[[annotations]]
+path = [
+  "dataset/water/**",
+  "dataset/water_shard/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = [
+  "2019 SchNOrb dataset authors",
+  "2026 Seongsu Kim",
+]
+SPDX-License-Identifier = "MIT"

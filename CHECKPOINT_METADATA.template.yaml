@@ -1,0 +1,29 @@
+schema_version: 1
+name: ""
+model_architecture: ""
+checkpoint_file: ""
+sha256: ""
+created_by: "Seongsu Kim"
+training_code:
+  repository: "https://github.com/seongsukim-ml/QHFlow2"
+  commit: ""
+configuration: ""
+software:
+  python: "3.12"
+  torch: "2.4.1"
+  cuda: "12.1"
+base_checkpoint:
+  name: null
+  source: null
+  license: null
+datasets:
+  - name: ""
+    source: ""
+    license: ""
+license: ""
+license_file: ""
+license_scope: ""
+intended_use: "Research on molecular Hamiltonian prediction"
+metrics: {}
+limitations: ""
+created_at: ""
