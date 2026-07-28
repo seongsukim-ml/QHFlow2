@@ -76,6 +76,19 @@ SPDX-FileCopyrightText = [
 ]
 SPDX-License-Identifier = "MIT"
 
+# Verbatim upstream MIT notices distributed with QHFlow2.
+[[annotations]]
+path = "THIRD_PARTY_LICENSES/FairChem-MIT.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Meta, Inc. and its affiliates"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "THIRD_PARTY_LICENSES/e3nn-MIT.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "2020 The Regents of the University of California, through Lawrence Berkeley National Laboratory; Ecole Polytechnique Federale de Lausanne (EPFL); Free University of Berlin; and Kostiantyn Lapchevskyi"
+SPDX-License-Identifier = "MIT"
+
 # SchNOrb Hamiltonian data and QHFlow2-generated representations of it.
 [[annotations]]
 path = [

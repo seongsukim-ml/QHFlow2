@@ -9,6 +9,7 @@ from every copyright holder.
 - QHFlow2 initial import: `82ebba73ff510f4b2a49f3fef7646fd3446efd2f`
 - AIRS comparison commit: `4a16c68a7da707c521019067dec51c227c10de45`
 - FairChem comparison commit: `ecc7718769368804ebb683c719405c23ab5d84b8`
+- e3nn dependency/license reference: tag `0.5.1`
 - Audit date: 2026-07-28
 
 The QHFlow2 repository history begins with a single 273-file import, so commit
@@ -31,6 +32,11 @@ project README.
 | `src/models/modules/Jd.pt` | SHA-256 is byte-identical to FairChem UMA `Jd.pt` | MIT |
 | `dataset/water/**` and `dataset/water_shard/**` | Raw archive is the published SchNOrb Hamiltonian water dataset | MIT |
 | Remaining project-authored files | No substantial match found in the audited upstream paths | MIT, subject to author review |
+
+The exact upstream MIT notices for the audited FairChem commit and the pinned
+e3nn 0.5.1 dependency are included under `THIRD_PARTY_LICENSES/`. e3nn API
+imports do not by themselves make QHFlow2 source files e3nn-derived, so no
+QHFlow2 file was reclassified solely because it imports e3nn.
 
 The QHFlow2-specific additions to third-party-derived files are intended to be
 permissively reusable where they can be separated, but the combined files
