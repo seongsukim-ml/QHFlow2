@@ -33,12 +33,28 @@ separately released under CC-BY-NC-SA-4.0 as described in `ckpts/README.md`.
 ## FairChem / eSCN
 
 - Project: FairChem
-- Source: https://github.com/facebookresearch/fairchem
+- Source: https://github.com/facebookresearch/fairchem/tree/ecc7718769368804ebb683c719405c23ab5d84b8
 - Upstream license: MIT
-- Copyright: Meta Platforms, Inc. and affiliates
+- Copyright: Meta, Inc. and its affiliates
 - QHFlow2 changes: Hamiltonian-specific backbones, variants, and integration
+- Included license: `THIRD_PARTY_LICENSES/FairChem-MIT.txt`
 
 The original Meta copyright and MIT notices are retained in the source files.
+
+## e3nn
+
+- Project: Euclidean neural networks (e3nn)
+- Version used by QHFlow2: 0.5.1
+- Source: https://github.com/e3nn/e3nn/tree/0.5.1
+- Upstream license: MIT
+- Copyright: 2020 The Regents of the University of California, through
+  Lawrence Berkeley National Laboratory; Ecole Polytechnique Federale de
+  Lausanne (EPFL); Free University of Berlin; and Kostiantyn Lapchevskyi
+- Included license: `THIRD_PARTY_LICENSES/e3nn-MIT.txt`
+
+QHFlow2 imports e3nn as an external dependency. No vendored e3nn source was
+identified in this audit, so the e3nn license is recorded as a dependency
+notice and does not replace the file-level licenses in `REUSE.toml`.
 
 ## SchNOrb Hamiltonian datasets
 

@@ -13,7 +13,12 @@ file, dataset, or model checkpoint.
   This CC license does not apply to QHFlow2 source code, configuration,
   documentation, or checkpoint metadata.
 - FairChem-derived eSCN files retain their upstream MIT license and copyright
-  notices.
+  notices. The upstream license text is included in
+  `THIRD_PARTY_LICENSES/FairChem-MIT.txt`.
+- e3nn 0.5.1, used as an external dependency, is available under the MIT
+  License. Its upstream notice is included in
+  `THIRD_PARTY_LICENSES/e3nn-MIT.txt`. Importing e3nn does not change the
+  licenses assigned to QHFlow2 or QHNet-derived files.
 - Dataset and checkpoint terms are documented separately in
   `DATASETS.md` and `ckpts/README.md`.
 
