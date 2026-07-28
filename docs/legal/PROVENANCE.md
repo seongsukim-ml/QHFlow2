@@ -34,9 +34,10 @@ project README.
 | Remaining project-authored files | No substantial match found in the audited upstream paths | MIT, subject to author review |
 
 The exact upstream MIT notices for the audited FairChem commit and the pinned
-e3nn 0.5.1 dependency are included under `THIRD_PARTY_LICENSES/`. e3nn API
-imports do not by themselves make QHFlow2 source files e3nn-derived, so no
-QHFlow2 file was reclassified solely because it imports e3nn.
+e3nn 0.5.1 dependency are included under
+`docs/legal/third_party_licenses/`. e3nn API imports do not by themselves make
+QHFlow2 source files e3nn-derived, so no QHFlow2 file was reclassified solely
+because it imports e3nn.
 
 The QHFlow2-specific additions to third-party-derived files are intended to be
 permissively reusable where they can be separated, but the combined files
@@ -67,5 +68,5 @@ remains GPL-3.0-only, as does AIRS/QHNet-derived model software; other original
 QHFlow2 software is mapped to MIT.
 
 The external QH9 dataset remains a separately licensed upstream work under
-CC-BY-NC-SA-4.0. Recording that upstream dataset license in `DATASETS.md` does
+CC-BY-NC-SA-4.0. Recording that upstream dataset license in this document does
 not extend CC-BY-NC-SA-4.0 to QHFlow2 source code.

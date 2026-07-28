@@ -27,7 +27,7 @@ without changing the license of the underlying records.
 The linked Drive folders contain processed copies but currently do not include
 per-folder license sidecars. Before redistributing a folder, include:
 
-1. a copy of the applicable license from `LICENSES/`;
+1. a copy of the applicable license from [`LICENSES/`](../../LICENSES/);
 2. this dataset card or an equivalent README;
 3. the upstream source URL and citation;
 4. a description of QHFlow2 processing and any changes; and

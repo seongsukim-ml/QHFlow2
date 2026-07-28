@@ -13,7 +13,7 @@ The MIT license for QHFlow2-authored files does not replace these terms.
 - QHFlow2 changes: refactoring, flow-matching integration, new backbones,
   configuration changes, training utilities, and dataset support
 
-The affected paths are identified in `REUSE.toml`.
+The affected paths are identified in [`REUSE.toml`](../../REUSE.toml).
 
 ## QH9 benchmark and dataset
 
@@ -28,7 +28,8 @@ data schema and split protocol; the upstream QH9 loader source is not included.
 The upstream CC notice in this section applies to the QH9 dataset and other
 upstream material actually covered by that notice. It is not used as the
 license for QHFlow2 source code. QHFlow2 checkpoint weights trained on QH9 are
-separately released under CC-BY-NC-SA-4.0 as described in `ckpts/README.md`.
+separately released under CC-BY-NC-SA-4.0 as described in the
+[checkpoint policy](../../ckpts/README.md).
 
 ## FairChem / eSCN
 
@@ -37,7 +38,8 @@ separately released under CC-BY-NC-SA-4.0 as described in `ckpts/README.md`.
 - Upstream license: MIT
 - Copyright: Meta, Inc. and its affiliates
 - QHFlow2 changes: Hamiltonian-specific backbones, variants, and integration
-- Included license: `THIRD_PARTY_LICENSES/FairChem-MIT.txt`
+- Included license:
+  [`FairChem-MIT.txt`](third_party_licenses/FairChem-MIT.txt)
 
 The original Meta copyright and MIT notices are retained in the source files.
 
@@ -50,11 +52,12 @@ The original Meta copyright and MIT notices are retained in the source files.
 - Copyright: 2020 The Regents of the University of California, through
   Lawrence Berkeley National Laboratory; Ecole Polytechnique Federale de
   Lausanne (EPFL); Free University of Berlin; and Kostiantyn Lapchevskyi
-- Included license: `THIRD_PARTY_LICENSES/e3nn-MIT.txt`
+- Included license: [`e3nn-MIT.txt`](third_party_licenses/e3nn-MIT.txt)
 
 QHFlow2 imports e3nn as an external dependency. No vendored e3nn source was
 identified in this audit, so the e3nn license is recorded as a dependency
-notice and does not replace the file-level licenses in `REUSE.toml`.
+notice and does not replace the file-level licenses in
+[`REUSE.toml`](../../REUSE.toml).
 
 ## SchNOrb Hamiltonian datasets
 

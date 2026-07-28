@@ -34,6 +34,11 @@ with the checkpoint, recipients should not assume a reuse grant.
 
 ## Required metadata
 
+Start from the
+[general checkpoint template](../docs/legal/templates/CHECKPOINT_METADATA.template.yaml)
+or the
+[QH9 checkpoint template](../docs/legal/templates/CHECKPOINT_METADATA.qh9.template.yaml).
+
 Every released checkpoint folder should include a `CHECKPOINT_METADATA.yaml`
 with at least:
 

@@ -14,17 +14,17 @@ file, dataset, or model checkpoint.
   documentation, or checkpoint metadata.
 - FairChem-derived eSCN files retain their upstream MIT license and copyright
   notices. The upstream license text is included in
-  `THIRD_PARTY_LICENSES/FairChem-MIT.txt`.
+  `docs/legal/third_party_licenses/FairChem-MIT.txt`.
 - e3nn 0.5.1, used as an external dependency, is available under the MIT
   License. Its upstream notice is included in
-  `THIRD_PARTY_LICENSES/e3nn-MIT.txt`. Importing e3nn does not change the
-  licenses assigned to QHFlow2 or QHNet-derived files.
+  `docs/legal/third_party_licenses/e3nn-MIT.txt`. Importing e3nn does not
+  change the licenses assigned to QHFlow2 or QHNet-derived files.
 - Dataset and checkpoint terms are documented separately in
-  `DATASETS.md` and `ckpts/README.md`.
+  `docs/legal/DATASETS.md` and `ckpts/README.md`.
 
-The authoritative file-to-license mapping is `REUSE.toml`. Full license texts
-are stored in `LICENSES/`, and upstream attribution is recorded in
-`THIRD_PARTY_NOTICES.md`.
+The authoritative file-to-license mapping is `REUSE.toml`. SPDX license texts
+are stored in `LICENSES/`; supporting policy, provenance, release, and upstream
+attribution material is organized under `docs/legal/`.
 
 The MIT grant for QHFlow2-authored files does not relicense third-party code,
 datasets, or checkpoints. When distributing an integrated build, comply with
