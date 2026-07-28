@@ -1,10 +1,10 @@
 import torch
-import math
-import torch.nn.functional as F
+
+from .time_embedding import get_time_embedding
 
 def get_orbital_mask(basis):
     """Get orbital masks for different atomic numbers.
-    
+
     Returns:
         dict: Mapping from atomic number to orbital indices
     """
@@ -194,29 +194,3 @@ def calculate_orbital_slices(data, graph_idx, orbital_mask):
         orbital_count = len(orbital_mask[atom_idx.item()])
         slices.append(slices[-1] + orbital_count)
     return slices
-
-def get_time_embedding(timesteps, embedding_dim, max_positions=2000):
-    """Generate sinusoidal time embeddings for diffusion timesteps.
-    
-    Args:
-        timesteps: Timestep values
-        embedding_dim: Dimension of output embedding
-        max_positions: Maximum number of positions for encoding
-        
-    Returns:
-        torch.Tensor: Time embeddings with sinusoidal encoding
-    """
-    # Code adapted from https://github.com/hojonathanho/diffusion/blob/master/diffusion_tf/nn.py
-    assert len(timesteps.shape) == 1
-    timesteps = timesteps * max_positions
-    half_dim = embedding_dim // 2
-    emb = math.log(max_positions) / (half_dim - 1)
-    emb = torch.exp(
-        torch.arange(half_dim, dtype=torch.float32, device=timesteps.device) * -emb
-    )
-    emb = timesteps.float()[:, None] * emb[None, :]
-    emb = torch.cat([torch.sin(emb), torch.cos(emb)], dim=1)
-    if embedding_dim % 2 == 1:  # zero pad
-        emb = F.pad(emb, (0, 1), mode="constant")
-    assert emb.shape == (timesteps.shape[0], embedding_dim)
-    return emb

@@ -99,9 +99,17 @@ where NAME is the dataset name (`QH9Stable` / `QH9Dynamic`). Use the following S
 - `QH9Stable`: `random`, `size_ood`
 - `QH9Dynamic`: `geometry`, `mol`
 
-Data is assembled automatically when the final chunk is processed.
+Set `DB_IDX=-1` to process all shards, or use one shard index for a resumable
+partial run. Each shard is written directly under `processed/lmdbs/`.
+The command above remains as a compatibility CLI, but new Python code should
+import from `dataset_module.qh9_dataset`. The following legacy import paths are
+deprecated, emit `DeprecationWarning`, and retain their previous exports during
+the compatibility period:
 
-**Note**: The legacy `qh9_datasets_split.py` module will be deprecated. Use `qh9_datasets_shard.py` for all new dataset processing operations.
+- `dataset_module.qh9_common`
+- `dataset_module.qh9_datasets_split`
+- `dataset_module.qh9_datasets_shard`
+- `dataset_module.qh9_datasets_shard_full_process`
 
 **Note:** We plan to provide pre-processed datasets for all datasets to facilitate easier setup and usage.
 
@@ -205,3 +213,12 @@ This project is based on the repo [AIRS](https://github.com/divelab/AIRS.git) (Q
 **MD17 Dataset**: [Revised MD17 dataset (rMD17)](https://figshare.com/articles/dataset/Revised_MD17_dataset_rMD17_/12672038)
 
 **QH9 Dataset**: [QHBench/QH9](https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9)
+
+## License
+
+QHFlow2 uses file-level licensing; see [LICENSE](LICENSE) and
+[REUSE.toml](REUSE.toml) for the authoritative mapping. Original QHFlow2 files
+are MIT, while identified AIRS/QHNet-derived software remains GPL-3.0-only.
+CC-BY-NC-SA-4.0 applies only to QHFlow2 checkpoint weight files trained on QH9,
+not to QHFlow2 source code. External datasets retain their own upstream terms
+as listed in [DATASETS.md](DATASETS.md).

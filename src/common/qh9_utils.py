@@ -14,38 +14,37 @@ logger = get_logger(__file__)
 
 def load_qh9_dataset(conf: DictConfig, root_path: str):
     """Load QH9 dataset based on configuration."""
-    from dataset_module.qh9_datasets_split import QH9Stable, QH9Dynamic
-    from dataset_module.qh9_datasets_shard import QH9Stable as QH9Stable_shard, QH9Dynamic as QH9Dynamic_shard
+    from dataset_module.qh9_dataset import QH9Dynamic, QH9Stable
     dataset_name = conf.dataset.dataset_name
     logger.info(f"Loading {dataset_name} dataset...")
 
+    feature_kwargs = dict(
+        return_orbital_and_energies=conf.dataset.get("return_orbital_and_energies", False),
+        use_ref_hamiltonian_as_init_ham=conf.dataset.get("use_ref_hamiltonian_as_init_ham", False),
+        compute_q_tensor=conf.dataset.get("compute_q_tensor", True),
+        include_initial_hamiltonian=conf.dataset.get("include_initial_hamiltonian", True),
+        include_overlap=conf.dataset.get("include_overlap", True),
+        include_dft_energy=conf.dataset.get("include_dft_energy", False),
+        include_dft_forces=conf.dataset.get("include_dft_forces", False),
+        include_cut_orbital_coefficients=conf.dataset.get("include_cut_orbital_coefficients", True),
+    )
     if conf.dataset.get("use_shard", False):
         logger.info("Using shard dataset")
-        shard_feature_kwargs = dict(
-            return_orbital_and_energies=conf.dataset.get("return_orbital_and_energies", False),
-            use_ref_hamiltonian_as_init_ham=conf.dataset.get("use_ref_hamiltonian_as_init_ham", False),
-            compute_q_tensor=conf.dataset.get("compute_q_tensor", True),
-            include_initial_hamiltonian=conf.dataset.get("include_initial_hamiltonian", True),
-            include_overlap=conf.dataset.get("include_overlap", True),
-            include_dft_energy=conf.dataset.get("include_dft_energy", True),
-            include_dft_forces=conf.dataset.get("include_dft_forces", True),
-            include_cut_orbital_coefficients=conf.dataset.get("include_cut_orbital_coefficients", True),
-        )
 
         if dataset_name == "QH9Stable":
-            dataset = QH9Stable_shard(
+            dataset = QH9Stable(
                 os.path.join(root_path, "dataset"),
                 prefix="_shard",
                 split=conf.dataset.split,
-                **shard_feature_kwargs,
+                **feature_kwargs,
             )
         elif dataset_name == "QH9Dynamic":
-            dataset = QH9Dynamic_shard(
+            dataset = QH9Dynamic(
                 os.path.join(root_path, "dataset"),
                 split=conf.dataset.split,
                 prefix="_shard",
                 version=conf.dataset.version,
-                **shard_feature_kwargs,
+                **feature_kwargs,
             )
         else:
             raise ValueError(f"Unknown dataset: {dataset_name}")
@@ -58,12 +57,14 @@ def load_qh9_dataset(conf: DictConfig, root_path: str):
             dataset = QH9Stable(
                 os.path.join(root_path, "dataset"),
                 split=conf.dataset.split,
+                **feature_kwargs,
             )
         elif dataset_name == "QH9Dynamic":
             dataset = QH9Dynamic(
                 os.path.join(root_path, "dataset"),
                 split=conf.dataset.split,
                 version=conf.dataset.version,
+                **feature_kwargs,
             )
         else:
             raise ValueError(f"Unknown dataset: {dataset_name}")
