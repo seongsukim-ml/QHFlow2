@@ -216,9 +216,10 @@ This project is based on the repo [AIRS](https://github.com/divelab/AIRS.git) (Q
 
 ## License
 
-QHFlow2 uses file-level licensing; see [LICENSE](LICENSE) and
-[REUSE.toml](REUSE.toml) for the authoritative mapping. Original QHFlow2 files
-are MIT, while identified AIRS/QHNet-derived software remains GPL-3.0-only.
-CC-BY-NC-SA-4.0 applies only to QHFlow2 checkpoint weight files trained on QH9,
-not to QHFlow2 source code. External datasets retain their own upstream terms
-as listed in [DATASETS.md](DATASETS.md).
+QHFlow2 uses file-level licensing; see [LICENSE](LICENSE),
+[REUSE.toml](REUSE.toml), and the [legal documentation](docs/legal/README.md).
+Original QHFlow2 files are MIT, while identified AIRS/QHNet-derived software
+remains GPL-3.0-only. CC-BY-NC-SA-4.0 applies only to QHFlow2 checkpoint weight
+files trained on QH9, not to QHFlow2 source code. External datasets retain
+their own upstream terms as listed in the
+[dataset licensing guide](docs/legal/DATASETS.md).
