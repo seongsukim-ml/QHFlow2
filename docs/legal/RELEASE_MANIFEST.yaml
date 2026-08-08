@@ -1,7 +1,7 @@
 schema_version: 1
 audited_at: "2026-07-28"
 source_repository: "https://github.com/seongsukim-ml/QHFlow2"
-source_branch: "chore/add-license"
+source_branch: "main"
 
 datasets:
   md17_schnorb:
@@ -36,7 +36,7 @@ checkpoints:
     license: "CC-BY-NC-SA-4.0"
     license_scope: "checkpoint_weight_files_only"
     license_status: "assigned_sidecar_pending"
-    metadata_template: "CHECKPOINT_METADATA.qh9.template.yaml"
+    metadata_template: "docs/legal/templates/CHECKPOINT_METADATA.qh9.template.yaml"
   qhflow2_md17:
     drive_url: "https://drive.google.com/drive/folders/1nYg4vahVGphyZchL-OhNdMcr2aU-vpMg"
     artifact_count: 6
