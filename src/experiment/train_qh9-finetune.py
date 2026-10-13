@@ -6,7 +6,7 @@ from pathlib import Path
 
 # Import common utilities
 from common.setup import (
-    setup_paths, setup_auxiliary_basis, setup_tensor_type_and_seed,
+    setup_paths, setup_tensor_type_and_seed,
     get_root_path, get_mode
 )
 from common.qh9_utils import (
@@ -45,9 +45,8 @@ def main(conf):
     # Validate QH9 fine-tuning configuration
     validate_qh9_finetune_config(conf)
     
-    # Setup output directory and auxiliary basis
+    # Setup output directory
     output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
-    setup_auxiliary_basis(output_dir)
 
     # Setup tensor type and seed
     setup_tensor_type_and_seed(conf)

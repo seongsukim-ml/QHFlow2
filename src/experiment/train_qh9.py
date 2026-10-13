@@ -7,7 +7,7 @@ import sys
 
 # Import common utilities
 from common.setup import (
-    setup_paths, setup_auxiliary_basis, setup_tensor_type_and_seed,
+    setup_paths, setup_tensor_type_and_seed,
     get_root_path, get_mode
 )
 from common.qh9_utils import (
@@ -53,9 +53,8 @@ MODE_DESCRIPTIONS = {
 @hydra.main(config_path="../config_qh9", config_name="config_flow_v2_simple")
 def main(conf):
 
-    # Setup output directory and auxiliary basis
+    # Setup output directory
     output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
-    setup_auxiliary_basis(output_dir)
 
     with open(output_dir / "command_log.txt", "a") as f:
         cmd = " ".join(sys.argv)

@@ -7,7 +7,6 @@ from typing import Optional, List
 from tqdm.rich import tqdm
 from copy import deepcopy
 from ase.data import chemical_symbols, atomic_numbers
-import psi4
 from e3nn import o3
 from torch import nn
 import time
@@ -463,37 +462,54 @@ class Onsite_3idx_Overlap_Integral:
         self.basis = basis
 
     def calc_Q(self, atom: str):
-        psi4.core.be_quiet()
+        """Compute three-center overlap with PySCF, retaining the legacy order.
 
-        # NOTE: prevent Psi4 from moving the molecule in space.
-        # Refer to https://forum.psicode.org/t/how-to-align-the-atomic-orbitals-between-pyscf-and-psi4/3025/2
-        mol = psi4.geometry(
-            f"""
-            {atom} 0 0 0
-            nocom
-            noreorient
+        The result has shape ``(60, nao, nao)`` in the historical Psi4
+        spherical order. ``transform_Q`` converts all three axes to PySCF
+        order, as before. No Psi4 installation or working-directory basis
+        file is needed.
         """
+        from pyscf.df.incore import aux_e2
+
+        # Exactly the uncontracted 16s/8p/4d basis in auxiliary.gbs, in the
+        # original shell order. Each primitive is normalized by PySCF.
+        auxiliary_basis = [
+            [l, [2.0 ** (start - step * i), 1.0]]
+            for l, count, start, step in ((0, 16, 7, 1), (1, 8, 5, 2), (2, 4, 2, 2))
+            for i in range(count)
+        ]
+        # Only integrals are needed; electron parity satisfies Mole's spin
+        # check for odd-Z atoms without requiring an atomic SCF calculation.
+        mol = gto.M(
+            atom=[(atom, (0.0, 0.0, 0.0))], basis=self.basis,
+            spin=atomic_numbers[atom] % 2, cart=False, verbose=0,
         )
-
-        # Basis Set
-        psi4.set_options({"basis": self.basis})
-
-        # Build new wavefunction
-        wfn = psi4.core.Wavefunction.build(mol, psi4.core.get_global_option("basis"))
-
-        # Initialize MintsHelper with wavefunction's basis set
-        mints = psi4.core.MintsHelper(wfn.basisset())
-
-        # Refer to https://psicode.org/psi4manual/4.0b5/quickaddbasis.html
-        psi4.set_options({"basis": "auxiliary"})
-
-        # Build new wavefunction
-        wfn_aux = psi4.core.Wavefunction.build(
-            mol, psi4.core.get_global_option("basis")
+        auxmol = gto.M(
+            atom=mol.atom, basis={atom: auxiliary_basis},
+            spin=mol.spin, cart=False, verbose=0,
         )
+        # int3c1e integrates the product of three AOs at the same point.
+        # int3c2e would instead compute a Coulomb integral and is not Q.
+        Q = torch.from_numpy(
+            aux_e2(mol, auxmol, intor="int3c1e", aosym="s1").transpose(2, 0, 1).copy()
+        ).double()
 
-        Q = mints.ao_3coverlap(wfn.basisset(), wfn.basisset(), wfn_aux.basisset())
-        return torch.from_numpy(Q.np.T).double()
+        # Preserve calc_Q's public ordering as well as Q_table's ordering.
+        # The existing transform_Q applies the forward permutations.
+        AOs, AO_slices = self.parse_basis(atom)
+        inverse = {
+            shell: transform.argmax(dim=1).argsort()
+            for shell, transform in self.AO_transform_row.items()
+        }
+        orbital_order = torch.cat([
+            inverse[shell] + offset for shell, offset in zip(AOs, AO_slices)
+        ])
+        auxiliary_order = torch.cat([
+            torch.arange(16),
+            *[inverse["p"] + 16 + 3 * i for i in range(8)],
+            *[inverse["d"] + 40 + 5 * i for i in range(4)],
+        ])
+        return Q[auxiliary_order][:, orbital_order][:, :, orbital_order]
 
     def Q_table(self):
         Q_dict = {}
@@ -507,8 +523,10 @@ class Onsite_3idx_Overlap_Integral:
 
     @property
     def AO_transform_row(self):  # psi4 -> pyscf
-        """The on-site three-index overlap integral is calculated with `psi4`, while Hamiltonian obtained from `psycf`,
-        which represents Hamiltonian under AOs with different ordering from that in `psi4`.
+        r"""Convert the historical calc_Q spherical order to PySCF order.
+
+        These permutations remain for API compatibility; the integrals are
+        now calculated with PySCF and require no Psi4 installation.
 
         Refer to https://psicode.org/psi4manual/master/prog_blas.html#how-to-name-orbital-bases-e-g-ao-so:
         If Spherical Harmonics are used, :math: `2L + 1` real combinations of the spherical harmonics are built
