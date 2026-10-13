@@ -5,10 +5,7 @@ Common setup utilities for experiments.
 import os
 import sys
 import torch
-import shutil
-import subprocess
 import pytorch_lightning as pl
-from pathlib import Path
 from omegaconf import DictConfig
 from common.custom_logger import get_logger
 
@@ -39,15 +36,6 @@ def setup_paths(src_path: str=None):
     sys.path.insert(0, src_path)
     logger.info(f"Add src_path to sys.path: {src_path}")
     return src_path
-
-
-def setup_auxiliary_basis(output_dir: Path):
-    """Copy auxiliary basis file and set basis."""
-    shutil.copy(os.path.join(os.path.dirname(__file__), "..", "experiment", "auxiliary.gbs"), output_dir)
-    logger.info("Copied auxiliary basis file")
-    cmd = subprocess.Popen("set basis AUXILIARY", shell=True)
-    cmd.wait()
-    logger.info("Set auxiliary basis")
 
 
 def setup_tensor_type_and_seed(conf: DictConfig):

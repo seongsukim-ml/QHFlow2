@@ -6,7 +6,7 @@ from dataset_module.ori_dataset import MD17_DFT, random_split, get_mask
 
 # Import common utilities
 from common.setup import (
-    setup_paths, setup_auxiliary_basis, setup_tensor_type_and_seed,
+    setup_paths, setup_tensor_type_and_seed,
     get_root_path, get_mode
 )
 from common.data_utils import create_md17_data_loaders, log_dataset_info, load_md17_dataset
@@ -44,9 +44,8 @@ MODE_DESCRIPTIONS = {
 
 @hydra.main(config_path="../config_md17", config_name="config_flow-lw10")
 def main(conf):
-    # Setup output directory and auxiliary basis
+    # Setup output directory
     output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
-    setup_auxiliary_basis(output_dir)
 
     with open(output_dir / "command_log.txt", "a") as f:
         cmd = " ".join(sys.argv)

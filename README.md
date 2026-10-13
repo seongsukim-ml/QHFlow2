@@ -12,7 +12,7 @@ All codes are tested and confirmed to work with `python 3.12` and `CUDA 12.1`. A
 
 ```bash
 # Example CUDA 12.1 with torch 2.4.1 without gpu-pyscf
-conda create -n qhflow2 python=3.12 psi4 -y
+conda create -n qhflow2 python=3.12 -y
 conda activate qhflow2
 
 pip install fairchem-core==2.6.0
@@ -26,7 +26,7 @@ pip install -r ../requirements.txt
 
 ```bash
 # Example CUDA 12.1 with torch 2.4.1 with gpu-pyscf
-conda create -n qhflow2-gpu-pyscf python=3.12 psi4 -y
+conda create -n qhflow2-gpu-pyscf python=3.12 -y
 conda activate qhflow2-gpu-pyscf
 conda install cuda=12.4.0 -c nvidia
 
@@ -45,6 +45,10 @@ pip install -r ../requirements.txt
 ```
 
 **Note:** Run `pip install -r ../requirements.txt` from the `src/` directory (or `pip install -r requirements.txt` from the repository root).
+
+Q tensor generation uses PySCF (`int3c1e`) with the original 16s/8p/4d auxiliary
+basis defined in code. Psi4 and a working-directory `auxiliary.gbs` file are
+not required. Existing Q tensor shapes and orbital ordering are preserved.
 
 ## Directory and Files
 The project follows this directory structure:
