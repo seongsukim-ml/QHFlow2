@@ -28,6 +28,7 @@ if USE_FAIRCHEM:
     # from .QHFlow_so2_v4_1 import QHFlow_escn_v4_1
     # from .QHFlow_so2_v5 import QHFlow_escn_v5
     from .QHFlow_so2_v5_1 import QHFlow_escn_v5_1   
+    from .QHFlow_so2_v5_1_ordering_fixed import QHFlow_escn_v5_1_ordering_fixed
     from .QHFlow_so2_v5_1_SO2 import QHFlow_escn_v5_1_SO2
     from .QHFlow_so2_v5_1_SO3 import QHFlow_escn_v5_1_SO3
     # from .QHFlow_so2_v5_1_dual import QHFlow_escn_v5_1_dual
@@ -90,6 +91,7 @@ def get_model(args):
         # model_dict["QHFlow_so2_uma_test2".lower()] = QHFlow_escn_uma_test2
         # model_dict["QHFlow_so2_v5".lower()] = QHFlow_escn_v5
         model_dict["QHFlow_so2_v5_1".lower()] = QHFlow_escn_v5_1
+        model_dict["QHFlow_so2_v5_1_ordering_fixed".lower()] = QHFlow_escn_v5_1_ordering_fixed
         model_dict["QHFlow_so2_v5_1_SO2".lower()] = QHFlow_escn_v5_1_SO2
         model_dict["QHFlow_so2_v5_1_SO3".lower()] = QHFlow_escn_v5_1_SO3
         model_dict["QHFlow_so2_v5_1_no_t".lower()] = QHFlow_escn_v5_1_no_t
