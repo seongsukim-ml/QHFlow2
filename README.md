@@ -27,6 +27,13 @@ Updated checkpoints, configurations, and detailed benchmark results are planned
 for release after end-to-end equivariance validation and benchmark evaluation.
 See the [issue description, validation scope, and release plan](docs/EQUIVARIANCE_STATUS.md).
 
+The [Stable/Muon branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-stable-muon)
+now provides the corrected SO(3) architecture and two-pass O(3) group-averaged
+models in all four sizes, plus QH9Stable-only training configurations. Muon
+starts at **1e-3**; norm/embedding and other non-matrix parameters use AdamW at
+**1e-4**. See the [implementation and training guide](docs/QH9STABLE_MUON.md).
+Full training and benchmark checkpoint release remain planned work.
+
 ## Packages and Requirements
 
 All codes are tested and confirmed to work with `python 3.12` and `CUDA 12.1`. A similar environment should also work, as this project does not rely on some rapidly changing packages.
