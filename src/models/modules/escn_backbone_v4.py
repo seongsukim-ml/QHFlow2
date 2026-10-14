@@ -362,6 +362,13 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
         # multiple channels
         return l, embedding
 
+    def _matrix_features_for_nodes(self, features, data_dict):
+        """Legacy graph-level matrix conditioning; QH9 blocks override this."""
+        return features[data_dict["batch"]]
+
+    def _time_features_for_nodes(self, features, data_dict):
+        return features[data_dict["batch"]]
+
     def _get_displacement_and_cell(
         self, data_dict: AtomicData
     ) -> tuple[torch.Tensor | None, torch.Tensor | None]:
@@ -567,18 +574,23 @@ class eSCNMDBackbone_ham(nn.Module, MOLEInterface):
             x_message[:, 0, :] = x_message_original[:, 0, :]
         
         if self.use_time_embedding:
-            time_message = get_time_embedding(data_dict["t"], self.sphere_channels)[data_dict["batch"]]
+            time_message = self._time_features_for_nodes(
+                get_time_embedding(data_dict["t"], self.sphere_channels), data_dict
+            )
         x_message[:, 0, :] = x_message[:, 0, :] + time_message
 
-        matrix_l_len = node_feats_H.shape[1]
-        matrix_mix_list = [x_message_original[:,0,:], node_feats_H[data_dict["batch"]][:,0,:]]
-        x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_H[data_dict["batch"]][:,0:matrix_l_len,:]
+        node_feats_H_nodes = self._matrix_features_for_nodes(node_feats_H, data_dict)
+        matrix_l_len = node_feats_H_nodes.shape[1]
+        matrix_mix_list = [x_message_original[:,0,:], node_feats_H_nodes[:,0,:]]
+        x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_H_nodes[:,0:matrix_l_len,:]
         if self.use_block_H:
-            matrix_mix_list.append(node_feats_H_init[data_dict["batch"]][:,0,:])
-            x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_H_init[data_dict["batch"]][:,0:matrix_l_len,:]
+            node_feats_H_init_nodes = self._matrix_features_for_nodes(node_feats_H_init, data_dict)
+            matrix_mix_list.append(node_feats_H_init_nodes[:,0,:])
+            x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_H_init_nodes[:,0:matrix_l_len,:]
         if self.use_block_S:
-            matrix_mix_list.append(node_feats_S[data_dict["batch"]][:,0,:])
-            x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_S[data_dict["batch"]][:,0:matrix_l_len,:]
+            node_feats_S_nodes = self._matrix_features_for_nodes(node_feats_S, data_dict)
+            matrix_mix_list.append(node_feats_S_nodes[:,0,:])
+            x_message[:, 0:matrix_l_len, :] = x_message[:, 0:matrix_l_len, :] + node_feats_S_nodes[:,0:matrix_l_len,:]
         if self.use_time_embedding:
             matrix_mix_list.append(time_message)
 

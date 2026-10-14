@@ -1,0 +1,44 @@
+# QH9Stable benchmark preparation; fresh checkpoints for these architectures.
+defaults:
+  - config_flow_v2_simple
+  - override model: QHFlow2_s
+  - override dataset: QH9Stable
+  - _self_
+
+hydra:
+  run:
+    dir: /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-stable-muon-${model.model_name}-s${seed}-${now:%Y%m%d-%H%M%S}
+
+optimizer: muon_adamw
+muon:
+  lr: 1.0e-3
+  adamw_lr: 1.0e-4
+  weight_decay: 1.0e-2
+  momentum: 0.95
+  ns_steps: 5
+  adjust_lr_fn: original
+  adamw_betas: [0.99, 0.999]
+
+# No warmup: the first updates use the requested 1e-3 / 1e-4 rates.
+warmup_step: 0
+scheduler_type: cosine
+accumulate_grad_batches: ${model.accumulate_grad_batches}
+gradient_clip_val: 1.0
+float32_matmul_precision: highest
+partial_val: 1.0
+seed: 42
+use_last_ckpt: false
+ckpt: ''
+wandb:
+  mode: disabled
+  project: QHFlow2-QH9Stable-Muon
+  run_name: ${model.model_name}-QH9Stable-muon-s${seed}
+
+dataset:
+  dataset_name: QH9Stable
+  split: random
+  batch_size: ${model.train_batch_size}
+  processed_directory: /dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed
+  split_file: /dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json
+  learning_rate: 1.0e-3
+  warmup_steps: 0

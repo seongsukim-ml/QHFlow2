@@ -1,0 +1,20 @@
+# Separate environment for the new benchmark models; do not combine with the
+# legacy requirements.txt pins. Install matching torch_scatter/torch_cluster
+# wheels for your PyTorch/CUDA build before using the model.
+torch==2.11.0
+torch-geometric==2.7.0
+e3nn==0.6.0
+fairchem-core==2.6.0
+pyscf==2.12.1
+numpy==2.2.6
+pytorch-lightning==2.6.1
+transformers==4.56.2
+huggingface-hub>=0.34,<1.0
+hydra-core>=1.3,<1.4
+torch-ema==0.3
+lmdb>=1.7
+rich
+wandb
+pandas
+gdown
+apsw

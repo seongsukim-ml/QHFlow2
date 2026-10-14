@@ -28,6 +28,16 @@ def load_qh9_dataset(conf: DictConfig, root_path: str):
         include_dft_forces=conf.dataset.get("include_dft_forces", False),
         include_cut_orbital_coefficients=conf.dataset.get("include_cut_orbital_coefficients", True),
     )
+    if conf.dataset.get("processed_directory"):
+        if dataset_name != "QH9Stable":
+            raise ValueError("The explicit read-only benchmark loader supports QH9Stable only")
+        from dataset_module.qh9_stable_readonly import QH9StableReadonly
+        return QH9StableReadonly(
+            processed_directory=conf.dataset.processed_directory,
+            split_file=conf.dataset.split_file,
+            split=conf.dataset.split,
+            **feature_kwargs,
+        )
     if conf.dataset.get("use_shard", False):
         logger.info("Using shard dataset")
 
