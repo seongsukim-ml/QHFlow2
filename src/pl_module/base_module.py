@@ -153,6 +153,12 @@ class LitModel(pl.LightningModule):
                 amsgrad=False,
             )
             logger.info(f"Optimizer: AdamW with lr: {optimizer.param_groups[0]['lr']}, weight_decay: {optimizer.param_groups[0]['weight_decay']}")
+        elif self.conf.optimizer.lower() == "muon_adamw":
+            from common.muon import MuonAdamW
+            optimizer = MuonAdamW(self.model, **dict(self.conf.get("muon", {})))
+            for group in optimizer.parameter_summary():
+                logger.info(f"Optimizer: {group['algorithm']}, lr={group['lr']}, "
+                            f"{group['parameters']} parameters in {group['tensors']} tensors")
         else:
             raise NotImplementedError(f"Optimizer {self.conf.optimizer} is not implemented.")
         
@@ -610,21 +616,22 @@ class LitModel(pl.LightningModule):
     @staticmethod
     def post_processing(batch, default_type):
         """Post-process batch data to ensure correct tensor shapes and types."""
-        if "hamiltonian" in batch.keys:
+        keys = batch.keys() if callable(batch.keys) else batch.keys
+        if "hamiltonian" in keys:
             if batch.hamiltonian.dim() == 2:
                 batch.hamiltonian = batch.hamiltonian.view(
                     batch.hamiltonian.shape[0] // batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                     batch.hamiltonian.shape[1],
                 )
-        if "overlap" in batch.keys:
+        if "overlap" in keys:
             if batch.overlap.dim() == 2:
                 batch.overlap = batch.overlap.view(
                     batch.overlap.shape[0] // batch.overlap.shape[1],
                     batch.overlap.shape[1],
                     batch.overlap.shape[1],
                 )
-        for key in batch.keys:
+        for key in keys:
             if type(batch[key]) == torch.Tensor:
                 if torch.is_floating_point(batch[key]):
                     batch[key] = batch[key].type(default_type)

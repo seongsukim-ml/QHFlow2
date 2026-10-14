@@ -1551,7 +1551,10 @@ class LitModel_flow(LitModel):
 
                 elif key in ["hamiltonian", "hamiltonian_full"]:
                     target_key = "hamiltonian"
-                    row = target.edge_index[0]
+                    edge_index = outputs.get("full_edge_index")
+                    if edge_index is None:
+                        edge_index = target.edge_index
+                    row = edge_index[0]
                     edge_batch = target.batch[row]
                     
                     # Get the predictions and targets for the diagonal and non-diagonal blocks
@@ -1964,7 +1967,10 @@ class LitModel_flow(LitModel):
             for key in keys:
                 if key == "hamiltonian":
                     # Standard Hamiltonian loss
-                    row = target.edge_index[0]
+                    edge_index = outputs.get("full_edge_index")
+                    if edge_index is None:
+                        edge_index = target.edge_index
+                    row = edge_index[0]
                     edge_batch = target.batch[row]
                     diff_diagonal = (
                         outputs[f"{key}_diagonal_blocks"] - target[f"diagonal_{key}"]

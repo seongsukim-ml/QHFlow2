@@ -46,8 +46,9 @@ def setup_tensor_type_and_seed(conf: DictConfig):
     
     if default_type == torch.float32:
         # Enable TensorFloat32 for better performance on Ampere GPUs
-        logger.info("Setting float32 matmul precision to high")
-        torch.set_float32_matmul_precision('high')
+        precision = conf.get("float32_matmul_precision", "high")
+        logger.info(f"Setting float32 matmul precision to {precision}")
+        torch.set_float32_matmul_precision(precision)
 
     # Set random seed
     seed = conf.get("seed", 0)
