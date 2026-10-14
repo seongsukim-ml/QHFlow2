@@ -6,6 +6,17 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 
 🌟 This repository contains an implementation of the QHFlow2 for DFT Hamiltonian prediction. This repository is still updating.
 
+## Known equivariance issue and planned corrected version
+
+We identified a feature-ordering bug in the legacy eSCN-to-e3nn interface that
+breaks rotational equivariance for multi-channel spherical features. The
+original model behavior is retained for checkpoint reproducibility. A separate
+experimental implementation, `QHFlow_so2_v5_1_ordering_fixed`, is available
+on the [equivariance-fix branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-equivariance-fix).
+We plan to release a corrected version after end-to-end rotation tests,
+retraining, and benchmark evaluation. See the
+[issue description and validation scope](docs/EQUIVARIANCE_STATUS.md).
+
 ## Packages and Requirements
 
 All codes are tested and confirmed to work with `python 3.12` and `CUDA 12.1`. A similar environment should also work, as this project does not rely on some rapidly changing packages.
