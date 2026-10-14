@@ -162,6 +162,13 @@ class QHFlow_escn_v5_1(nn.Module):
     
     def _get_orbital_mask(self):
         return get_orbital_mask(self.basis)
+
+    def _flatten_escn_embedding(self, embedding):
+        """Preserve the legacy feature layout for existing checkpoints.
+
+        The separately named ordering-fixed variant overrides this boundary.
+        """
+        return embedding.reshape(embedding.shape[0], -1)
     
     def _build_layers(self):
         """Build the main network layers."""
@@ -345,7 +352,7 @@ class QHFlow_escn_v5_1(nn.Module):
             data,
             [node_attr_R, node_feats_H, node_feats_H_init, node_feats_S]
             )
-        node_attr_R = middle_features["node_embedding"].reshape(data.num_nodes, -1)
+        node_attr_R = self._flatten_escn_embedding(middle_features["node_embedding"])
         data["node_attr_R"] = node_attr_R
         data["node_attr_R_init"] = middle_features["node_embedding"].narrow(1, 0, 1).squeeze()
         # data["node_attr_R_init"] = middle_features["node_attr_R_init"]
@@ -354,7 +361,7 @@ class QHFlow_escn_v5_1(nn.Module):
         fij = None
 
         fii_2 = node_attr_R        
-        fij_2 = middle_features["xy_embedding"].reshape(middle_features["xy_embedding"].shape[0], -1)
+        fij_2 = self._flatten_escn_embedding(middle_features["xy_embedding"])
 
         for layer_idx in range(len(self.e3_gnn_node_layer)):
             cur_fii = self.e3_gnn_node_layer[layer_idx](data, node_attr_R, fii)
