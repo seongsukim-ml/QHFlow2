@@ -1,5 +1,16 @@
 # Equivariance issue and separate correction
 
+## Follow-up: SO(3), O(3), and Stable/Muon implementations
+
+The separate [Stable/Muon branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-stable-muon)
+now implements `QHFlow2_order_fixed` and `QHFlow2_O3` with s/m/l/xl
+configurations. It combines corrected packing with the QH9 AO frame and
+spectral gating, then optionally averages identity and inversion predictions.
+Complete-model rotation/reflection tests and CPU training preflights are
+described in the [Stable/Muon guide](QH9STABLE_MUON.md). Full training and
+benchmark evaluation are still pending. The historical packing-only variant
+and its validation limits below remain available separately.
+
 ## Confirmed legacy bug
 
 The legacy `QHFlow_so2_v5_1` flattens eSCN node and atom-pair embeddings directly
@@ -94,9 +105,10 @@ for use as benchmarks:
 | QHFlow2 (order-fixed) | QHFlow2-s, QHFlow2-m, QHFlow2-l, QHFlow2-xl |
 | QHFlow2-O(3) | QHFlow2-O(3)-s, QHFlow2-O(3)-m, QHFlow2-O(3)-l, QHFlow2-O(3)-xl |
 
-These eight variants are planned releases. The current experimental branch
-provides the ordering correction for `QHFlow_so2_v5_1`; it does not yet provide
-the complete Muon-trained model lineup. Updated checkpoints, model
+These eight trained variants are planned releases. The initial experimental
+branch provides the ordering correction for `QHFlow_so2_v5_1`; the Stable/Muon
+branch now supplies the new architectures and training configurations.
+Updated checkpoints, model
 configurations, and detailed benchmark results will be released after
 end-to-end equivariance validation, retraining, and benchmark evaluation.
 The legacy implementation remains available separately for reproducibility.
