@@ -9,13 +9,23 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 ## Known equivariance issue and planned corrected version
 
 We identified a feature-ordering bug in the legacy eSCN-to-e3nn interface that
-breaks rotational equivariance for multi-channel spherical features. The
-original model behavior is retained for checkpoint reproducibility. A separate
+breaks rotational equivariance for multi-channel spherical features. The bug
+arose in QHFlow2 while adapting feature conventions from prior models. In
+follow-up experiments, we observed similar performance after correcting this
+ordering issue.
+
+The original model behavior is retained for checkpoint reproducibility. A separate
 experimental implementation, `QHFlow_so2_v5_1_ordering_fixed`, is available
 on the [equivariance-fix branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-equivariance-fix).
-We plan to release a corrected version after end-to-end rotation tests,
-retraining, and benchmark evaluation. See the
-[issue description and validation scope](docs/EQUIVARIANCE_STATUS.md).
+We plan to retrain the following model families with **Muon** and update them
+for benchmarking:
+
+- **QHFlow2 (order-fixed):** QHFlow2-s, QHFlow2-m, QHFlow2-l, QHFlow2-xl.
+- **QHFlow2-O(3):** QHFlow2-O(3)-s, QHFlow2-O(3)-m, QHFlow2-O(3)-l, QHFlow2-O(3)-xl.
+
+Updated checkpoints, configurations, and detailed benchmark results are planned
+for release after end-to-end equivariance validation and benchmark evaluation.
+See the [issue description, validation scope, and release plan](docs/EQUIVARIANCE_STATUS.md).
 
 ## Packages and Requirements
 

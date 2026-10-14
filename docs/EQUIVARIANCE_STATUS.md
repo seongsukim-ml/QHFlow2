@@ -10,6 +10,10 @@ multiple channels and non-scalar features, it does not commute with rotation.
 This bug was present before the Psi4-to-PySCF dependency replacement and is
 independent of Q-tensor generation.
 
+The bug arose in QHFlow2 while adapting feature conventions from prior models.
+The integration did not reconcile the different component/channel layouts at
+the eSCN-to-e3nn boundary.
+
 Both the node and pair paths in `QHFlow_so2_v5_1` are affected. The SO2, SO3,
 no-time, and no-time SO2/SO3 variants contain the same direct-flatten pattern;
 the experimental correction currently targets only `QHFlow_so2_v5_1`.
@@ -32,6 +36,14 @@ On the experimental branch, select
 `model=QHFlow_so2_v5_1_ordering_fixed_small` in the QH9 or MD17 training entrypoint.
 This is an explicit opt-in configuration; selecting the existing model keeps
 the existing behavior.
+
+## Performance observations
+
+In follow-up experiments, we observed similar performance after correcting the
+feature-ordering issue, compared with the legacy implementation. Detailed
+benchmark results will accompany the planned model update below. This empirical
+performance observation does not by itself establish full-model equivariance;
+the validation scope and remaining rotation checks are described separately.
 
 ## Validation and limits
 
@@ -74,7 +86,17 @@ test must not be counted as a successful integration check.
 ## Release plan
 
 We acknowledge that this bug existed in the legacy implementation. We plan to
-release a separately identified corrected version after end-to-end validation,
-retraining, and benchmark evaluation, with corresponding model/configuration
-and checkpoint information. No corrected pretrained checkpoint or new
-benchmark result is claimed by the experimental code.
+retrain the following model families with the **Muon optimizer** and update them
+for use as benchmarks:
+
+| Model family | Planned variants |
+| --- | --- |
+| QHFlow2 (order-fixed) | QHFlow2-s, QHFlow2-m, QHFlow2-l, QHFlow2-xl |
+| QHFlow2-O(3) | QHFlow2-O(3)-s, QHFlow2-O(3)-m, QHFlow2-O(3)-l, QHFlow2-O(3)-xl |
+
+These eight variants are planned releases. The current experimental branch
+provides the ordering correction for `QHFlow_so2_v5_1`; it does not yet provide
+the complete Muon-trained model lineup. Updated checkpoints, model
+configurations, and detailed benchmark results will be released after
+end-to-end equivariance validation, retraining, and benchmark evaluation.
+The legacy implementation remains available separately for reproducibility.
