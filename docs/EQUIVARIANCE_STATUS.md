@@ -1,0 +1,80 @@
+# Equivariance issue and separate correction
+
+## Confirmed legacy bug
+
+The legacy `QHFlow_so2_v5_1` flattens eSCN node and atom-pair embeddings directly
+from `[batch, (lmax + 1)^2, channels]`. Within each angular-degree block, eSCN
+stores `[m, channel]`, whereas e3nn's `channels x l` irreps require
+`[channel, m]`. Direct flattening mixes magnetic components and channels. For
+multiple channels and non-scalar features, it does not commute with rotation.
+This bug was present before the Psi4-to-PySCF dependency replacement and is
+independent of Q-tensor generation.
+
+Both the node and pair paths in `QHFlow_so2_v5_1` are affected. The SO2, SO3,
+no-time, and no-time SO2/SO3 variants contain the same direct-flatten pattern;
+the experimental correction currently targets only `QHFlow_so2_v5_1`.
+
+## Separate experimental implementation
+
+The [codex/qhflow2-equivariance-fix branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-equivariance-fix)
+provides `QHFlow_so2_v5_1_ordering_fixed`. It transposes the component and channel
+axes **within each l block** before packing both node and pair embeddings.
+The original model names, default configurations, and legacy packing behavior
+are preserved. The variant adds no trainable parameters.
+
+The old and new variants have matching parameter shapes, but those parameters
+operate on different feature layouts. Loading a legacy checkpoint into the new
+variant is not a behavior-preserving migration. Use a separate run and retrain
+or explicitly validate any transfer; keep legacy checkpoints with their
+original model configuration.
+
+On the experimental branch, select
+`model=QHFlow_so2_v5_1_ordering_fixed_small` in the QH9 or MD17 training entrypoint.
+This is an explicit opt-in configuration; selecting the existing model keeps
+the existing behavior.
+
+## Validation and limits
+
+`tests/test_spherical_layout.py` on the experimental branch reproduces the bug
+and tests proper rotations at lmax 4 with 1, 2, 64, and 128 channels and three
+random seeds. The one-channel case is a control: direct flattening is correct
+there. The corrected conversion commutes with the independent e3nn rotation
+representation at float64 precision. Tests also cover gradients and the actual
+diagonal-head layers, including the model's all-even Expansion convention.
+
+`tests/test_ordering_fixed_model.py` checks separate model registration, strict
+state-dict shape compatibility, and rotation of both diagonal and off-diagonal
+heads using prescribed equivariant backbone embeddings. This isolates both
+conversion call sites from the backbone's numerical approximations. These
+tests, together with the Q-tensor and time-embedding regression tests, pass
+(30 tests; CPU, Python 3.12, PyTorch 2.11, fairchem-core 2.6.0).
+
+These are component-level regression tests. They do not establish full-model
+equivariance, reflection/inversion equivariance, trained-checkpoint accuracy,
+or the impact on previously reported benchmark results. An initial untrained
+full-model smoke test also completed, but nonzero rotation residuals remained
+after fixing the layout. Backbone numerical behavior and the molecular/AO
+coordinate convention still require a dedicated end-to-end audit. The
+`ordering_fixed` name describes this specific correction, not a certification
+of full-model equivariance. Those audits and benchmark evaluation remain
+required before a corrected release.
+
+To run the regression checks from the repository root with the model's
+dependencies installed:
+
+```bash
+OMP_NUM_THREADS=1 python -m pytest -q \
+  tests/test_spherical_layout.py tests/test_ordering_fixed_model.py \
+  tests/test_onsite_overlap.py tests/test_time_embedding.py
+```
+
+The model integration test is skipped if fairchem is unavailable; a skipped
+test must not be counted as a successful integration check.
+
+## Release plan
+
+We acknowledge that this bug existed in the legacy implementation. We plan to
+release a separately identified corrected version after end-to-end validation,
+retraining, and benchmark evaluation, with corresponding model/configuration
+and checkpoint information. No corrected pretrained checkpoint or new
+benchmark result is claimed by the experimental code.
