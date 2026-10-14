@@ -1,8 +1,10 @@
 # QH9Stable: corrected SO(3) models, O(3) averaging, and Muon
 
-The `codex/qhflow2-stable-muon` branch provides two separately named model
-families. The legacy model names and checkpoints retain their original behavior.
-These new architectures require new training runs.
+Code release **`v0.2.0-rc.1`**, also integrated into `main`, provides two separately
+named model families. The legacy model names and checkpoints retain their
+original behavior. These new architectures require new training runs. Use the
+[release/version guide](RELEASING.md) to pin the source tag; a new code release
+does not imply that trained benchmark checkpoints are available.
 
 ## Models
 
@@ -100,6 +102,9 @@ Run from the current code checkout:
 
 ```bash
 cd /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-equivariance-fix/src
+
+# Inspect the code release and exact source commit before preparing a run.
+python3 -m qhflow2_version --json
 
 # Resolve all eight configurations and list optimizer assignments.
 /home/gpuuser/dataset/_cache/qhflow2-stable-muon-venv/bin/python \

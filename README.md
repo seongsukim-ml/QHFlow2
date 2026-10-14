@@ -6,7 +6,28 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 
 🌟 This repository contains an implementation of the QHFlow2 for DFT Hamiltonian prediction. This repository is still updating.
 
-## Known equivariance issue and planned corrected version
+## Code releases
+
+Current code release: **[v0.2.0-rc.1](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1)**.
+This prerelease includes corrected SO(3)/O(3) models and QH9Stable Muon training
+configurations. Retrained benchmark checkpoints and results are still pending.
+
+| Release | Contents |
+| --- | --- |
+| [`ver.0.1.0`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/ver.0.1.0) | Historical code snapshot, including the legacy equivariance issue |
+| [`v0.2.0-rc.1`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) | PySCF Q tensors, legacy models, corrected SO(3)/O(3) models, Stable/Muon preparation |
+
+All model families now live in `main` under distinct model names. Use a release
+tag to pin source code, and a model configuration to select the architecture.
+Existing model names and default configurations retain legacy behavior.
+From the repository root, `python3 src/qhflow2_version.py --json` prints the code
+version and Git provenance without importing training dependencies. New training
+checkpoints record these fields and the selected model name.
+
+See the [changelog](CHANGELOG.md), [versioning and release guide](docs/RELEASING.md),
+and [Stable/Muon training guide](docs/QH9STABLE_MUON.md).
+
+## Known legacy equivariance issue and corrected models
 
 We identified a feature-ordering bug in the legacy eSCN-to-e3nn interface that
 breaks rotational equivariance for multi-channel spherical features. The bug
@@ -14,29 +35,36 @@ arose in QHFlow2 while adapting feature conventions from prior models. In
 follow-up experiments, we observed similar performance after correcting this
 ordering issue.
 
-The original model behavior is retained for checkpoint reproducibility. A separate
-experimental implementation, `QHFlow_so2_v5_1_ordering_fixed`, is available
-on the [equivariance-fix branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-equivariance-fix).
+The original model behavior is retained for checkpoint reproducibility. The
+historical packing-only implementation, `QHFlow_so2_v5_1_ordering_fixed`, is
+preserved alongside the complete corrected models `QHFlow2_order_fixed` and
+`QHFlow2_O3`. Legacy checkpoints require their original model configuration;
+the corrected architectures require new training.
 We plan to retrain the following model families with **Muon** and update them
 for benchmarking:
 
 - **QHFlow2 (order-fixed):** QHFlow2-s, QHFlow2-m, QHFlow2-l, QHFlow2-xl.
 - **QHFlow2-O(3):** QHFlow2-O(3)-s, QHFlow2-O(3)-m, QHFlow2-O(3)-l, QHFlow2-O(3)-xl.
 
-Updated checkpoints, configurations, and detailed benchmark results are planned
-for release after end-to-end equivariance validation and benchmark evaluation.
+The new configurations and end-to-end equivariance checks are included in
+`v0.2.0-rc.1`. Updated checkpoints and detailed benchmark results are planned
+for release after retraining and benchmark evaluation.
 See the [issue description, validation scope, and release plan](docs/EQUIVARIANCE_STATUS.md).
 
-The [Stable/Muon branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-stable-muon)
-now provides the corrected SO(3) architecture and two-pass O(3) group-averaged
-models in all four sizes, plus QH9Stable-only training configurations. Muon
+The [versioned source](https://github.com/seongsukim-ml/QHFlow2/tree/v0.2.0-rc.1)
+provides the corrected SO(3) architecture and two-pass O(3) group-averaged models
+in all four sizes, plus QH9Stable-only training configurations. Muon
 starts at **1e-3**; norm/embedding and other non-matrix parameters use AdamW at
 **1e-4**. See the [implementation and training guide](docs/QH9STABLE_MUON.md).
 Full training and benchmark checkpoint release remain planned work.
 
 ## Packages and Requirements
 
-All codes are tested and confirmed to work with `python 3.12` and `CUDA 12.1`. A similar environment should also work, as this project does not rely on some rapidly changing packages.
+For the corrected SO(3)/O(3) models with Muon, use
+[`requirements-stable-muon.txt`](requirements-stable-muon.txt) and the
+[tested runtime instructions](docs/QH9STABLE_MUON.md#stable-data-and-runtime).
+The installation examples below are retained for the **legacy** models;
+their Torch 2.4 runtime does not provide native Muon.
 
 ```bash
 # Example CUDA 12.1 with torch 2.4.1 without gpu-pyscf
