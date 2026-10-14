@@ -1,9 +1,9 @@
-# Equivariance issue and separate correction
+# Equivariance issue and versioned correction
 
 ## Follow-up: SO(3), O(3), and Stable/Muon implementations
 
-The separate [Stable/Muon branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-stable-muon)
-now implements `QHFlow2_order_fixed` and `QHFlow2_O3` with s/m/l/xl
+Code prerelease [v0.2.0-rc.1](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1),
+also integrated into `main`, implements `QHFlow2_order_fixed` and `QHFlow2_O3` with s/m/l/xl
 configurations. It combines corrected packing with the QH9 AO frame and
 spectral gating, then optionally averages identity and inversion predictions.
 Complete-model rotation/reflection tests and CPU training preflights are
@@ -29,7 +29,7 @@ Both the node and pair paths in `QHFlow_so2_v5_1` are affected. The SO2, SO3,
 no-time, and no-time SO2/SO3 variants contain the same direct-flatten pattern;
 the experimental correction currently targets only `QHFlow_so2_v5_1`.
 
-## Separate experimental implementation
+## Historical packing-only implementation
 
 The [codex/qhflow2-equivariance-fix branch](https://github.com/seongsukim-ml/QHFlow2/tree/codex/qhflow2-equivariance-fix)
 provides `QHFlow_so2_v5_1_ordering_fixed`. It transposes the component and channel
@@ -43,7 +43,7 @@ variant is not a behavior-preserving migration. Use a separate run and retrain
 or explicitly validate any transfer; keep legacy checkpoints with their
 original model configuration.
 
-On the experimental branch, select
+To select the historical packing-only model, use
 `model=QHFlow_so2_v5_1_ordering_fixed_small` in the QH9 or MD17 training entrypoint.
 This is an explicit opt-in configuration; selecting the existing model keeps
 the existing behavior.
@@ -56,7 +56,7 @@ benchmark results will accompany the planned model update below. This empirical
 performance observation does not by itself establish full-model equivariance;
 the validation scope and remaining rotation checks are described separately.
 
-## Validation and limits
+## Historical packing-only validation and limits
 
 `tests/test_spherical_layout.py` on the experimental branch reproduces the bug
 and tests proper rotations at lmax 4 with 1, 2, 64, and 128 channels and three
@@ -76,11 +76,12 @@ These are component-level regression tests. They do not establish full-model
 equivariance, reflection/inversion equivariance, trained-checkpoint accuracy,
 or the impact on previously reported benchmark results. An initial untrained
 full-model smoke test also completed, but nonzero rotation residuals remained
-after fixing the layout. Backbone numerical behavior and the molecular/AO
-coordinate convention still require a dedicated end-to-end audit. The
+after fixing the layout. At that stage, backbone numerical behavior and the
+molecular/AO coordinate convention required a dedicated end-to-end audit. The
 `ordering_fixed` name describes this specific correction, not a certification
-of full-model equivariance. Those audits and benchmark evaluation remain
-required before a corrected release.
+of full-model equivariance. The subsequent audit produced the separate
+`QHFlow2_order_fixed` and `QHFlow2_O3` implementations and complete-model tests
+included in `v0.2.0-rc.1`. Benchmark evaluation remains pending.
 
 To run the regression checks from the repository root with the model's
 dependencies installed:
@@ -107,8 +108,9 @@ for use as benchmarks:
 
 These eight trained variants are planned releases. The initial experimental
 branch provides the ordering correction for `QHFlow_so2_v5_1`; the Stable/Muon
-branch now supplies the new architectures and training configurations.
-Updated checkpoints, model
-configurations, and detailed benchmark results will be released after
-end-to-end equivariance validation, retraining, and benchmark evaluation.
-The legacy implementation remains available separately for reproducibility.
+implementation is now published as code prerelease `v0.2.0-rc.1` and supplies
+the new architectures and training configurations in `main`.
+The configurations are available now. Updated trained checkpoints and detailed
+benchmark results are planned for `v0.2.0` after retraining and evaluation.
+The legacy implementation remains available under its original model names
+for reproducibility. See the [versioning and release guide](RELEASING.md).

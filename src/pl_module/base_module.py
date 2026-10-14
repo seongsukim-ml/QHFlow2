@@ -1,6 +1,7 @@
 import torch
 import pytorch_lightning as pl
 from models import get_model
+from qhflow2_version import get_code_metadata
 
 from collections import defaultdict
 from typing import List
@@ -81,6 +82,8 @@ class LitModel(pl.LightningModule):
     def __init__(self, conf):
         super().__init__()
         self.conf = conf
+        self.code_metadata = get_code_metadata()
+        logger.info(f"QHFlow2 source: {self.code_metadata}")
         
         # Device and data type setup
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -139,6 +142,18 @@ class LitModel(pl.LightningModule):
     # ==========================================
     # Core PyTorch Lightning Methods
     # ==========================================
+
+    def on_save_checkpoint(self, checkpoint):
+        """Record the code and architecture used by the saving run.
+
+        This additive field does not change model state keys. Older checkpoints
+        without it continue to load with their original model configuration.
+        """
+        checkpoint["qhflow2"] = {
+            **self.code_metadata,
+            "model_version": self.conf.model.version,
+            "model_name": self.conf.model.get("model_name", self.conf.model.version),
+        }
     
     def configure_optimizers(self):
         """Configure optimizers and learning rate schedulers."""

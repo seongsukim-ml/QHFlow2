@@ -15,6 +15,7 @@ from omegaconf import OmegaConf
 
 from common.muon import MuonAdamW
 from experiment.train_qh9_stable_muon import validate_config
+from qhflow2_version import get_code_metadata
 
 MODEL_CONFIGS = [f"QHFlow2{family}_{size}" for family in ("", "_O3") for size in ("s", "m", "l", "xl")]
 
@@ -26,7 +27,8 @@ def prepare(output, models, smoke=False):
         raise ValueError("Use an explicit absolute preparation output path")
     output.mkdir(parents=True, exist_ok=False)
     torch.set_num_threads(1)
-    report = {"torch": torch.__version__, "models": [], "full_training_launched": False}
+    report = {"qhflow2": get_code_metadata(), "torch": torch.__version__,
+              "models": [], "full_training_launched": False}
     dataset = None
     try:
         with initialize_config_dir(version_base=None, config_dir=str(Path(__file__).resolve().parents[1] / "config_qh9")):
