@@ -1,0 +1,91 @@
+{
+  "jobs": [
+    {
+      "id": "qhflow2-geometry-models-20261017",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+      "args": [
+        "benchmark",
+        "models",
+        "{gpus}",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-geometry-models-20261017"
+      ],
+      "gpu_count": 1,
+      "gpu_mode": "exclusive",
+      "allowed_hosts": [
+        "server-1-qhflow2-compute-20261016"
+      ],
+      "priority": 60,
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017",
+      "input_files": [
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017/src/config_qh9/config_stable_muon_optimized.yaml",
+        "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_auto_script/qhflow2_compute_20261016/gpu_guard.py",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/_my_script/experiment/2026-10-16/benchmark_compute.py"
+      ],
+      "environment": {
+        "EXPECTED_HOST": "usr310-gpumngc-01",
+        "TORCH_LOGS": "recompiles"
+      },
+      "description": "Bounded validation only: varied official batches, cache parity, O3 branch batching and compile-mode comparisons"
+    },
+    {
+      "id": "qhflow2-geometry-modes-20261017",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+      "args": [
+        "benchmark",
+        "modes",
+        "{gpus}",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-geometry-modes-20261017"
+      ],
+      "gpu_count": 1,
+      "gpu_mode": "exclusive",
+      "allowed_hosts": [
+        "server-1-qhflow2-compute-20261016"
+      ],
+      "priority": 60,
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017",
+      "input_files": [
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017/src/config_qh9/config_stable_muon_optimized.yaml",
+        "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_auto_script/qhflow2_compute_20261016/gpu_guard.py",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/_my_script/experiment/2026-10-16/benchmark_compute.py"
+      ],
+      "environment": {
+        "EXPECTED_HOST": "usr310-gpumngc-01",
+        "TORCH_LOGS": "recompiles"
+      },
+      "description": "Bounded validation only: varied official batches, cache parity, O3 branch batching and compile-mode comparisons"
+    },
+    {
+      "id": "qhflow2-geometry-o3-20261017",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+      "args": [
+        "benchmark",
+        "o3",
+        "{gpus}",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-geometry-o3-20261017"
+      ],
+      "gpu_count": 1,
+      "gpu_mode": "exclusive",
+      "allowed_hosts": [
+        "server-1-qhflow2-compute-20261016"
+      ],
+      "priority": 60,
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017",
+      "input_files": [
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_geometry_benchmark.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017/src/config_qh9/config_stable_muon_optimized.yaml",
+        "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_auto_script/qhflow2_compute_20261016/gpu_guard.py",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/_my_script/experiment/2026-10-16/benchmark_compute.py"
+      ],
+      "environment": {
+        "EXPECTED_HOST": "usr310-gpumngc-01",
+        "TORCH_LOGS": "recompiles"
+      },
+      "description": "Bounded validation only: varied official batches, cache parity, O3 branch batching and compile-mode comparisons"
+    }
+  ]
+}

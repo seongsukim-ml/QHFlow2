@@ -2,7 +2,7 @@
 import torch
 
 
-def compile_flow(module, scope="heads", *, backend="inductor"):
+def compile_flow(module, scope="heads", *, backend="inductor", mode=None, options=None):
     """Compile tensor regions, retaining eager geometry and checkpoint names.
 
     The blocks scope follows the dynamic, full-graph tensor-core boundary used
@@ -30,6 +30,6 @@ def compile_flow(module, scope="heads", *, backend="inductor"):
             backbone = module.model.node_attr_backbone
             modules += [*backbone.blocks, *backbone.xy_blocks]
         for layer in modules:
-            layer.compile(backend=backend, dynamic=True, fullgraph=True)
+            layer.compile(backend=backend, dynamic=True, fullgraph=True, mode=mode, options=options)
     else:
         raise ValueError(f"Unknown compilation scope: {scope}")

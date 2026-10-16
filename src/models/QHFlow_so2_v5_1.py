@@ -480,6 +480,23 @@ class QHFlow_escn_v5_1(nn.Module):
                 "hamiltonian_non_diagonal_blocks": ret_hamiltonian_non_diagonal_matrix
             }
 
+    def _prepare_geometry(self, data):
+        data["atomic_numbers"] = data.atoms
+        data["edge_index"] = radius_graph(data.pos, self.max_radius, data.batch, max_num_neighbors=self.max_num_neighbors)
+        data["edge_distance_vec"] = data.pos[data.edge_index[0]] - data.pos[data.edge_index[1]]
+        data["edge_distance"] = data["edge_distance_vec"].norm(dim=-1)
+        data["full_edge_index"] = radius_graph(data.pos, 10000, data.batch, max_num_neighbors=self.max_num_neighbors)
+        data["full_edge_distance_vec"] = data.pos[data.full_edge_index[0]] - data.pos[data.full_edge_index[1]]
+        data["full_edge_distance"] = data["full_edge_distance_vec"].norm(dim=-1)
+        data["full_edge_sh"] = o3.spherical_harmonics(
+            self.sh_irrep,
+            data["full_edge_distance_vec"][:, [1, 2, 0]],
+            normalize=True,
+            normalization="component",
+        ).type(data.pos.type())
+        data["transpose_edge_index"] = self._calculate_transpose_indices(data, data["full_edge_index"])
+        data["full_edge_attr"] = self.distance_expansion(data["full_edge_distance"].unsqueeze(-1)).squeeze().type(data.pos.type())
+
     def forward(self, data, H, keep_blocks=False):
         """Forward pass of the QHFlow model.
         
@@ -499,21 +516,7 @@ class QHFlow_escn_v5_1(nn.Module):
         # node_attr: features from atomic numbers
         # rbf_new  : features from radial basis functions
         # transpose_edge_index: transpose indices for diagonal matrix symmetry
-        data["atomic_numbers"] = data.atoms
-        data["edge_index"] = radius_graph(data.pos, self.max_radius, data.batch, max_num_neighbors=self.max_num_neighbors)
-        data["edge_distance_vec"] = data.pos[data.edge_index[0]] - data.pos[data.edge_index[1]]
-        data["edge_distance"] = data["edge_distance_vec"].norm(dim=-1)
-        data["full_edge_index"] = radius_graph(data.pos, 10000, data.batch, max_num_neighbors=self.max_num_neighbors)
-        data["full_edge_distance_vec"] = data.pos[data.full_edge_index[0]] - data.pos[data.full_edge_index[1]]
-        data["full_edge_distance"] = data["full_edge_distance_vec"].norm(dim=-1)
-        data["full_edge_sh"] = o3.spherical_harmonics(
-            self.sh_irrep,
-            data["full_edge_distance_vec"][:, [1, 2, 0]],
-            normalize=True,
-            normalization="component",
-        ).type(data.pos.type())
-        data["full_edge_attr"] = self.distance_expansion(data["full_edge_distance"].unsqueeze(-1)).squeeze().type(data.pos.type())
-        data["transpose_edge_index"] = self._calculate_transpose_indices(data, data["full_edge_index"])
+        self._prepare_geometry(data)
         # data["node_attr_R"] = self.node_embedding(data["atomic_numbers"])
         data["pbc"] = torch.zeros(len(data), 3, dtype=torch.bool) # Do not use PBC
         # data["cell"] = torch.zeros(data.H.shape[0], 3, 3).to(self.device)
