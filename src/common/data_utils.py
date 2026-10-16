@@ -6,10 +6,8 @@ import os
 from common.custom_logger import get_logger
 from torch_geometric.loader import DataLoader
 from omegaconf import DictConfig
-from dataset_module.ori_dataset import MD17_DFT, random_split, get_mask
-from dataset_module.md17_datasets_shard import MD17_DFT_Shard
-from dataset_module.new_md_dataloader import RMD17_DFT
-from dataset_module.new_md_dataloader_mdsim import MD17_DFT_MDSim
+# Dataset-specific imports stay inside the loader that needs them. QH9 uses
+# log_dataset_info without requiring MD17 download dependencies such as gdown.
 from torch.utils.data import Subset
 
 logger = get_logger(__file__)
@@ -23,6 +21,7 @@ def load_md17_dataset(conf: DictConfig, root_path: str, dataset_type: str = None
             raise ValueError(f"Invalid dataset type: {dataset_type}")
     if dataset_type == "md17":
         if conf.dataset.get("use_shard", False):
+            from dataset_module.md17_datasets_shard import MD17_DFT_Shard
             return MD17_DFT_Shard(
                 os.path.join(root_path, "dataset"),
                 prefix="_shard",
@@ -32,6 +31,7 @@ def load_md17_dataset(conf: DictConfig, root_path: str, dataset_type: str = None
                 # transform=get_mask, # Not used
             )
         else:
+            from dataset_module.ori_dataset import MD17_DFT, get_mask
             return MD17_DFT(
                 os.path.join(root_path, "dataset"),
                 name=conf.dataset.dataset_name,
@@ -39,6 +39,7 @@ def load_md17_dataset(conf: DictConfig, root_path: str, dataset_type: str = None
                 use_ref_hamiltonian_as_init_ham=conf.dataset.get("use_ref_hamiltonian_as_init_ham", False),
             )
     elif dataset_type == "rmd17":
+        from dataset_module.new_md_dataloader import RMD17_DFT
         return RMD17_DFT(
             os.path.join(root_path, "dataset"),
             name=conf.dataset.dataset_name,
@@ -50,6 +51,7 @@ def load_md17_dataset(conf: DictConfig, root_path: str, dataset_type: str = None
             use_ref_hamiltonian_as_init_ham=conf.dataset.get("use_ref_hamiltonian_as_init_ham", False),
         )
     elif dataset_type == "mdsim":
+        from dataset_module.new_md_dataloader_mdsim import MD17_DFT_MDSim
         return MD17_DFT_MDSim(
             os.path.join(root_path, "dataset"),
             name=conf.dataset.dataset_name,
@@ -99,6 +101,8 @@ def _create_md17_dataset(dataset, conf: DictConfig, train_size=None):
         then the train set is sliced from the front. This ensures that with the same seed,
         a smaller train_size will always be a subset of a larger train_size.
     """
+    from dataset_module.ori_dataset import random_split
+
     num_train_config = conf.dataset.num_train
     num_valid = conf.dataset.num_valid
     

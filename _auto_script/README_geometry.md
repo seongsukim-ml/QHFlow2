@@ -1,6 +1,6 @@
 # QHFlow2 geometry and execution optimization
 
-Status: bounded CPU/CUDA validation; full training stays stopped at user request.
+Status: bounded CUDA validation complete; full training stays stopped at user request.
 Continues the experiment started on 2026-10-16; later files retain that launcher directory.
 
 Source: `/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017`.
@@ -41,3 +41,18 @@ Metadata caches are limited to one no-grad sampling/validation context and
 invalidated by tensor identity/version. They never cache learned radial outputs.
 Cached Wigner frames preserve subsequent RNG state by consuming the original
 per-edge random-roll draw. Graph-gradient calls bypass geometry caches.
+
+The measurements pin `692f0d5`; later integration exposes the same execution
+through the public presets. The optimized preset selects compile blocks/default
+and Lightning `inference_mode: false` (validation still runs without gradients).
+`config_stable_muon_optimized_o3` additionally enables paired O(3)-s at batch32.
+The [follow-up report](../docs/releases/v0.2.0-rc.2-geometry.md) includes all
+selected results, rejected modes and exact checkpoint-smoke evidence. The
+bounded O(3) confirmation compares the first-round baseline directly with paired
+execution on one GPU; no throughput ratios from different jobs are multiplied.
+
+Rebuild the report from the existing results:
+
+```bash
+python3 /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-geometry-optimized-20261017/_auto_script/report_geometry.py
+```
