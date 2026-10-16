@@ -73,3 +73,11 @@ Queue invokes:
 Checks: every initial parameter gradient, variable-size compilation counts,
 SO(3)/O(3) outputs, validation, memory and warm throughput.
 Status: prepared; compilation remains opt-in pending CUDA results.
+
+The first block benchmark attempt was terminated after the additional rotation
+fixture passed raw float64 dataset tensors to a float32 model. The fixture now
+uses the same float32 input policy as training. The failed attempt is retained.
+Resume with larger microbatches translates Lightning batch counters while leaving
+model, optimizer, scheduler, epoch and global optimizer step unchanged. It retains
+the immutable parent and writes a separate adapted checkpoint and counter receipt.
+The original non-stateful shuffled loader does not support bitwise sample-order continuation.

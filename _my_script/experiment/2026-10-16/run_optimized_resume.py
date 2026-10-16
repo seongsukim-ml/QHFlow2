@@ -78,6 +78,15 @@ def run(args):
     checkpoint_path = Path(args.checkpoint).resolve(strict=True)
     saved_parent = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
     resume_step = int(saved_parent['global_step'])
+    from common.checkpoint_migration import adapt_microbatch_progress
+    adapted, loop_receipt = adapt_microbatch_progress(saved_parent, int(conf.dataset.batch_size))
+    checkpoint_for_fit = checkpoint_path
+    if loop_receipt['changed']:
+        checkpoint_for_fit = output / 'adapted-resume.ckpt'
+        torch.save(adapted, checkpoint_for_fit)
+    del adapted
+    receipt['microbatch_progress_migration'] = loop_receipt
+    receipt['minibatch_order_bitwise_continuation'] = False
     expected_rates = [g['lr'] for g in saved_parent['optimizer_states'][0]['param_groups']]
     expected_scheduler = saved_parent['lr_schedulers'][0]
     expected_model_version = saved_parent['qhflow2']['model_version']
@@ -203,7 +212,7 @@ def run(args):
         torch.cuda.reset_peak_memory_stats()
         max_steps = resume_step + 2 if args.scope == 'smoke' else conf.num_training_steps
         trainer, progress, checkpoint = make_trainer('training', -1, max_steps)
-        trainer.fit(module, train_loader, val_loader, ckpt_path=str(checkpoint_path), weights_only=False)
+        trainer.fit(module, train_loader, val_loader, ckpt_path=str(checkpoint_for_fit), weights_only=False)
         if args.scope == 'smoke':
             assert trainer.global_step == resume_step + 2
             # Force the complete sampling protocol, including projected O(3)
