@@ -175,7 +175,10 @@ def run(args):
                 torch.testing.assert_close(saved['state_dict'][key], value.cpu(), rtol=0, atol=0)
             del saved
             restored = LitModel_flow.load_from_checkpoint(checkpoint.last_model_path, map_location='cpu', weights_only=False)
-            resumed, _, _ = make_trainer('resume', 2, steps + 1)
+            # The epoch-end checkpoint still has pending loop bookkeeping.
+            # Match full training's step-based limit so resume must actually
+            # execute another optimizer update before this check succeeds.
+            resumed, _, _ = make_trainer('resume', -1, steps + 1)
             resumed.fit(restored, train_loader, val_loader, ckpt_path=checkpoint.last_model_path, weights_only=False)
             assert resumed.global_step == steps + 1
             resumed.validate(restored, val_loader)
