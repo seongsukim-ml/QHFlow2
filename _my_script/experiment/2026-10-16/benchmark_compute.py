@@ -60,7 +60,7 @@ def child(args):
     loss.backward()
     fixture = {'loss':loss.detach().cpu(),
                'parameter_names':[n for n,p in module.model.named_parameters()],
-               'grads':{n:p.grad.flatten()[::max(1,p.numel()//1024)].cpu() for n,p in module.model.named_parameters() if p.grad is not None}}
+               'grads':{n:p.grad.detach().cpu() for n,p in module.model.named_parameters() if p.grad is not None}}
     torch.save(fixture, args.output/'first-gradient.pt')
     optimizer.zero_grad(set_to_none=True)
     for _ in range(2):step()
@@ -91,13 +91,57 @@ def child(args):
     if args.variant != 'baseline':
         assert sample_metrics, 'Sampling metrics must actually be present'
         assert all(torch.isfinite(v).all() for v in logged.values() if isinstance(v,torch.Tensor))
+    extra = check_dynamic_and_equivariance(module, graphs, optimizer, args.compile_scope)
     result={'variant':args.variant,'model':args.model,'microbatch':args.batch,'effective_batch':32,
             'train_seconds_per_update':statistics.median(timings),'train_timings':timings,
             'validation_8_graph_seconds':validation,'sample_metric_count':len(sample_metrics),
             'peak_memory_mib':train_peak,'data_load_32_graph_seconds':data_load_seconds,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
-            'compile_scope':args.compile_scope,'preparation_seconds':preparation_seconds,'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
+            'checks':extra, 'compile_scope':args.compile_scope,'preparation_seconds':preparation_seconds,'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
     (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result),flush=True);dataset.close()
+
+
+def check_dynamic_and_equivariance(module, graphs, optimizer, scope):
+    import torch
+    from torch_geometric.data import Batch
+    from e3nn import o3
+    counts = []
+    module.train()
+    for number in (12, 10, 14):
+        optimizer.zero_grad(set_to_none=True)
+        loss = module.training_step(Batch.from_data_list(graphs[:number]).to('cuda'), 0)
+        loss.backward()
+        assert torch.isfinite(loss)
+        counts.append(int(torch._dynamo.utils.counters['stats']['unique_graphs']))
+    if scope:
+        assert counts[-1] == counts[-2], f'Graph count keeps growing: {counts}'
+    optimizer.zero_grad(set_to_none=True)
+    module.eval()
+    data = Batch.from_data_list(graphs[:2]).to('cuda')
+    data.t = torch.full((data.pos.shape[0],), .5, device='cuda')
+    h = data.diagonal_hamiltonian
+    maximum = 0.
+    with torch.no_grad():
+        baseline = module.model(data, h, keep_blocks=True)
+        rotations = [o3.rand_matrix(device='cuda')]
+        if module.model.__class__.__name__ == 'QHFlow2_O3':
+            rotations.append(-torch.eye(3, device='cuda'))
+        for rotation in rotations:
+            perm = torch.eye(3, device='cuda')[[1, 2, 0]]
+            d = o3.Irreps('3x0e+2x1o+1x2e').D_from_matrix(perm@rotation@perm.T)
+            rotated = data.clone()
+            rotated.pos = data.pos@rotation.T
+            for key in ('diagonal_init_ham', 'diagonal_overlap'):
+                rotated[key] = d@data[key]@d.T
+            actual = module.model(rotated, d@h@d.T, keep_blocks=True)
+            for key in ('hamiltonian_diagonal_blocks', 'hamiltonian_non_diagonal_blocks'):
+                expected = d@baseline[key]@d.T
+                torch.testing.assert_close(actual[key], expected, rtol=5e-5, atol=5e-5)
+                maximum = max(maximum, float((actual[key]-expected).abs().max()))
+    keys = list(module.state_dict())
+    assert not any('_orig_mod.' in key for key in keys)
+    return {'dynamic_graph_counts':counts, 'rotation_max_abs_error':maximum,
+            'checkpoint_keys_unchanged':True}
 
 
 def parent(args):
@@ -155,7 +199,7 @@ def run_compile_cases(args):
     import torch
     cases = [(model, batch, scope) for model, batch in
              [('QHFlow2_s',32), ('QHFlow2_O3_s',32), ('QHFlow2_m',32), ('QHFlow2_l',16)]
-             for scope in [None, 'heads']]
+             for scope in [None, 'blocks']]
     # Whole-model compilation and compiled native Muon were already measured.
     # This run tests the repaired, selectively compiled tensor kernels.
     results = []
@@ -168,7 +212,7 @@ def run_compile_cases(args):
         result = {'model':model, 'scope':scope, 'microbatch':batch}
         try:
             with (out/'console.log').open('w') as log:
-                completed = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
+                completed = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=1200)
             if completed.returncode:raise RuntimeError(f'Child exited {completed.returncode}')
             result.update(json.loads((out/'result.json').read_text()), status='passed')
             if scope:
@@ -176,6 +220,7 @@ def run_compile_cases(args):
                 actual = torch.load(out/'first-gradient.pt',weights_only=True)
                 assert ref['parameter_names'] == actual['parameter_names']
                 torch.testing.assert_close(ref['loss'],actual['loss'],rtol=1e-5,atol=1e-7)
+                assert ref['grads'].keys() == actual['grads'].keys()
                 for name in ref['grads']:
                     torch.testing.assert_close(ref['grads'][name],actual['grads'][name],rtol=3e-4,atol=2e-6,msg=name)
         except Exception as error:
@@ -190,5 +235,5 @@ if __name__=='__main__':
     parser.add_argument('--output',type=Path,required=True);parser.add_argument('--variant');parser.add_argument('--model');parser.add_argument('--batch',type=int)
     parser.add_argument('--profile', action='store_true')
     parser.add_argument('--compile-check', action='store_true')
-    parser.add_argument('--compile-scope', choices=['model','heads','muon'])
+    parser.add_argument('--compile-scope', choices=['model','heads','blocks','muon'])
     args=parser.parse_args();(parent if args.scope=='parent' else child)(args)
