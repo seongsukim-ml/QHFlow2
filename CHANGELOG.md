@@ -15,12 +15,19 @@ source and configuration files; `model.version` selects an architecture.
 - Fix O(3) ODE sampling: the projected model deliberately omits latent features,
   but the former sampler indexed them unconditionally. Training loss was valid;
   sampling metrics raised KeyError and were missing from affected validation.
-- Prepare selective torch.compile support using primitive layer metadata,
-  without changing parameter names or checkpoint keys. GPU speed and correctness
-  measurements determine whether compilation is enabled for each run.
-- Continue the four current training runs from their saved model, optimizer and
-  scheduler states after CUDA resume checks. This candidate is not a published
-  release and does not include completed benchmark weights.
+- Validate selective torch.compile for backbone blocks and tensor heads,
+  preserving parameter names and checkpoint keys. Fixed pairwise contractions
+  prevent batch-size specialization from einsum path planning.
+- On isolated H100 benchmarks at effective batch 32, reduce update time by
+  12.9% / 38.5% / 22.1% / 39.3% for s / O(3)-s / m / l, including microbatch
+  tuning. Compilation contributes a further 5.6–8.2% over optimized eager code.
+- Verify model, optimizer and scheduler restoration for all four runs, including
+  Lightning progress migration when changing microbatch size. Original full
+  training jobs are stopped at the user's request; no full restart was launched.
+  This candidate is not a published release or completed benchmark checkpoint.
+
+See the [validation report](docs/releases/v0.2.0-rc.2.md) for measurement
+conditions, memory tradeoffs, startup cost and checkpoint limitations.
 
 ## 0.2.0-rc.1 — 2026-10-14
 

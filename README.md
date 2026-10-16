@@ -16,7 +16,7 @@ configurations. Retrained benchmark checkpoints and results are still pending.
 | --- | --- |
 | [`ver.0.1.0`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/ver.0.1.0) | Historical code snapshot, including the legacy equivariance issue |
 | [`v0.2.0-rc.1`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) | PySCF Q tensors, legacy models, corrected SO(3)/O(3) models, Stable/Muon preparation |
-| `v0.2.0-rc.2` (development candidate) | Compute and input-pipeline optimizations, O(3) sampling correction, checkpoint continuation |
+| [`v0.2.0-rc.2`](docs/releases/v0.2.0-rc.2.md) (development candidate) | Validated compute optimizations and selective torch.compile, O(3) sampling correction, checkpoint continuation support |
 
 All model families now live in `main` under distinct model names. Use a release
 tag to pin source code, and a model configuration to select the architecture.
