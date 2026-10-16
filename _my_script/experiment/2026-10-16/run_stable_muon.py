@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import sys
 
-SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016')
+SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016')
 OUTPUTS = Path('/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs')
 SPLIT_SHA256 = 'b6bfadb51aedc894f388ffd786c6c3a682d900aa0ff229a94b678b4c72b898c1'
 sys.path.insert(0, str(SOURCE / 'src'))
@@ -28,6 +28,8 @@ def resolve(model):
     with initialize_config_dir(version_base=None, config_dir=str(SOURCE / 'src/config_qh9')):
         conf = compose(config_name='config_stable_muon', overrides=[f'model={model}'])
     validate_config(conf)
+    assert conf.model.version == "QHFlow2_order_fixed"
+    assert conf.model.use_block_H_fix
     assert conf.muon.lr == 1e-3 and conf.muon.adamw_lr == 1e-4
     assert conf.dataset.batch_size * conf.accumulate_grad_batches == 32
     assert conf.num_training_steps == 260000 and conf.warmup_step == 0
@@ -199,6 +201,6 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('scope', choices=('validate', 'smoke', 'full'))
-    parser.add_argument('model', choices=('QHFlow2_s', 'QHFlow2_O3_s'))
+    parser.add_argument('model', choices=('QHFlow2_m', 'QHFlow2_l'))
     parser.add_argument('--output')
     run(parser.parse_args())
