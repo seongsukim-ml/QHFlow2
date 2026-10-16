@@ -1635,6 +1635,33 @@ def benchmark_cut_matrix(matrix, atoms, orbital_mask, full_orbitals, n_iteration
     }
 
 def _cut_matrix_3d(matrix, atoms, orbital_mask, full_orbitals):
+    """Preserve source-major edge order while gathering all AO blocks at once."""
+    n = atoms.numel()
+    mapping = torch.zeros((n, full_orbitals), dtype=torch.long, device=matrix.device)
+    valid = torch.zeros((n, full_orbitals), dtype=torch.bool, device=matrix.device)
+    offset = 0
+    for i, z in enumerate(atoms.reshape(-1).detach().cpu().tolist()):
+        keep = orbital_mask[z].to(matrix.device)
+        mapping[i, keep] = torch.arange(offset, offset + keep.numel(), device=matrix.device)
+        valid[i, keep] = True
+        offset += keep.numel()
+    flat = mapping.flatten()
+    dense = matrix.index_select(1, flat).index_select(2, flat)
+    mask = valid.flatten()[:, None] & valid.flatten()[None, :]
+    dense = dense.masked_fill(~mask, 0)
+    features = matrix.shape[0]
+    # [src, dst, feature, row AO, column AO], like the legacy nested loops.
+    blocks = dense.reshape(features, n, full_orbitals, n, full_orbitals).permute(3, 1, 0, 2, 4)
+    masks = mask.reshape(n, full_orbitals, n, full_orbitals).permute(2, 0, 1, 3)
+    masks = masks.unsqueeze(2).expand(n, n, features, full_orbitals, full_orbitals).to(matrix.dtype)
+    indices = torch.arange(n, device=matrix.device)
+    src, dst = torch.meshgrid(indices, indices, indexing='ij')
+    off = src != dst
+    edges = torch.stack((dst[off], src[off]))
+    return blocks[indices, indices], blocks[off], masks[indices, indices], masks[off], edges
+
+
+def _cut_matrix_3d_legacy(matrix, atoms, orbital_mask, full_orbitals):
     """Optimized 3D matrix cutting - no runtime checks for maximum performance.
     
     This function processes 3D matrices where multiple properties are stacked

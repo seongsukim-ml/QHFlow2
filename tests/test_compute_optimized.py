@@ -16,6 +16,36 @@ from models.QHFlow2_equivariant import QHFlow2_order_fixed
 from models.QHFlow_so2_v5_1 import QHFlow_escn_v5_1
 
 
+def test_vectorized_cutting_preserves_ao_values_masks_edges_and_gradients():
+    from common.matrix_transforms import _cut_matrix_3d, _cut_matrix_3d_legacy
+    atoms = torch.tensor([6, 1, 7, 8, 1])
+    masks = get_orbital_mask('def2-svp')
+    n = sum(len(masks[int(z)]) for z in atoms)
+    matrix = torch.randn(3, n, n, dtype=torch.float64, requires_grad=True)
+    expected = _cut_matrix_3d_legacy(matrix, atoms, masks, 14)
+    actual = _cut_matrix_3d(matrix, atoms, masks, 14)
+    for a, e in zip(actual, expected):
+        torch.testing.assert_close(a, e, rtol=0, atol=0)
+    ga = torch.autograd.grad(sum(x.square().sum() for x in actual[:2]), matrix)[0]
+    ge = torch.autograd.grad(sum(x.square().sum() for x in expected[:2]), matrix)[0]
+    torch.testing.assert_close(ga, ge, rtol=0, atol=0)
+    single = _cut_matrix_3d(torch.eye(5)[None], torch.tensor([1]), masks, 14)
+    assert single[1].shape == (0, 1, 14, 14)
+    assert single[-1].shape == (2, 0)
+
+
+def test_dense_noise_expansion_matches_reference_and_has_no_checkpoint_keys():
+    from utils import Expansion
+    irreps = o3.Irreps('3x0e+2x1e+1x2e')
+    layer = Expansion(irreps, irreps, irreps)
+    x = torch.randn(77, irreps.dim)
+    expected = layer._reference_forward(x)
+    assert not layer.state_dict()
+    with patch('e3nn.o3.wigner_3j', side_effect=AssertionError('forward rebuilt constant')):
+        actual = layer(x)
+    torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-6)
+
+
 def test_matrix_assembly_values_and_gradients_with_shuffled_edges():
     ptr = torch.tensor([0, 3, 5, 6])
     edges = torch.tensor([(d, s) for lo, hi in zip(ptr[:-1], ptr[1:])

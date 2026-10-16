@@ -596,6 +596,10 @@ class Expansion(nn.Module):
         self.irrep_out_1 = irrep_out_1
         self.irrep_out_2 = irrep_out_2
         self.instructions = self.get_expansion_path(irrep_in, irrep_out_1, irrep_out_2)
+        self._input_layout = tuple((sl.start, sl.stop, item.mul, item.ir.dim)
+                                   for sl, item in zip(irrep_in.slices(), irrep_in))
+        self._output1_dims = tuple(item.dim for item in irrep_out_1)
+        self._output2_dims = tuple(item.dim for item in irrep_out_2)
         register_couplings(self, ((i[1], i[2], i[0]) for i in self.instructions))
         self.num_path_weight = sum(prod(ins[-1]) for ins in self.instructions if ins[3])
         self.num_bias = sum(
@@ -609,25 +613,18 @@ class Expansion(nn.Module):
 
     def forward(self, x_in, weights=None, bias_weights=None):
         batch_num = x_in.shape[0]
-        if len(self.irrep_in) == 1:
-            x_in_s = [
-                x_in.reshape(batch_num, self.irrep_in[0].mul, self.irrep_in[0].ir.dim)
-            ]
-        else:
-            x_in_s = [
-                x_in[:, i].reshape(batch_num, mul_ir.mul, mul_ir.ir.dim)
-                for i, mul_ir in zip(self.irrep_in.slices(), self.irrep_in)
-            ]
+        x_in_s = [x_in[:, start:stop].reshape(batch_num, mul, dim)
+                  for start, stop, mul, dim in self._input_layout]
 
         outputs = {}
         flat_weight_index = 0
         bias_weight_index = 0
         for ins in self.instructions:
-            mul_ir_in = self.irrep_in[ins[0]]
-            mul_ir_out1 = self.irrep_out_1[ins[1]]
-            mul_ir_out2 = self.irrep_out_2[ins[2]]
+            mul_in, dim_in = self._input_layout[ins[0]][2:]
+            dim_out1 = self._output1_dims[ins[1]]
+            dim_out2 = self._output2_dims[ins[2]]
             x1 = x_in_s[ins[0]]
-            x1 = x1.reshape(batch_num, mul_ir_in.mul, mul_ir_in.ir.dim)
+            x1 = x1.reshape(batch_num, mul_in, dim_in)
             w3j_matrix = (
                 coupling(self, ins[1], ins[2], ins[0], x1)
             )
@@ -638,7 +635,7 @@ class Expansion(nn.Module):
                     ].reshape(ins[-1])
                     result = (
                         torch.einsum(f"wuv, ijk, bwk-> buivj", weight, w3j_matrix, x1)
-                        / mul_ir_in.mul
+                        / mul_in
                     )
                 else:
                     weight = weights[
@@ -653,7 +650,7 @@ class Expansion(nn.Module):
                         result = result + bias_weight.unsqueeze(-1)
                     result = (
                         torch.einsum(f"ijk, buvk->buivj", w3j_matrix, result)
-                        / mul_ir_in.mul
+                        / mul_in
                     )
                 flat_weight_index += prod(ins[-1])
             else:
@@ -661,10 +658,10 @@ class Expansion(nn.Module):
                     f"uvw, ijk, bwk-> buivj",
                     torch.ones(ins[-1]).type(x1.type()).to(self.device),
                     w3j_matrix,
-                    x1.reshape(batch_num, mul_ir_in.mul, mul_ir_in.ir.dim),
+                    x1.reshape(batch_num, mul_in, dim_in),
                 )
 
-            result = result.reshape(batch_num, mul_ir_out1.dim, mul_ir_out2.dim)
+            result = result.reshape(batch_num, dim_out1, dim_out2)
             key = (ins[1], ins[2])
             if key in outputs.keys():
                 outputs[key] = outputs[key] + result
@@ -672,16 +669,16 @@ class Expansion(nn.Module):
                 outputs[key] = result
 
         rows = []
-        for i in range(len(self.irrep_out_1)):
+        for i in range(len(self._output1_dims)):
             blocks = []
-            for j in range(len(self.irrep_out_2)):
+            for j in range(len(self._output2_dims)):
                 if (i, j) not in outputs.keys():
                     blocks += [
                         torch.zeros(
                             (
                                 x_in.shape[0],
-                                self.irrep_out_1[i].dim,
-                                self.irrep_out_2[j].dim,
+                                self._output1_dims[i],
+                                self._output2_dims[j],
                             ),
                             device=x_in.device,
                         ).type(x_in.type())

@@ -155,8 +155,16 @@ class Expansion(nn.Module):
         self.irrep_out_1 = irrep_out_1
         self.irrep_out_2 = irrep_out_2
         self.instructions = self.get_expansion_path(irrep_in, irrep_out_1, irrep_out_2)
+        self._output_shape = (irrep_out_1.dim, irrep_out_2.dim)
+        with torch.no_grad():
+            basis = torch.eye(irrep_in.dim)
+            operator = self._reference_forward(basis).reshape(irrep_in.dim, -1)
+        self.register_buffer("_expansion_operator", operator, persistent=False)
 
     def forward(self, x_in):
+        return (x_in @ self._expansion_operator.to(x_in)).reshape(-1, *self._output_shape)
+
+    def _reference_forward(self, x_in):
         batch_num = x_in.shape[0]
         x_in_s = [
             x_in[:, i].reshape(batch_num, mul_ir.mul, mul_ir.ir.dim)
