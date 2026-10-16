@@ -23,6 +23,7 @@ import torch
 from common.custom_logger import get_logger
 import time
 from tqdm.rich import tqdm
+from common.inference_cache import reuse_inference_metadata
 from torch_scatter import scatter_sum
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
@@ -2271,6 +2272,7 @@ class LitModel_flow(LitModel):
         self._log_error(errors, "train")
         return loss
 
+    @reuse_inference_metadata
     def validation_step(self, batch, batch_idx):
         """
         Single validation step for the flow model.
@@ -2583,7 +2585,7 @@ class LitModel_flow(LitModel):
                         torch.save(gt, gt_dir / f"gt_{file_index}.pt")
 
         if self._batch_has_ground_truth_hamiltonian(batch_one):
-            metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights, qh9_cache=metric_cache)
+            metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights)
             for key in metrics.keys():
                 self.log(
                     f"pred/sample_{key}",
@@ -2630,6 +2632,7 @@ class LitModel_flow(LitModel):
     # Sampling and Generation Methods
     # ==========================================
 
+    @reuse_inference_metadata
     def sample(
         self,
         batch,
@@ -2998,7 +3001,7 @@ class LitModel_flow(LitModel):
             sample, traj, pred = self.sample(batch_one, num_timesteps=num_timesteps,
                                              return_trajectory=save_pred)
             if log:
-                metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights)
+                metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights, qh9_cache=metric_cache)
                 for key in metrics.keys():
                     self.log(
                         f"{prefix}/sample_{key}{post_fix}",

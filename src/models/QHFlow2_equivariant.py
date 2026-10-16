@@ -9,6 +9,8 @@ checkpoints. In particular, spectral gating replaces sampled-grid nonlinearities
 import copy
 import torch
 
+from common.inference_cache import cached_tensor_metadata
+
 from .QHFlow_so2_v5_1_ordering_fixed import QHFlow_escn_v5_1_ordering_fixed
 from .modules.escn_backbone_v4 import eSCNMDBackbone_ham
 
@@ -31,9 +33,29 @@ class QH9SphericalBackbone(eSCNMDBackbone_ham):
     def _get_rotmat_and_wigner(self, edge_distance_vecs, use_cuda_graph):
         # QH9's loader stores p AOs as [py, pz, px]. All spherical degrees
         # must use the same coordinate convention, not just the p block.
-        return super()._get_rotmat_and_wigner(
-            edge_distance_vecs[:, [1, 2, 0]], use_cuda_graph
-        )
+        def build():
+            return super(QH9SphericalBackbone, self)._get_rotmat_and_wigner(
+                edge_distance_vecs[:, [1, 2, 0]], use_cuda_graph)
+        if torch.is_grad_enabled() or use_cuda_graph:
+            return build()
+        result, hit = cached_tensor_metadata(
+            (self, "wigner"), (edge_distance_vecs,), build)
+        if hit:
+            # Preserve the random stream used by subsequent flow noise draws.
+            # The original frame builder draws one random roll per edge.
+            torch.rand(edge_distance_vecs.shape[0], device=edge_distance_vecs.device,
+                       dtype=edge_distance_vecs.dtype)
+        return result
+
+    def _generate_graph(self, data_dict):
+        build = lambda: super(QH9SphericalBackbone, self)._generate_graph(data_dict)
+        if torch.is_grad_enabled():
+            return build()
+        result, _ = cached_tensor_metadata(
+            (self, "backbone_graph", self.cutoff, self.max_neighbors),
+            (data_dict.pos, data_dict.batch, data_dict.cell), build)
+        return result.copy()
+
 
 
 class QHFlow2_order_fixed(QHFlow_escn_v5_1_ordering_fixed):
@@ -71,6 +93,25 @@ class QHFlow2_order_fixed(QHFlow_escn_v5_1_ordering_fixed):
         data.spin = torch.zeros_like(data.charge)
         return super().forward(data, H, keep_blocks=True)
 
+    def _prepare_geometry(self, data):
+        if torch.is_grad_enabled():
+            return super()._prepare_geometry(data)
+        keys = ("atomic_numbers", "edge_index", "edge_distance_vec", "edge_distance",
+                "full_edge_index", "full_edge_distance_vec", "full_edge_distance",
+                "full_edge_sh", "transpose_edge_index")
+        def build():
+            super(QHFlow2_order_fixed, self)._prepare_geometry(data)
+            return {key: data[key] for key in keys}
+        result, hit = cached_tensor_metadata(
+            (self, "model_geometry", self.max_radius, self.max_num_neighbors),
+            (data.pos, data.batch, data.ptr, data.atoms), build)
+        for key, value in result.items():
+            data[key] = value
+        if hit:
+            # The radial basis has a learned parameter: recompute even on hits.
+            data["full_edge_attr"] = self.distance_expansion(
+                data["full_edge_distance"].unsqueeze(-1)).squeeze().type(data.pos.type())
+
     @staticmethod
     def _calculate_transpose_indices(data, radius_edges):
         """Reverse complete-graph edges without per-molecule CUDA scalars."""
@@ -91,8 +132,9 @@ class QHFlow2_O3(QHFlow2_order_fixed):
     with the SO(3) backbone this gives O(3), not just inversion equivariance.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, batch_branches=False, **kwargs):
         super().__init__(*args, **kwargs)
+        self.batch_branches = batch_branches
         self.register_buffer(
             "ao_parity", torch.tensor([1.] * 3 + [-1.] * 6 + [1.] * 5),
             persistent=False,
@@ -105,8 +147,14 @@ class QHFlow2_O3(QHFlow2_order_fixed):
     def forward(self, data, H, keep_blocks=False):
         if not keep_blocks:
             raise ValueError("QHFlow2-O(3) requires QH9 AO blocks (keep_blocks=True)")
+        if self.batch_branches:
+            return self._forward_paired(data, H)
         reflected = copy.copy(data)
-        reflected.pos = -data.pos
+        if torch.is_grad_enabled():
+            reflected.pos = -data.pos
+        else:
+            reflected.pos, _ = cached_tensor_metadata(
+                (self, "inverted_positions"), (data.pos,), lambda: -data.pos)
         for key in ("diagonal_init_ham", "diagonal_overlap"):
             if key in data:
                 reflected[key] = self._invert_matrix(data[key])
@@ -121,3 +169,40 @@ class QHFlow2_O3(QHFlow2_order_fixed):
             key: direct[key]
             for key in ("full_edge_index", "full_edge_distance_vec")
         }
+
+    def _forward_paired(self, data, H):
+        """Evaluate the two projected branches as independent graphs in one batch."""
+        paired = copy.copy(data)
+        n = H.shape[0]
+        graphs = data.ptr.numel() - 1
+        def positions():
+            return torch.cat((data.pos, -data.pos), dim=0)
+        def topology():
+            return (torch.cat((data.atoms, data.atoms), dim=0),
+                    torch.cat((data.batch, data.batch + graphs), dim=0),
+                    torch.cat((data.ptr, data.ptr[1:] + n), dim=0),
+                    torch.cat((data.cell, data.cell), dim=0))
+        if torch.is_grad_enabled():
+            paired.pos = positions()
+            paired.atoms, paired.batch, paired.ptr, paired.cell = topology()
+        else:
+            paired.pos, _ = cached_tensor_metadata((self, "paired_pos"), (data.pos,), positions)
+            topo, _ = cached_tensor_metadata((self, "paired_topology"),
+                (data.atoms, data.batch, data.ptr, data.cell), topology)
+            paired.atoms, paired.batch, paired.ptr, paired.cell = topo
+        paired.num_nodes = 2 * n
+        if "natoms" in data:
+            paired.natoms = torch.cat((data.natoms, data.natoms), dim=0)
+        paired.t = torch.cat((data.t, data.t), dim=0)
+        for key in ("diagonal_init_ham", "diagonal_overlap"):
+            if key in data:
+                paired[key] = torch.cat((data[key], self._invert_matrix(data[key])), dim=0)
+        output = super().forward(paired, torch.cat((H, self._invert_matrix(H)), dim=0), keep_blocks=True)
+        projected = {}
+        for key in ("hamiltonian_diagonal_blocks", "hamiltonian_non_diagonal_blocks"):
+            direct, inverse = output[key].chunk(2, dim=0)
+            projected[key] = (direct + self._invert_matrix(inverse)) / 2
+        edges = output["full_edge_index"].shape[1] // 2
+        projected["full_edge_index"] = output["full_edge_index"][:, :edges]
+        projected["full_edge_distance_vec"] = output["full_edge_distance_vec"][:edges]
+        return projected

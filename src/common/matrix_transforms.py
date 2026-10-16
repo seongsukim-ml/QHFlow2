@@ -297,10 +297,6 @@ def _build_final_matrix_optimized(
     device and retain autograd, including arbitrarily ordered directed edges.
     """
     edges = data.full_edge_index if hasattr(data, "full_edge_index") else data.edge_index_full
-    dst, src = edges.detach().cpu().tolist()
-    ptr = data.ptr.detach().cpu().tolist()
-    atoms = data.atoms.reshape(-1).detach().cpu().tolist()
-    masks = {z: orbital_mask[z].detach().cpu().tolist() for z in set(atoms)}
     diagonal = diagonal_matrix if isinstance(diagonal_matrix, torch.Tensor) else torch.stack(diagonal_matrix)
     if isinstance(non_diagonal_matrix, torch.Tensor):
         off = non_diagonal_matrix
@@ -310,18 +306,33 @@ def _build_final_matrix_optimized(
         off = diagonal.new_empty((0, *diagonal.shape[-2:]))
     blocks = torch.cat((diagonal, off), dim=0)
     width = diagonal.shape[-1]
-    edge_lookup = {(d, s): len(atoms) + i for i, (d, s) in enumerate(zip(dst, src))}
+    from common.inference_cache import cached_tensor_metadata
+    def prepare_indices():
+        dst, src = edges.detach().cpu().tolist()
+        ptr = data.ptr.detach().cpu().tolist()
+        atoms = data.atoms.reshape(-1).detach().cpu().tolist()
+        masks = {z: orbital_mask[z].detach().cpu().tolist() for z in set(atoms)}
+        edge_lookup = {(d, s): len(atoms) + i for i, (d, s) in enumerate(zip(dst, src))}
+        indices = []
+        for start, end in zip(ptr[:-1], ptr[1:]):
+            n = end - start
+            block_indices = torch.tensor(
+                [d if d == s else edge_lookup[(d, s)]
+                 for d in range(start, end) for s in range(start, end)],
+                device=blocks.device, dtype=torch.long)
+            keep = torch.tensor([local * width + ao
+                                 for local, z in enumerate(atoms[start:end]) for ao in masks[z]],
+                                device=blocks.device, dtype=torch.long)
+            indices.append((n, block_indices, keep))
+        return indices
+    indices, _ = cached_tensor_metadata(
+        ("ao_assembly", width, blocks.device, tuple(sorted(orbital_mask))),
+        (edges, data.ptr, data.atoms, *(orbital_mask[z] for z in sorted(orbital_mask))),
+        prepare_indices)
     result = []
-    for start, end in zip(ptr[:-1], ptr[1:]):
-        n = end - start
-        indices = [d if d == s else edge_lookup[(d, s)]
-                   for d in range(start, end) for s in range(start, end)]
-        block_indices = torch.tensor(indices, device=blocks.device, dtype=torch.long)
+    for n, block_indices, keep in indices:
         grid = blocks.index_select(0, block_indices).reshape(n, n, width, width)
         dense = grid.permute(0, 2, 1, 3).reshape(n * width, n * width)
-        keep = torch.tensor([local * width + ao
-                             for local, z in enumerate(atoms[start:end]) for ao in masks[z]],
-                            device=blocks.device, dtype=torch.long)
         result.append(dense.index_select(0, keep).index_select(1, keep))
     return result
 
