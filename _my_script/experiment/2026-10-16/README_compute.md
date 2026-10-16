@@ -4,7 +4,7 @@ User-requested optimization of the four active QH9Stable Muon models, with
 checkpoint continuation after numerical, equivariance, and CUDA verification.
 Data and learning rates retain the official random split and prior settings.
 
-Source: `/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-optimized-20261016`
+Source: `/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016`
 Baseline: `/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016` at `39bce6e`.
 Environment: `/home/gpuuser/dataset/_cache/qhflow2-stable-muon-venv/bin/python`.
 Data: `/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed`.
@@ -16,7 +16,7 @@ GPU workloads and the existing source/output histories remain intact.
 
 ```bash
 /dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_compute_benchmark.sh validate all 4 /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-compute-benchmark-20261016
-/dataset/seongsu/shared-home/conda/envs/proj-dft-baselines-maloq-sc26/bin/python /dataset/seongsu/shared-home/workspace/_global_auto_script/experiment_queue/sc26_queue.py enqueue /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-optimized-20261016/_my_script/experiment/2026-10-16/queue-benchmark.json
+/dataset/seongsu/shared-home/conda/envs/proj-dft-baselines-maloq-sc26/bin/python /dataset/seongsu/shared-home/workspace/_global_auto_script/experiment_queue/sc26_queue.py enqueue /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/_my_script/experiment/2026-10-16/queue-benchmark.json
 ```
 
 Each source is benchmarked in a separate process on identical training and

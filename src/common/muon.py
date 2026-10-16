@@ -36,7 +36,7 @@ class MuonAdamW(torch.optim.Optimizer):
 
     def __init__(self, model, lr=1e-3, adamw_lr=1e-4, weight_decay=1e-2,
                  momentum=0.95, ns_steps=5, adamw_betas=(0.99, 0.999),
-                 adjust_lr_fn="original"):
+                 adjust_lr_fn="original", batched=False):
         if not hasattr(torch.optim, "Muon"):
             raise RuntimeError("Muon training requires a PyTorch build with torch.optim.Muon (>=2.9)")
         groups, names = partition_parameters(model)
@@ -55,6 +55,7 @@ class MuonAdamW(torch.optim.Optimizer):
             betas=tuple(adamw_betas),
         )
         self._bind_state()
+        self.batched = batched
 
     def _bind_state(self):
         self._muon.param_groups = [g for g in self.param_groups if g["algorithm"] == "muon"]
@@ -72,7 +73,12 @@ class MuonAdamW(torch.optim.Optimizer):
         if closure is not None:
             with torch.enable_grad():
                 loss = closure()
-        self._muon.step()
+        if self.batched:
+            from .batched_muon import batched_muon_step
+            for group in self._muon.param_groups:
+                batched_muon_step(group, self.state)
+        else:
+            self._muon.step()
         self._adamw.step()
         return loss
 

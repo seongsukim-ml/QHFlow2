@@ -124,6 +124,7 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
             test_batch_size = batch_size[2]
             print(f"Using custom test batch size: {test_batch_size} instead of config batch size {conf.dataset.test_batch_size}")
 
+    persistent_workers = conf.dataset.num_workers > 0 and conf.dataset.get("persistent_workers", False)
     use_ddp = "ddp" in str(conf.get("strategy", "None")).lower()
     if not use_ddp:
         train_loader = DataLoader(
@@ -132,6 +133,7 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
             shuffle=True,
             num_workers=conf.dataset.num_workers,
             pin_memory=conf.dataset.pin_memory,
+            persistent_workers=persistent_workers,
         )
         
         val_loader = DataLoader(
@@ -140,6 +142,7 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
             shuffle=False,
             num_workers=conf.dataset.num_workers,
             pin_memory=conf.dataset.pin_memory,
+            persistent_workers=persistent_workers,
         )
         
         test_loader = DataLoader(
@@ -148,6 +151,7 @@ def _create_qh9_data_loaders(train_dataset, valid_dataset, test_dataset, conf: D
             shuffle=False,
             num_workers=conf.dataset.num_workers,
             pin_memory=conf.dataset.pin_memory,
+            persistent_workers=persistent_workers,
         )
     else:
         if not dist.is_available() or not dist.is_initialized():

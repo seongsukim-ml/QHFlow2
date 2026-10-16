@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 
-SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-optimized-20261016')
+SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016')
 BASELINE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016')
 PYTHON = '/home/gpuuser/dataset/_cache/qhflow2-stable-muon-venv/bin/python'
 
@@ -24,13 +24,15 @@ def child(args):
     from common.qh9_utils import load_qh9_dataset
     from pl_module.flow_module import LitModel_flow
     with initialize_config_dir(version_base=None, config_dir=str(code/'src/config_qh9')):
-        conf = compose(config_name='config_stable_muon', overrides=[f'model={args.model}'])
+        conf = compose(config_name='config_stable_muon' if args.variant == 'baseline' else 'config_stable_muon_optimized', overrides=[f'model={args.model}'])
     setup_tensor_type_and_seed(conf)
     torch.set_num_threads(8)
     dataset = load_qh9_dataset(conf, str(code))
     # Identical official training rows across sources and microbatches.
     ids = dataset.train_mask[torch.linspace(0, len(dataset.train_mask)-1, 32).long()]
+    load_start = time.perf_counter()
     graphs = [dataset[int(i)] for i in ids]
+    data_load_seconds = time.perf_counter() - load_start
     batches = [Batch.from_data_list(graphs[i:i+args.batch]).to('cuda') for i in range(0, 32, args.batch)]
     val_ids = dataset.val_mask[torch.linspace(0, len(dataset.val_mask)-1, 8).long()]
     val = Batch.from_data_list([dataset[int(i)] for i in val_ids]).to('cuda')
@@ -55,6 +57,28 @@ def child(args):
                'parameter_names':[n for n,p in module.model.named_parameters()],
                'grads':{n:p.grad.flatten()[::max(1,p.numel()//1024)].cpu() for n,p in module.model.named_parameters() if p.grad is not None}}
     torch.save(fixture, args.output/'first-gradient.pt')
+    optimizer_difference = None
+    if args.variant != 'baseline':
+        from common.batched_muon import batched_muon_step
+        group = optimizer.param_groups[0]
+        parameters = group['params']
+        original = [p.detach().clone() for p in parameters]
+        reference = [torch.nn.Parameter(p.detach().clone()) for p in parameters]
+        for p, q in zip(parameters, reference):
+            if p.grad is not None:q.grad = p.grad.clone()
+        native = torch.optim.Muon(reference, **{key:group[key] for key in
+            ('lr','weight_decay','momentum','nesterov','ns_coefficients','eps','ns_steps','adjust_lr_fn')})
+        native.step()
+        batched_muon_step(group, optimizer.state)
+        optimizer_difference = max(float((p-q).abs().max().detach()) for p,q in zip(parameters,reference))
+        for p,q in zip(parameters,reference):
+            torch.testing.assert_close(p,q,rtol=1e-4,atol=2e-5)
+            if p.grad is not None:
+                torch.testing.assert_close(optimizer.state[p]['momentum_buffer'],native.state[q]['momentum_buffer'],rtol=0,atol=0)
+        with torch.no_grad():
+            for p,saved in zip(parameters,original):p.copy_(saved)
+        optimizer.state.clear()
+        del reference, original, native
     optimizer.zero_grad(set_to_none=True)
     for _ in range(2):step()
     torch.cuda.synchronize()
@@ -63,7 +87,7 @@ def child(args):
     for _ in range(6):
         start=time.perf_counter();loss=step();torch.cuda.synchronize();timings.append(time.perf_counter()-start)
         if not torch.isfinite(loss):raise FloatingPointError('Nonfinite benchmark loss')
-    if args.model == 'QHFlow2_l' and args.batch == 4:
+    if args.profile and args.model == 'QHFlow2_l' and args.batch == 4:
         with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA]) as prof:
             step();torch.cuda.synchronize()
         (args.output/'profile.txt').write_text(prof.key_averages().table(sort_by='self_cuda_time_total',row_limit=45))
@@ -86,7 +110,7 @@ def child(args):
     result={'variant':args.variant,'model':args.model,'microbatch':args.batch,'effective_batch':32,
             'train_seconds_per_update':statistics.median(timings),'train_timings':timings,
             'validation_8_graph_seconds':validation,'sample_metric_count':len(sample_metrics),
-            'peak_memory_mib':train_peak,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
+            'peak_memory_mib':train_peak,'data_load_32_graph_seconds':data_load_seconds,'optimizer_max_difference':optimizer_difference,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
             'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
     (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result),flush=True);dataset.close()
@@ -143,4 +167,5 @@ def parent(args):
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('scope',choices=['parent','child'])
     parser.add_argument('--output',type=Path,required=True);parser.add_argument('--variant');parser.add_argument('--model');parser.add_argument('--batch',type=int)
+    parser.add_argument('--profile', action='store_true')
     args=parser.parse_args();(parent if args.scope=='parent' else child)(args)

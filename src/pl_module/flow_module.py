@@ -2287,6 +2287,7 @@ class LitModel_flow(LitModel):
         """
         batch = self.post_processing(batch, self.default_type)
         batch_one = batch.clone()
+        qh9_metric_cache = {} if self.qh9 else None
         batch = self.corrupt(batch, mul=self.batch_mul)
         self.cur_batch_size = len(batch)
 
@@ -2308,7 +2309,7 @@ class LitModel_flow(LitModel):
                 # Conditional sampling evaluation for EMA
                 if self.error_threshold is None or ema_loss < self.error_threshold:
                     self._log_sample_metric(
-                        batch_one, "val", num_timesteps=self.num_ode_steps_val
+                        batch_one, "val", num_timesteps=self.num_ode_steps_val, metric_cache=qh9_metric_cache
                     )
 
         # Regular model evaluation
@@ -2329,8 +2330,8 @@ class LitModel_flow(LitModel):
         # Conditional sampling evaluation
         if self.error_threshold is None or loss < self.error_threshold:
             for n_steps in self.log_n_steps_ODE_val:
-                self._log_sample_metric(batch_one, "val", num_timesteps=n_steps, post_fix=f"_{n_steps}")
-            self._log_sample_metric(batch_one, "val", num_timesteps=self.num_ode_steps_val)
+                self._log_sample_metric(batch_one, "val", num_timesteps=n_steps, post_fix=f"_{n_steps}", metric_cache=qh9_metric_cache)
+            self._log_sample_metric(batch_one, "val", num_timesteps=self.num_ode_steps_val, metric_cache=qh9_metric_cache)
             
         return None
 
@@ -2582,7 +2583,7 @@ class LitModel_flow(LitModel):
                         torch.save(gt, gt_dir / f"gt_{file_index}.pt")
 
         if self._batch_has_ground_truth_hamiltonian(batch_one):
-            metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights)
+            metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights, qh9_cache=metric_cache)
             for key in metrics.keys():
                 self.log(
                     f"pred/sample_{key}",
@@ -2975,7 +2976,7 @@ class LitModel_flow(LitModel):
                     batch_size=self.cur_batch_size,
                 )
 
-    def _log_sample_metric(self, batch_one, prefix, num_timesteps=1, post_fix="", save_pred=False, log=True):
+    def _log_sample_metric(self, batch_one, prefix, num_timesteps=1, post_fix="", save_pred=False, log=True, metric_cache=None):
         """
         Log sampling-based errors by running full generation and evaluating results.
         

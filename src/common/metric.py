@@ -381,3 +381,23 @@ def pad_symmetric_matrices(matrices):
         padded_matrices.append(padded_matrix)
     
     return torch.stack(padded_matrices)
+
+def prepare_overlap_factors(overlaps, tol=1e-8):
+    """Cache the original single-matrix eigh whitening for repeated metrics."""
+    factors = []
+    for overlap in overlaps:
+        values, vectors = torch.linalg.eigh(overlap)
+        values = torch.where(values > tol, values, torch.full_like(values, tol))
+        factors.append(vectors / torch.sqrt(values).unsqueeze(0))
+    return factors
+
+
+def orbitals_from_overlap_factors(factors, hamiltonians):
+    """Same single-matrix solver, reusing only the invariant overlap factor."""
+    energies, coefficients = [], []
+    for factor, hamiltonian in zip(factors, hamiltonians):
+        transformed = torch.mm(torch.mm(factor.T, hamiltonian), factor)
+        values, vectors = torch.linalg.eigh(transformed)
+        energies.append(values)
+        coefficients.append(torch.mm(factor, vectors))
+    return energies, coefficients

@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 import sys
 
-SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016')
+SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016')
 OUTPUTS = Path('/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs')
 SPLIT_SHA256 = 'b6bfadb51aedc894f388ffd786c6c3a682d900aa0ff229a94b678b4c72b898c1'
 sys.path.insert(0, str(SOURCE / 'src'))

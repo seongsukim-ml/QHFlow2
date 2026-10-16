@@ -45,6 +45,21 @@ def test_reverse_edges_matches_existing_graph_order():
     torch.testing.assert_close(edges[:, actual], edges.flip(0))
 
 
+def test_reused_overlap_factors_match_original_eigensolver():
+    from common.metric import (prepare_overlap_factors, orbitals_from_overlap_factors,
+                               cal_orbital_and_energies_variable_size_grouped)
+    torch.manual_seed(21)
+    matrices = [torch.randn(n, n, dtype=torch.float64) for n in (5, 14, 23)]
+    overlaps = [x @ x.T + torch.eye(x.shape[0]) for x in matrices]
+    hamiltonians = [(x + x.T) / 2 for x in matrices]
+    reference = cal_orbital_and_energies_variable_size_grouped(overlaps, hamiltonians)
+    factors = prepare_overlap_factors(overlaps)
+    actual = orbitals_from_overlap_factors(factors, hamiltonians)
+    for reference_list, actual_list in zip(reference, actual):
+        for expected, value in zip(reference_list, actual_list):
+            torch.testing.assert_close(value, expected, rtol=0, atol=0)
+
+
 def test_couplings_follow_dtype_without_checkpoint_keys_or_forward_rebuild():
     ir = o3.Irreps('3x0e+2x1e+1x2e')
     layer = ParamContraction(ir, ir, o3.Irreps('4x0e')).double()
