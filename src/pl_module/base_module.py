@@ -22,7 +22,7 @@ import os
 # PySCF imports for inference functionality
 import pyscf
 from pyscf import dft
-from common.metric import cal_orbital_and_energies, cal_orbital_and_energies_variable_size_grouped
+from common.metric import prepare_overlap_factors, orbitals_from_overlap_factors, cal_orbital_and_energies, cal_orbital_and_energies_variable_size_grouped
 from common.matrix_transforms import get_convention_dict, _build_final_matrix, _matrix_transform_list, _matrix_transform_single, _matrix_transform_single_optimized, _get_orbital_mask
 
 # ==========================================        
@@ -951,13 +951,13 @@ class LitModel(pl.LightningModule):
     # Evaluation Methods
     # ==========================================
     
-    def metric(self, _outputs, _target, metric_weights=None):
+    def metric(self, _outputs, _target, metric_weights=None, qh9_cache=None):
         """Calculate orbital energy and coefficient errors."""
         outputs = _outputs
         target = _target
         
         if self.qh9:
-            return self._metric_qh9(outputs, target, metric_weights)
+            return self._metric_qh9(outputs, target, metric_weights, qh9_cache)
         else:
             return self._metric_md17(outputs, target, metric_weights)
 
@@ -1117,7 +1117,7 @@ class LitModel(pl.LightningModule):
 
         return error_dict
 
-    def _metric_qh9(self, _outputs, _target, metric_weights=None):
+    def _metric_qh9(self, _outputs, _target, metric_weights=None, qh9_cache=None):
         """Fixed test criterion for QH9 dataset."""
         if metric_weights is None:
             metric_weights = {
@@ -1145,33 +1145,31 @@ class LitModel(pl.LightningModule):
             dtype=torch.float64,
         )
         
-        batch.hamiltonian = self.build_final_matrix(
-            batch,
-            batch.diagonal_hamiltonian,
-            batch.non_diagonal_hamiltonian,
-            transform=True,
-            convention="back2pyscf",
-            dtype=torch.float64,
-        )
-        
-        # Overlap matrix is shared across batch and
-        overlap = self.build_final_matrix(
-            batch,
-            batch.diagonal_overlap,
-            batch.non_diagonal_overlap,
-            transform=True,
-            convention="back2pyscf",
-            dtype=torch.float64,
-        )
-
-        # Calculate orbital properties
+        # The cache belongs to one validation batch and is discarded afterwards.
+        # Neither model predictions nor mutable ODE state are cached.
+        cache = {} if qh9_cache is None else qh9_cache
+        if not cache:
+            target_h = self.build_final_matrix(
+                batch, batch.diagonal_hamiltonian, batch.non_diagonal_hamiltonian,
+                transform=True, convention="back2pyscf", dtype=torch.float64,
+            )
+            overlap = self.build_final_matrix(
+                batch, batch.diagonal_overlap, batch.non_diagonal_overlap,
+                transform=True, convention="back2pyscf", dtype=torch.float64,
+            )
+            factors = prepare_overlap_factors(overlap, EIGENVALUE_TOLERANCE)
+            energies, coefficients = orbitals_from_overlap_factors(factors, target_h)
+            cache.update(hamiltonian=target_h, overlap=overlap, factors=factors,
+                         energies=energies, coefficients=coefficients)
+        overlap = cache["overlap"]
+        batch.hamiltonian = cache["hamiltonian"]
         outputs["orbital_energies"], outputs["orbital_coefficients"] = (
-            self.cal_orbital_and_energies(overlap, outputs["hamiltonian"])
+            orbitals_from_overlap_factors(cache["factors"], outputs["hamiltonian"])
         )
-        batch.orbital_energies, batch.orbital_coefficients = (
-            self.cal_orbital_and_energies(overlap, batch["hamiltonian"])
-        )
-        
+        # Later occupied-space slicing must not alter the cached full spectra.
+        batch.orbital_energies = list(cache["energies"])
+        batch.orbital_coefficients = list(cache["coefficients"])
+
         num_orb=[]
         pred_HOMO=[]
         pred_LUMO=[]
