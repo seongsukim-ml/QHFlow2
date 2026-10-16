@@ -1,7 +1,7 @@
 {
   "jobs": [
     {
-      "id": "qhflow2-s-order-fixed-stable-muon-s42-20261016-cuda-smoke",
+      "id": "qhflow2-s-order-fixed-stable-muon-s42-20261016-cuda-smoke-v2",
       "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
       "args": [
         "smoke",
@@ -12,7 +12,7 @@
       "gpu_count": 1,
       "gpu_mode": "exclusive",
       "allowed_hosts": [
-        "usr310-gpumngc-01"
+        "server-1-qhflow2-stable-muon-20261016"
       ],
       "priority": 50,
       "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016",
@@ -29,7 +29,7 @@
       "description": "QHFlow2_s QH9Stable random split, seed42, Muon1e-3/AdamW1e-4; smoke"
     },
     {
-      "id": "qhflow2-o3-s-stable-muon-s42-20261016-cuda-smoke",
+      "id": "qhflow2-o3-s-stable-muon-s42-20261016-cuda-smoke-v2",
       "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
       "args": [
         "smoke",
@@ -40,7 +40,7 @@
       "gpu_count": 1,
       "gpu_mode": "exclusive",
       "allowed_hosts": [
-        "usr310-gpumngc-01"
+        "server-1-qhflow2-stable-muon-20261016"
       ],
       "priority": 50,
       "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016",
