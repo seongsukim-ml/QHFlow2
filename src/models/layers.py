@@ -18,6 +18,7 @@ from e3nn.math import normalize2mom, perm
 from e3nn.util.jit import compile_mode
 
 from .modules import *
+from .coupling_cache import register_couplings, coupling
 
 
 _RESCALE = True
@@ -595,6 +596,7 @@ class Expansion(nn.Module):
         self.irrep_out_1 = irrep_out_1
         self.irrep_out_2 = irrep_out_2
         self.instructions = self.get_expansion_path(irrep_in, irrep_out_1, irrep_out_2)
+        register_couplings(self, ((i[1], i[2], i[0]) for i in self.instructions))
         self.num_path_weight = sum(prod(ins[-1]) for ins in self.instructions if ins[3])
         self.num_bias = sum(
             [prod(ins[-1][1:]) for ins in self.instructions if ins[0] == 0]
@@ -627,7 +629,7 @@ class Expansion(nn.Module):
             x1 = x_in_s[ins[0]]
             x1 = x1.reshape(batch_num, mul_ir_in.mul, mul_ir_in.ir.dim)
             w3j_matrix = (
-                o3.wigner_3j(ins[1], ins[2], ins[0]).to(self.device).type(x1.type())
+                coupling(self, ins[1], ins[2], ins[0], x1)
             )
             if ins[3] is True or weights is not None:
                 if weights is None:

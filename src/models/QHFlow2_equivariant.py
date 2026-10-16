@@ -6,6 +6,7 @@ These are new architectures, not inference-time replacements for legacy
 checkpoints. In particular, spectral gating replaces sampled-grid nonlinearities.
 """
 
+import copy
 import torch
 
 from .QHFlow_so2_v5_1_ordering_fixed import QHFlow_escn_v5_1_ordering_fixed
@@ -61,10 +62,25 @@ class QHFlow2_order_fixed(QHFlow_escn_v5_1_ordering_fixed):
             raise ValueError("QHFlow2 benchmark models require QH9 AO blocks (keep_blocks=True)")
         # The backbone sizes charge/spin from len(data). Populate both keys
         # first so adding one does not change the length used for the other.
-        data = data.clone()
+        # Isolate attribute assignments without cloning every label, Q tensor,
+        # overlap and orbital coefficient in the input batch.
+        data = copy.copy(data)
+        if not self.node_attr_backbone.direct_forces:
+            data.pos = data.pos.clone()
         data.charge = torch.zeros(data.ptr.numel() - 1, dtype=torch.long, device=H.device)
         data.spin = torch.zeros_like(data.charge)
         return super().forward(data, H, keep_blocks=True)
+
+    @staticmethod
+    def _calculate_transpose_indices(data, radius_edges):
+        """Reverse complete-graph edges without per-molecule CUDA scalars."""
+        counts = data.ptr[1:] - data.ptr[:-1]
+        edge_counts = counts * (counts - 1)
+        offsets = edge_counts.cumsum(0) - edge_counts
+        graph = data.batch[radius_edges[0]]
+        local = radius_edges - data.ptr[graph].unsqueeze(0)
+        return (offsets[graph] + local[0] * (counts[graph] - 1)
+                + local[1] - (local[0] < local[1]).long())
 
 
 class QHFlow2_O3(QHFlow2_order_fixed):
@@ -89,7 +105,7 @@ class QHFlow2_O3(QHFlow2_order_fixed):
     def forward(self, data, H, keep_blocks=False):
         if not keep_blocks:
             raise ValueError("QHFlow2-O(3) requires QH9 AO blocks (keep_blocks=True)")
-        reflected = data.clone()
+        reflected = copy.copy(data)
         reflected.pos = -data.pos
         for key in ("diagonal_init_ham", "diagonal_overlap"):
             if key in data:
