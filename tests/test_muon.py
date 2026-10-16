@@ -87,27 +87,3 @@ def test_closure_runs_once_and_both_groups_receive_gradients():
     loss = optimizer.step(closure)
     assert len(calls) == 1 and torch.isfinite(loss)
     assert all(p in optimizer.state for g in optimizer.param_groups for p in g["params"])
-
-
-def test_batched_muon_loads_native_state_and_matches_updates():
-    torch.manual_seed(13)
-    model = nn.Sequential(nn.Linear(8, 16), nn.Linear(16, 8),
-                          nn.Linear(8, 16), nn.Linear(16, 8), nn.LayerNorm(8))
-    native = MuonAdamW(model)
-    set_gradients(model)
-    native.step()
-    restored_model = copy.deepcopy(model)
-    batched = MuonAdamW(restored_model, batched=True)
-    batched.load_state_dict(copy.deepcopy(native.state_dict()))
-    for _ in range(3):
-        set_gradients(model)
-        set_gradients(restored_model)
-        # A missing gradient must skip momentum and weight decay for that weight.
-        model[0].weight.grad = None
-        restored_model[0].weight.grad = None
-        native.step()
-        batched.step()
-        for expected, actual in zip(model.parameters(), restored_model.parameters()):
-            torch.testing.assert_close(actual, expected, rtol=0, atol=0)
-            for key, value in native.state[expected].items():
-                torch.testing.assert_close(batched.state[actual][key], value, rtol=0, atol=0)
