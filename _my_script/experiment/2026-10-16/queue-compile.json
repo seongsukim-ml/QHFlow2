@@ -1,0 +1,31 @@
+{
+  "jobs": [
+    {
+      "id": "qhflow2-torch-compile-benchmark-20261016",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_compute_v020rc2_benchmark.sh",
+      "args": [
+        "compile",
+        "all",
+        "{gpus}",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-torch-compile-benchmark-20261016"
+      ],
+      "gpu_count": 1,
+      "gpu_mode": "exclusive",
+      "allowed_hosts": [
+        "server-1-qhflow2-compute-20261016"
+      ],
+      "priority": 60,
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016",
+      "input_files": [
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_compute_v020rc2_benchmark.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/src/config_qh9/config_stable_muon.yaml",
+        "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016/src/config_qh9/config_stable_muon_optimized.yaml"
+      ],
+      "environment": {
+        "EXPECTED_HOST": "usr310-gpumngc-01"
+      },
+      "description": "Measure torch.compile correctness, compile cost and throughput for model, heads and native Muon"
+    }
+  ]
+}

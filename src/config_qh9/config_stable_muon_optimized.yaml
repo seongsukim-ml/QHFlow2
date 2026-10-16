@@ -3,9 +3,6 @@ defaults:
   - config_stable_muon
   - _self_
 
-muon:
-  batched: true
-
 dataset:
   # The Hamiltonian-only objective and orbital validation do not consume Q
   # tensors or pre-cut occupied coefficients. Compute orbital metrics from

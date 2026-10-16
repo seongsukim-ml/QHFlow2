@@ -37,6 +37,11 @@ def child(args):
     val_ids = dataset.val_mask[torch.linspace(0, len(dataset.val_mask)-1, 8).long()]
     val = Batch.from_data_list([dataset[int(i)] for i in val_ids]).to('cuda')
     module = LitModel_flow(conf).cuda()
+    compile_start = time.perf_counter()
+    if args.compile_scope:
+        from common.compile import compile_flow
+        compile_flow(module, args.compile_scope)
+
     logged = {}
     module.log = lambda key, value, **kw: logged.__setitem__(key, value.detach() if isinstance(value, torch.Tensor) else value)
     optimizer = module.configure_optimizers()[0][0]
@@ -57,31 +62,10 @@ def child(args):
                'parameter_names':[n for n,p in module.model.named_parameters()],
                'grads':{n:p.grad.flatten()[::max(1,p.numel()//1024)].cpu() for n,p in module.model.named_parameters() if p.grad is not None}}
     torch.save(fixture, args.output/'first-gradient.pt')
-    optimizer_difference = None
-    if args.variant != 'baseline':
-        from common.batched_muon import batched_muon_step
-        group = optimizer.param_groups[0]
-        parameters = group['params']
-        original = [p.detach().clone() for p in parameters]
-        reference = [torch.nn.Parameter(p.detach().clone()) for p in parameters]
-        for p, q in zip(parameters, reference):
-            if p.grad is not None:q.grad = p.grad.clone()
-        native = torch.optim.Muon(reference, **{key:group[key] for key in
-            ('lr','weight_decay','momentum','nesterov','ns_coefficients','eps','ns_steps','adjust_lr_fn')})
-        native.step()
-        batched_muon_step(group, optimizer.state)
-        optimizer_difference = max(float((p-q).abs().max().detach()) for p,q in zip(parameters,reference))
-        for p,q in zip(parameters,reference):
-            torch.testing.assert_close(p,q,rtol=1e-4,atol=2e-5)
-            if p.grad is not None:
-                torch.testing.assert_close(optimizer.state[p]['momentum_buffer'],native.state[q]['momentum_buffer'],rtol=0,atol=0)
-        with torch.no_grad():
-            for p,saved in zip(parameters,original):p.copy_(saved)
-        optimizer.state.clear()
-        del reference, original, native
     optimizer.zero_grad(set_to_none=True)
     for _ in range(2):step()
     torch.cuda.synchronize()
+    preparation_seconds = time.perf_counter() - compile_start
     torch.cuda.reset_peak_memory_stats()
     timings=[]
     for _ in range(6):
@@ -110,8 +94,8 @@ def child(args):
     result={'variant':args.variant,'model':args.model,'microbatch':args.batch,'effective_batch':32,
             'train_seconds_per_update':statistics.median(timings),'train_timings':timings,
             'validation_8_graph_seconds':validation,'sample_metric_count':len(sample_metrics),
-            'peak_memory_mib':train_peak,'data_load_32_graph_seconds':data_load_seconds,'optimizer_max_difference':optimizer_difference,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
-            'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
+            'peak_memory_mib':train_peak,'data_load_32_graph_seconds':data_load_seconds,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
+            'compile_scope':args.compile_scope,'preparation_seconds':preparation_seconds,'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
     (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result),flush=True);dataset.close()
 
@@ -133,6 +117,9 @@ def parent(args):
             stop.wait(15)
     thread=threading.Thread(target=drain,daemon=True);thread.start()
     try:
+        if args.compile_check:
+            run_compile_cases(args)
+            return
         cases=[('QHFlow2_s',32,32),('QHFlow2_O3_s',16,32),('QHFlow2_m',16,32),('QHFlow2_l',4,16)]
         results=[]
         for model,original,tuned in cases:
@@ -164,8 +151,43 @@ def parent(args):
         queue.release_autoresearch_drain_request(paths,host,gpu,job_id=job)
 
 
+def run_compile_cases(args):
+    import torch
+    cases = [(model, batch, scope) for model, batch in
+             [('QHFlow2_s',32), ('QHFlow2_O3_s',32), ('QHFlow2_m',32), ('QHFlow2_l',16)]
+             for scope in [None, 'heads']]
+    cases += [('QHFlow2_s',32,'model'), ('QHFlow2_s',32,'muon')]
+    results = []
+    for model, batch, scope in cases:
+        out = args.output / f"{model}-{scope or 'eager'}-b{batch}"
+        out.mkdir()
+        command = [PYTHON, str(SOURCE/'_my_script/experiment/2026-10-16/benchmark_compute.py'),
+                   'child','--variant','optimized','--model',model,'--batch',str(batch),'--output',str(out)]
+        if scope:command += ['--compile-scope',scope]
+        result = {'model':model, 'scope':scope, 'microbatch':batch}
+        try:
+            with (out/'console.log').open('w') as log:
+                completed = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
+            if completed.returncode:raise RuntimeError(f'Child exited {completed.returncode}')
+            result.update(json.loads((out/'result.json').read_text()), status='passed')
+            if scope:
+                ref = torch.load(args.output/f'{model}-eager-b{batch}/first-gradient.pt',weights_only=True)
+                actual = torch.load(out/'first-gradient.pt',weights_only=True)
+                assert ref['parameter_names'] == actual['parameter_names']
+                torch.testing.assert_close(ref['loss'],actual['loss'],rtol=1e-5,atol=1e-7)
+                for name in ref['grads']:
+                    torch.testing.assert_close(ref['grads'][name],actual['grads'][name],rtol=3e-4,atol=2e-6,msg=name)
+        except Exception as error:
+            result.update(status='rejected', reason=str(error))
+        results.append(result)
+        (args.output/'compile-summary.json').write_text(json.dumps(results,indent=2)+'\n')
+        print(json.dumps(result),flush=True)
+
+
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('scope',choices=['parent','child'])
     parser.add_argument('--output',type=Path,required=True);parser.add_argument('--variant');parser.add_argument('--model');parser.add_argument('--batch',type=int)
     parser.add_argument('--profile', action='store_true')
+    parser.add_argument('--compile-check', action='store_true')
+    parser.add_argument('--compile-scope', choices=['model','heads','muon'])
     args=parser.parse_args();(parent if args.scope=='parent' else child)(args)
