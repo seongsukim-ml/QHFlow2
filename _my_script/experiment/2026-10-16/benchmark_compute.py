@@ -12,6 +12,8 @@ import time
 SOURCE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-compute-v020rc2-20261016')
 BASELINE = Path('/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016')
 PYTHON = '/home/gpuuser/dataset/_cache/qhflow2-stable-muon-venv/bin/python'
+sys.path.insert(0, '/dataset/seongsu/shared-home/workspace/project/MALOQ/_auto_script/qhflow2_compute_20261016')
+from gpu_guard import exclusive_compute, check_gpu_processes
 
 
 def child(args):
@@ -67,9 +69,11 @@ def child(args):
     torch.cuda.synchronize()
     preparation_seconds = time.perf_counter() - compile_start
     torch.cuda.reset_peak_memory_stats()
+    check_gpu_processes(int(os.environ['SC26_QUEUE_GPUS']))
     timings=[]
     for _ in range(6):
         start=time.perf_counter();loss=step();torch.cuda.synchronize();timings.append(time.perf_counter()-start)
+        check_gpu_processes(int(os.environ['SC26_QUEUE_GPUS']))
         if not torch.isfinite(loss):raise FloatingPointError('Nonfinite benchmark loss')
     if args.profile and args.model == 'QHFlow2_l' and args.batch == 4:
         with torch.profiler.profile(activities=[torch.profiler.ProfilerActivity.CPU,torch.profiler.ProfilerActivity.CUDA]) as prof:
@@ -147,22 +151,7 @@ def check_dynamic_and_equivariance(module, graphs, optimizer, scope):
 
 
 def parent(args):
-    import threading
-    import socket
-    sys.path.insert(0,'/dataset/seongsu/shared-home/workspace/_global_auto_script/experiment_queue')
-    import sc26_queue as queue
-    paths=queue.QueuePaths(Path('/dataset/seongsu/shared-home/workspace/project/MALOQ'),Path('/dataset/seongsu/shared-home/workspace/_global_auto_script_output/experiment_queue'))
-    gpu=int(os.environ['SC26_QUEUE_GPUS']);job=os.environ['SC26_QUEUE_JOB_ID'];host=socket.gethostname()
-    # Queue-supported, job-scoped drain: prevent adaptive filler GEMMs from
-    # contaminating paired measurements. Other GPUs/services are unaffected.
-    stop=threading.Event()
-    def drain():
-        while not stop.is_set():
-            if not queue.request_autoresearch_drain(paths,host,gpu,job):
-                raise RuntimeError('Cannot acquire benchmark-owned autoresearch drain')
-            stop.wait(15)
-    thread=threading.Thread(target=drain,daemon=True);thread.start()
-    try:
+    with exclusive_compute():
         if args.compile_check:
             run_compile_cases(args)
             return
@@ -190,11 +179,8 @@ def parent(args):
             for name in ref['grads']:
                 torch.testing.assert_close(ref['grads'][name],opt['grads'][name],rtol=3e-4,atol=2e-6,msg=name)
                 maxima.append(float((ref['grads'][name]-opt['grads'][name]).abs().max()))
-            comparison[model]={'maximum_sampled_gradient_difference':max(maxima),'loss_difference':float((ref['loss']-opt['loss']).abs())}
+            comparison[model]={'maximum_gradient_difference':max(maxima),'loss_difference':float((ref['loss']-opt['loss']).abs())}
         (args.output/'benchmark-summary.json').write_text(json.dumps({'results':results,'equivalence':comparison},indent=2)+'\n')
-    finally:
-        stop.set();thread.join(timeout=20)
-        queue.release_autoresearch_drain_request(paths,host,gpu,job_id=job)
 
 
 def run_compile_cases(args):

@@ -240,34 +240,9 @@ def run(args):
 
 
 def exclusive_compute():
-    """Keep this allocated GPU free of adaptive filler during real training."""
-    from contextlib import contextmanager
-    import socket
-    import threading
-    sys.path.insert(0, '/dataset/seongsu/shared-home/workspace/_global_auto_script/experiment_queue')
-    import sc26_queue as queue
-    paths = queue.QueuePaths(Path('/dataset/seongsu/shared-home/workspace/project/MALOQ'),
-                            Path('/dataset/seongsu/shared-home/workspace/_global_auto_script_output/experiment_queue'))
-    gpu = int(os.environ['SC26_QUEUE_GPUS'])
-    job = os.environ['SC26_QUEUE_JOB_ID']
-    host = socket.gethostname()
-    @contextmanager
-    def guard():
-        if not queue.request_autoresearch_drain(paths, host, gpu, job):
-            raise RuntimeError('Cannot acquire job-owned compute drain')
-        stop = threading.Event()
-        def renew():
-            while not stop.wait(15):
-                queue.request_autoresearch_drain(paths, host, gpu, job)
-        thread = threading.Thread(target=renew, daemon=True)
-        thread.start()
-        try:
-            yield
-        finally:
-            stop.set()
-            thread.join(timeout=20)
-            queue.release_autoresearch_drain_request(paths, host, gpu, job_id=job)
-    return guard()
+    sys.path.insert(0, '/dataset/seongsu/shared-home/workspace/project/MALOQ/_auto_script/qhflow2_compute_20261016')
+    from gpu_guard import exclusive_compute as guarded
+    return guarded()
 
 
 if __name__ == '__main__':
