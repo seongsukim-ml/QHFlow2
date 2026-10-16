@@ -760,15 +760,7 @@ class LitModel(pl.LightningModule):
         """Transform matrix between different orbital conventions - CUDA optimized version."""
         assert convention in self.convention_dict, f"Invalid convention: {convention}"
         
-        final_matrix_list = []
-        
-        for graph_idx in range(data.ptr.shape[0] - 1):
-            hamiltonian = hamiltonian_list[graph_idx]
-            atoms = data.atoms[data.batch == graph_idx]
-            mat_res = self.matrix_transform(hamiltonian, atoms, convention)
-            final_matrix_list.append(mat_res)
-            
-        return final_matrix_list
+        return _matrix_transform_list(hamiltonian_list, data, self.convention_dict[convention])
 
     def build_final_matrix(
         self,
@@ -796,11 +788,10 @@ class LitModel(pl.LightningModule):
             non_diagonal_matrix,
             orbital_mask,
         )
-        for i in range(len(final_matrix)):
-            if transform:
-                final_matrix[i] = self.matrix_transform(final_matrix[i], data.atoms[data.batch == i], convention)
-            if dtype is not None:
-                final_matrix[i] = final_matrix[i].type(dtype)
+        if transform:
+            final_matrix = self.matrix_transform_list(final_matrix, data, convention)
+        if dtype is not None:
+            final_matrix = [matrix.to(dtype=dtype) for matrix in final_matrix]
         return final_matrix
 
     # ==========================================

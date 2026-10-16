@@ -70,6 +70,7 @@ def child(args):
         tick=time.perf_counter();wait,loss=update(iterator,i+4);timings.append(time.perf_counter()-tick)
         waits.append(wait);losses.append(loss);graph_counts.append(int(torch._dynamo.utils.counters['stats']['unique_graphs']))
     train_wall=time.perf_counter()-start
+    print(f'Train segment: {32*24/train_wall:.2f} samples/s including loading',flush=True)
     train_peak=torch.cuda.max_memory_allocated()/2**20
     check_gpu_processes(int(os.environ['SC26_QUEUE_GPUS']))
     module.eval();module.error_threshold=None
@@ -104,6 +105,8 @@ def child(args):
             'first_validation_seconds':first_validation,'first_gradient_preparation_seconds':preparation,
             'sample_metric_counts':metric_counts,'train_ids':train_ids,'val_ids':val_ids,
             'losses':losses,'unique_graphs':graph_counts,'checks':checks,'checkpoint_reload':True,'status':'passed'}
+    result['train_samples_per_second']=32/result['train_mean_seconds']
+    result['validation_samples_per_second']=32/result['validation_mean_seconds']
     (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps({k:v for k,v in result.items() if k not in ('train_ids','val_ids','losses','train_timings')}),flush=True)
     dataset.close()
 
@@ -123,7 +126,7 @@ def parent(args):
             result={'model':model,'variant':variant,'mode':mode}
             try:
                 with (out/'console.log').open('w') as log:
-                    proc=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=1200)
+                    proc=subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,timeout=600 if args.suite=='modes' else 1200)
                 if proc.returncode:raise RuntimeError(f'exit code {proc.returncode}')
                 result.update(json.loads((out/'result.json').read_text()))
                 if len(results) and ((args.suite=='models' and variant=='candidate') or args.suite!='models'):

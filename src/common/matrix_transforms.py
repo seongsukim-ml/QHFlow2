@@ -358,15 +358,39 @@ def _matrix_transform_list(hamiltonian_list, data, convention_rule):
     Returns:
         list: List of transformed Hamiltonian matrices, one per graph in the batch.
     """
-    final_matrix_list = []
-    
-    for graph_idx in range(data.ptr.shape[0] - 1):
-        hamiltonian = hamiltonian_list[graph_idx]
-        atoms = data.atoms[data.batch == graph_idx]
-        mat_res = _matrix_transform_single(hamiltonian, atoms, convention_rule)
-        final_matrix_list.append(mat_res)
-        
-    return final_matrix_list
+    from common.inference_cache import cached_tensor_metadata
+    if not hamiltonian_list:
+        return []
+    device, dtype = hamiltonian_list[0].device, hamiltonian_list[0].dtype
+    def prepare():
+        atoms = data.atoms.reshape(-1).detach().cpu().tolist()
+        batch = data.batch.detach().cpu().tolist()
+        groups = [[] for _ in hamiltonian_list]
+        for z, graph in zip(atoms, batch):
+            groups[graph].append(z)
+        return [_orbital_transform_plan(group, convention_rule, device, dtype) for group in groups]
+    plans, _ = cached_tensor_metadata(
+        ("ao_convention", id(convention_rule), device, dtype, len(hamiltonian_list)),
+        (data.atoms, data.batch), prepare)
+    return [matrix.index_select(-2, index).index_select(-1, index)
+            * signs.unsqueeze(-1) * signs.unsqueeze(-2)
+            for matrix, (index, signs) in zip(hamiltonian_list, plans)]
+
+
+def _orbital_transform_plan(atoms, conv, device, dtype):
+    orbitals, order = "", []
+    for z in atoms:
+        offset = len(order)
+        orbitals += conv.atom_to_orbitals_map[z]
+        order.extend(index + offset for index in conv.orbital_order_map[z])
+    indices, signs, offset = [], [], 0
+    for orbital in orbitals:
+        indices.append([i + offset for i in conv.orbital_idx_map[orbital]])
+        signs.append(list(conv.orbital_sign_map[orbital]))
+        offset += len(indices[-1])
+    return (torch.tensor([i for group in order for i in indices[group]], device=device, dtype=torch.long),
+            torch.tensor([i for group in order for i in signs[group]], device=device, dtype=dtype))
+
 
 def _matrix_transform_single(hamiltonian, atoms, convention_rule):
     """Transform matrices according to orbital convention using PyTorch.
