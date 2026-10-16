@@ -1,60 +1,60 @@
 {
   "jobs": [
     {
-      "id": "qhflow2-s-order-fixed-stable-muon-s42-20261016-cuda-smoke-v2",
-      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
+      "id": "qhflow2-m-order-fixed-stable-muon-s42-20261016-cuda-smoke",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon_ml.sh",
       "args": [
         "smoke",
-        "QHFlow2_s",
+        "QHFlow2_m",
         "{gpus}",
-        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-s-order-fixed-stable-muon-s42-20261016-cuda-smoke"
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-m-order-fixed-stable-muon-s42-20261016-cuda-smoke"
       ],
       "gpu_count": 1,
       "gpu_mode": "exclusive",
       "allowed_hosts": [
-        "server-1-qhflow2-stable-muon-20261016"
+        "server-1-qhflow2-stable-muon-ml-20261016"
       ],
       "priority": 50,
-      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016",
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016",
       "input_files": [
-        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/config_stable_muon.yaml",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/config_flow_v2_simple.yaml",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/model/QHFlow2_s.yaml",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon_ml.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/config_stable_muon.yaml",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/config_flow_v2_simple.yaml",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/model/QHFlow2_m.yaml",
         "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json"
       ],
       "environment": {
         "EXPECTED_HOST": "usr310-gpumngc-01"
       },
-      "description": "QHFlow2_s QH9Stable random split, seed42, Muon1e-3/AdamW1e-4; smoke"
+      "description": "QHFlow2_m order-fixed SO(3); Stable random, seed42, Muon1e-3/AdamW1e-4, effective batch32; smoke"
     },
     {
-      "id": "qhflow2-o3-s-stable-muon-s42-20261016-cuda-smoke-v2",
-      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
+      "id": "qhflow2-l-order-fixed-stable-muon-s42-20261016-cuda-smoke",
+      "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon_ml.sh",
       "args": [
         "smoke",
-        "QHFlow2_O3_s",
+        "QHFlow2_l",
         "{gpus}",
-        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-o3-s-stable-muon-s42-20261016-cuda-smoke"
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-order-fixed-stable-muon-s42-20261016-cuda-smoke"
       ],
       "gpu_count": 1,
       "gpu_mode": "exclusive",
       "allowed_hosts": [
-        "server-1-qhflow2-stable-muon-20261016"
+        "server-1-qhflow2-stable-muon-ml-20261016"
       ],
       "priority": 50,
-      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016",
+      "source_root": "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016",
       "input_files": [
-        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon.sh",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/config_stable_muon.yaml",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/config_flow_v2_simple.yaml",
-        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-training-20261016/src/config_qh9/model/QHFlow2_O3_s.yaml",
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_stable_muon_ml.sh",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/config_stable_muon.yaml",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/config_flow_v2_simple.yaml",
+        "/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-stable-muon-ml-training-20261016/src/config_qh9/model/QHFlow2_l.yaml",
         "/dataset/seongsu/shared-home/data/QH9_shard/QH9Stable_shard/processed/processed_QH9Stable_random_12.json"
       ],
       "environment": {
         "EXPECTED_HOST": "usr310-gpumngc-01"
       },
-      "description": "QHFlow2_O3_s QH9Stable random split, seed42, Muon1e-3/AdamW1e-4; smoke"
+      "description": "QHFlow2_l order-fixed SO(3); Stable random, seed42, Muon1e-3/AdamW1e-4, effective batch32; smoke"
     }
   ]
 }
