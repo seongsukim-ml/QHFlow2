@@ -53,3 +53,23 @@ This checkout extends the tested small-model runner at commit `48dceffa389d7b6d8
 Both requested architectures are order-fixed SO(3) models without group averaging.
 Medium uses microbatch 16 with accumulation 2; large uses microbatch 4 with accumulation 8.
 Two dedicated workers use `server-1-qhflow2-stable-muon-ml-20261016`; the existing small-model workers and their frozen source are preserved.
+
+## Flash-inspired torch.compile study
+
+Reference: https://github.com/manasakani/maloq/tree/4d4c588604e9844a4cfcd460fa61e3463dcf4142
+The reference isolates a dynamic fullgraph tensor core, leaves graph construction outside,
+and preserves checkpoint names by compiling call paths. This candidate applies those boundaries
+to existing QHFlow2 message-passing and AO head modules through `nn.Module.compile`.
+It does not port FlashSO2 parameters, Triton Wigner gauges, or upgrade the Torch 2.11 environment.
+`model` and `muon` scopes are benchmark-only rejected strategies.
+
+Manifest: `queue-compile-blocks.json`. H100, one queue-allocated GPU, official
+QH9Stable random split, seed42, effective batch32, native Muon/AdamW.
+Environment: `/home/gpuuser/dataset/_cache/qhflow2-stable-muon-venv/bin/python`.
+Queue invokes:
+```bash
+/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_compute_v020rc2_benchmark.sh compile all 5 /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-torch-compile-blocks-20261016
+```
+Checks: every initial parameter gradient, variable-size compilation counts,
+SO(3)/O(3) outputs, validation, memory and warm throughput.
+Status: prepared; compilation remains opt-in pending CUDA results.

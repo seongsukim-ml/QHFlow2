@@ -88,7 +88,7 @@ def run(args):
                          'sha256':hashlib.sha256(checkpoint_path.read_bytes()).hexdigest()}
 
     torch.set_num_threads(8)
-    receipt.update(scope=args.scope, torch=torch.__version__, gpu=torch.cuda.get_device_name(0),
+    receipt.update(compile_scope=args.compile_scope, scope=args.scope, torch=torch.__version__, gpu=torch.cuda.get_device_name(0),
                    queue_job_id=os.environ.get('SC26_QUEUE_JOB_ID'),
                    queue_attempt=os.environ.get('SC26_QUEUE_ATTEMPT'),
                    physical_gpus=os.environ.get('CUDA_VISIBLE_DEVICES'))
@@ -230,11 +230,47 @@ def run(args):
         dataset.close()
 
 
+def exclusive_compute():
+    """Keep this allocated GPU free of adaptive filler during real training."""
+    from contextlib import contextmanager
+    import socket
+    import threading
+    sys.path.insert(0, '/dataset/seongsu/shared-home/workspace/_global_auto_script/experiment_queue')
+    import sc26_queue as queue
+    paths = queue.QueuePaths(Path('/dataset/seongsu/shared-home/workspace/project/MALOQ'),
+                            Path('/dataset/seongsu/shared-home/workspace/_global_auto_script_output/experiment_queue'))
+    gpu = int(os.environ['SC26_QUEUE_GPUS'])
+    job = os.environ['SC26_QUEUE_JOB_ID']
+    host = socket.gethostname()
+    @contextmanager
+    def guard():
+        if not queue.request_autoresearch_drain(paths, host, gpu, job):
+            raise RuntimeError('Cannot acquire job-owned compute drain')
+        stop = threading.Event()
+        def renew():
+            while not stop.wait(15):
+                queue.request_autoresearch_drain(paths, host, gpu, job)
+        thread = threading.Thread(target=renew, daemon=True)
+        thread.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            thread.join(timeout=20)
+            queue.release_autoresearch_drain_request(paths, host, gpu, job_id=job)
+    return guard()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('scope', choices=('validate', 'smoke', 'full'))
     parser.add_argument('model', choices=('QHFlow2_s', 'QHFlow2_O3_s', 'QHFlow2_m', 'QHFlow2_l'))
     parser.add_argument('--output')
     parser.add_argument('--checkpoint')
-    parser.add_argument('--compile-scope', choices=('none','heads','model'), default='none')
-    run(parser.parse_args())
+    parser.add_argument('--compile-scope', choices=('none','heads','blocks'), default='none')
+    args = parser.parse_args()
+    if args.scope == 'validate':
+        run(args)
+    else:
+        with exclusive_compute():
+            run(args)
