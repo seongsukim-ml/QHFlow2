@@ -118,6 +118,7 @@ def check_dynamic_and_equivariance(module, graphs, optimizer, scope):
     optimizer.zero_grad(set_to_none=True)
     module.eval()
     data = Batch.from_data_list(graphs[:2]).to('cuda')
+    data.apply(lambda value: value.float() if torch.is_floating_point(value) else value)
     data.t = torch.full((data.pos.shape[0],), .5, device='cuda')
     h = data.diagonal_hamiltonian
     maximum = 0.
