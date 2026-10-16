@@ -108,6 +108,8 @@ def get_model(args):
         return model_dict["QHFlow"](**model_args)
 
     model_name = args.version.lower()
+    if model_name == "qhflow2_o3":
+        model_args["batch_branches"] = getattr(args, "batch_branches", False)
     if "uma" in model_name:
         model_args["uma_type"] = getattr(args, "uma_type", "uma-s-1p1")        
         model_args["uma_freeze"] = getattr(args, "uma_freeze", False)

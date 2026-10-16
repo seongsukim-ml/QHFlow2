@@ -8,7 +8,8 @@ source and configuration files; `model.version` selects an architecture.
 - Cache constant coupling tensors and the unweighted noise expansion; vectorize
   AO block cutting, reconstruction and reverse-edge indexing.
 - Avoid cloning unused model inputs and collecting ODE trajectories during
-  validation; reuse overlap factors and target spectra within a validation batch.
+  validation; prepare overlap-factor and target-spectrum reuse within a batch.
+  The follow-up below fixes the missing cache forwarding in validation metrics.
 - Add a lean QH9Stable Hamiltonian-only loader preset with pinned memory and
   persistent workers. The official split, objective, full validation, effective
   batch 32, native Muon and AdamW learning rates remain unchanged.
@@ -28,6 +29,16 @@ source and configuration files; `model.version` selects an architecture.
 
 See the [validation report](docs/releases/v0.2.0-rc.2.md) for measurement
 conditions, memory tradeoffs, startup cost and checkpoint limitations.
+
+Follow-up validation (2026-10-17 KST): reuse geometry, Wigner matrices and AO
+index/convention plans across sampling steps; add opt-in paired O(3) execution.
+The ordinary QH9 entrypoint now honors the optimized compile preset and uses
+no-grad validation with versioned tensors. The legacy presets retain their
+defaults. Compared with the already optimized and compiled candidate, O(3)-s
+update time falls another 10.4%; validation time falls 56.9% / 50.1% / 46.7% /
+29.9% for s / O(3)-s / m / l. Training throughput for s/m/l is essentially
+unchanged. See the [samples/s report](docs/releases/v0.2.0-rc.2-geometry.md) for
+matched measurements, rejected compiler modes and checkpoint checks.
 
 ## 0.2.0-rc.1 — 2026-10-14
 

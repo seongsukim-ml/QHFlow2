@@ -8,6 +8,8 @@ def compile_flow(module, scope="heads", *, backend="inductor", mode=None, option
     The blocks scope follows the dynamic, full-graph tensor-core boundary used
     by maloQ's flash branch. No FlashSO2 weights or rotation kernels are ported.
     """
+    if scope in {None, "none"}:
+        return
     if scope == "model":
         module.model.compile(dynamic=True, fullgraph=False)
     elif scope == "muon":
@@ -33,3 +35,13 @@ def compile_flow(module, scope="heads", *, backend="inductor", mode=None, option
             layer.compile(backend=backend, dynamic=True, fullgraph=True, mode=mode, options=options)
     else:
         raise ValueError(f"Unknown compilation scope: {scope}")
+
+
+def compile_from_config(module, conf):
+    """Opt in through a QH9 preset; older configs retain eager execution."""
+    settings = conf.get("compile")
+    if not settings:
+        return
+    compile_flow(module, scope=settings.get("scope", "none"),
+                 backend=settings.get("backend", "inductor"),
+                 mode=settings.get("mode"))

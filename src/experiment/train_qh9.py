@@ -16,6 +16,7 @@ from common.qh9_utils import (
 )
 from common.checkpoint_utils import get_checkpoint_path, get_checkpoint_path_finetune, setup_wandb_logger
 from common.training_utils import setup_callbacks, setup_trainer, log_training_config
+from common.compile import compile_from_config
 from common.data_utils import log_dataset_info
 
 # Setup paths and import models
@@ -130,6 +131,7 @@ def _run_qh9_training_or_testing(mode, trainer, lit_model, train_loader, val_loa
             if conf.get("freeze_backbone", False):
                 lit_model.model.eval()
 
+        compile_from_config(lit_model, conf)
         if ckpt_path is not None:
             trainer.fit(
                 lit_model,
@@ -158,9 +160,11 @@ def _run_qh9_training_or_testing(mode, trainer, lit_model, train_loader, val_loa
         else:
             logger.info("Skipping prediction after training")
     elif mode == "test":
+        compile_from_config(lit_model, conf)
         # Test the model
         trainer.test(lit_model, test_loader, ckpt_path=ckpt_path)
     elif mode in ["inference", "predict", "predict-mul", "predict_wo_eval"]:
+        compile_from_config(lit_model, conf)
         logger.info(f"Mode: {mode}, Setting output_dir to {output_dir}")
 
         setattr(lit_model, "output_dir", output_dir)

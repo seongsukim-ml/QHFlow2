@@ -1,0 +1,10 @@
+# Paired identity/inversion execution validated for O(3)-s on H100 80GB.
+defaults:
+  - config_stable_muon_optimized
+  - override model: QHFlow2_O3_s
+  - _self_
+
+model:
+  batch_branches: true
+  train_batch_size: 32
+  accumulate_grad_batches: 1

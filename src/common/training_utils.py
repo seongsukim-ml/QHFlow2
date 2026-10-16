@@ -65,6 +65,7 @@ def setup_trainer(conf: DictConfig, callbacks, loggers, output_dir: Path):
         "accelerator": conf.get("accelerator", "gpu"), # deprecated in v1.5.0
         "devices": conf.get("devices", 1),
         "precision": conf.get("precision", 32),
+        "inference_mode": conf.get("inference_mode", True),
         "callbacks": callbacks,
         "logger": loggers,
         "enable_progress_bar": conf.get("enable_progress_bar", True),
@@ -102,6 +103,7 @@ def setup_warmup_trainer(conf: DictConfig, callbacks, loggers, output_dir: Path)
         "accelerator": conf.get("accelerator", "gpu"), # deprecated in v1.5.0
         "devices": conf.get("devices", 1),
         "precision": conf.get("precision", 32),
+        "inference_mode": conf.get("inference_mode", True),
         "callbacks": callbacks,
         "logger": loggers,
         "enable_progress_bar": conf.get("enable_progress_bar", True),

@@ -11,3 +11,10 @@ dataset:
   include_cut_orbital_coefficients: false
   pin_memory: true
   persistent_workers: true
+
+# Lightning still disables gradients, while tensors retain version counters
+# needed to invalidate the per-validation-batch geometry/index caches safely.
+inference_mode: false
+compile:
+  scope: blocks
+  mode: default
