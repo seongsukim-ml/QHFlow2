@@ -81,3 +81,23 @@ Resume with larger microbatches translates Lightning batch counters while leavin
 model, optimizer, scheduler, epoch and global optimizer step unchanged. It retains
 the immutable parent and writes a separate adapted checkpoint and counter receipt.
 The original non-stateful shuffled loader does not support bitwise sample-order continuation.
+
+### Dynamic-shape and timing guard corrections
+
+`ParamContraction` now fixes the two-stage contraction order. The previous three-input
+opt_einsum path search specialized the atom count despite `dynamic=True`, adding one
+graph for each molecule-batch size. The complete-model regression now checks graph
+counts across 7/9/11/13 atoms, with both forward and backward.
+
+`qhflow2-torch-compile-blocks-20261016/attempt-3` timings are **invalid**: a startup
+race caused the drain thread to exit, allowing an adaptive overlay onto GPU 4.
+Its result directory contains `timing-invalid.json`. It must not be used as a
+compile speed comparison. The revised guard acquires synchronously with bounded
+retry, propagates renewal errors, and checks foreign GPU PIDs around timed steps.
+The new manifest is `queue-dynamic-compile.json`; no long training is requested.
+
+The user stopped the original four training runs to finish optimization first.
+Their model/optimizer checkpoints remain at steps s=6000, O(3)-s=6000, m=2000, l=1000.
+Three prior resume smokes restored all optimizer and scheduler states exactly,
+ran two updates and validation, and saved/reloaded successfully. Larger-batch stress
+checks passed for l and O(3)-s; all original logs and checkpoints are preserved.

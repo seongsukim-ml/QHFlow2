@@ -36,3 +36,25 @@ def test_fullgraph_regions_preserve_state_and_gradients(cls):
         x = torch.randn(nodes, 25, 4, requires_grad=True)
         torch.compile(layer, backend='eager', fullgraph=True, dynamic=True)(x).sum().backward()
         assert torch.isfinite(x.grad).all()
+
+
+@pytest.mark.parametrize('scope', ['heads', 'blocks'])
+def test_full_model_regions_do_not_specialize_atom_count(scope):
+    from torch_geometric.data import Data
+    torch._dynamo.reset()
+    torch._dynamo.utils.counters.clear()
+    model = QHFlow2_order_fixed(hidden_size=4, bottle_hidden_size=2,
+        num_gnn_layers=1, num_ham_gnn_layers=1, use_block_H=True, use_block_S=True)
+    compile_flow(SimpleNamespace(model=model, expand=nn.Identity()), scope, backend='eager')
+    counts=[]
+    for atoms in (7, 9, 11, 13):
+        h=torch.randn(atoms,14,14)
+        data=Data(pos=torch.randn(atoms,3), atoms=torch.full((atoms,1),6),
+            batch=torch.zeros(atoms,dtype=torch.long), ptr=torch.tensor([0,atoms]),
+            natoms=torch.tensor([atoms]),cell=torch.zeros(1,3,3),t=torch.rand(atoms),
+            diagonal_init_ham=torch.randn_like(h),diagonal_overlap=torch.randn_like(h))
+        output=model(data,h,keep_blocks=True)
+        sum(value.square().mean() for key,value in output.items() if key.startswith('hamiltonian')).backward()
+        counts.append(torch._dynamo.utils.counters['stats']['unique_graphs'])
+    assert counts[0] > 0
+    assert len(set(counts)) == 1, counts

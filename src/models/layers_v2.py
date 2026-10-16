@@ -284,11 +284,13 @@ class ParamContraction(nn.Module):
             w3j_matrix = coupling(self, l_in1, l_in2, l_out, x1_reshaped)
             # mul_channel = torch.ones(mul_tuple, device=x_in.device, dtype=x1_reshaped.dtype)
 
+            # Fix contraction order without specializing the batch size via
+            # opt_einsum's three-input path search under torch.compile.
             if weights is None:
                 weight = self.path_weights[
                     flat_weight_index : flat_weight_index + prod(ins[-1])
                 ].reshape(mul_tuple)
-                result = torch.einsum("buivj, ijk, wuv -> bwk", x1_reshaped, w3j_matrix, weight)
+                result = torch.einsum("buvk,wuv->bwk", torch.einsum("buivj,ijk->buvk", x1_reshaped, w3j_matrix), weight)
                 if self.use_bias:
                     bias_weight = self.bias_weights[
                         bias_weight_index : bias_weight_index + prod(ins[-1][2:])
@@ -299,7 +301,7 @@ class ParamContraction(nn.Module):
                 weight = weights[
                     :, flat_weight_index : flat_weight_index + prod(ins[-1])
                 ].reshape([-1] + mul_tuple)
-                result = torch.einsum("buivj, ijk, wuv -> bwk", x1_reshaped, w3j_matrix, weight)
+                result = torch.einsum("buvk,wuv->bwk", torch.einsum("buivj,ijk->buvk", x1_reshaped, w3j_matrix), weight)
                 if self.use_bias and bias_weights is not None:
                     bias_weight = bias_weights[
                         :, bias_weight_index : bias_weight_index + prod(ins[-1][2:])
