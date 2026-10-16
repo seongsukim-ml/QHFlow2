@@ -115,3 +115,47 @@ def test_validation_passes_target_spectrum_cache_to_metrics():
                              metric_weights={}, log=Mock())
     LitModel_flow._log_sample_metric(module, batch, 'val', metric_cache=cache)
     assert module.metric.call_args.kwargs['qh9_cache'] is cache
+
+
+def test_paired_pyg_batch_without_periodic_cell():
+    from torch_geometric.data import Batch
+    first, h = graph(torch.float64)
+    for key in ('batch', 'ptr', 'cell'):
+        del first[key]
+    data = Batch.from_data_list([first, first])
+    h = torch.cat((h,h))
+    model = QHFlow2_O3(hidden_size=4,bottle_hidden_size=2,num_gnn_layers=1,
+                      num_ham_gnn_layers=1).eval()
+    with torch.no_grad(), inference_cache_scope():
+        expected = model(data,h,keep_blocks=True)
+        model.batch_branches=True
+        actual = model(data,h,keep_blocks=True)
+        repeated = model(data,h,keep_blocks=True)
+    for key in ('hamiltonian_diagonal_blocks','hamiltonian_non_diagonal_blocks'):
+        torch.testing.assert_close(actual[key],expected[key],atol=1e-9,rtol=1e-9)
+        torch.testing.assert_close(repeated[key],actual[key],atol=0,rtol=0)
+    assert data.num_graphs == 2
+
+
+@pytest.mark.parametrize('convention', ['back2pyscf','pyscf_def2svp'])
+def test_cached_ao_convention_plan_matches_reference_and_gradients(convention):
+    from common.matrix_transforms import _matrix_transform_list, _matrix_transform_single, get_convention_dict
+    atoms=torch.tensor([6,1,8,1,7]); batch=torch.tensor([0,0,0,1,1])
+    data=Data(atoms=atoms,batch=batch,ptr=torch.tensor([0,3,5]))
+    conv=get_convention_dict()[convention]
+    matrices=[torch.randn(n,n,requires_grad=True) for n in (33,19)]
+    expected=[_matrix_transform_single(m,atoms[batch==i],conv) for i,m in enumerate(matrices)]
+    from types import SimpleNamespace
+    from pl_module.base_module import LitModel
+    module=SimpleNamespace(convention_dict=get_convention_dict())
+    integrated=LitModel.matrix_transform_list(module,matrices,data,convention)
+    for a,b in zip(integrated,expected):torch.testing.assert_close(a,b,atol=0,rtol=0)
+    with inference_cache_scope():
+        actual=_matrix_transform_list(matrices,data,conv)
+        with patch.object(torch.Tensor,'tolist',side_effect=AssertionError('rebuilt convention')):
+            repeated=_matrix_transform_list(matrices,data,conv)
+    for a,b,c in zip(actual,expected,repeated):
+        torch.testing.assert_close(a,b,atol=0,rtol=0);torch.testing.assert_close(a,c,atol=0,rtol=0)
+    ga=torch.autograd.grad(sum(m.square().sum() for m in actual),matrices)
+    gb=torch.autograd.grad(sum(m.square().sum() for m in expected),matrices)
+    for a,b in zip(ga,gb):torch.testing.assert_close(a,b,atol=0,rtol=0)

@@ -53,7 +53,7 @@ class QH9SphericalBackbone(eSCNMDBackbone_ham):
             return build()
         result, _ = cached_tensor_metadata(
             (self, "backbone_graph", self.cutoff, self.max_neighbors),
-            (data_dict.pos, data_dict.batch, data_dict.cell), build)
+            (data_dict.pos, data_dict.batch, *((data_dict.cell,) if "cell" in data_dict else ())), build)
         return result.copy()
 
 
@@ -180,17 +180,21 @@ class QHFlow2_O3(QHFlow2_order_fixed):
         def topology():
             return (torch.cat((data.atoms, data.atoms), dim=0),
                     torch.cat((data.batch, data.batch + graphs), dim=0),
-                    torch.cat((data.ptr, data.ptr[1:] + n), dim=0),
-                    torch.cat((data.cell, data.cell), dim=0))
+                    torch.cat((data.ptr, data.ptr[1:] + n), dim=0))
         if torch.is_grad_enabled():
             paired.pos = positions()
-            paired.atoms, paired.batch, paired.ptr, paired.cell = topology()
+            paired.atoms, paired.batch, paired.ptr = topology()
         else:
             paired.pos, _ = cached_tensor_metadata((self, "paired_pos"), (data.pos,), positions)
             topo, _ = cached_tensor_metadata((self, "paired_topology"),
-                (data.atoms, data.batch, data.ptr, data.cell), topology)
-            paired.atoms, paired.batch, paired.ptr, paired.cell = topo
+                (data.atoms, data.batch, data.ptr), topology)
+            paired.atoms, paired.batch, paired.ptr = topo
         paired.num_nodes = 2 * n
+        # PyG Batch keeps graph count independently of ptr/num_nodes.
+        if hasattr(data, "_num_graphs"):
+            paired._num_graphs = 2 * graphs
+        if "cell" in data:
+            paired.cell = torch.cat((data.cell, data.cell), dim=0)
         if "natoms" in data:
             paired.natoms = torch.cat((data.natoms, data.natoms), dim=0)
         paired.t = torch.cat((data.t, data.t), dim=0)
