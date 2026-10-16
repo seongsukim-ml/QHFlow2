@@ -1,3 +1,4 @@
+from .coupling_cache import register_couplings, coupling
 import collections
 from typing import Dict
 
@@ -67,6 +68,7 @@ class PureExpansion(nn.Module):
         self.irrep_out_1 = Irreps(irrep_out_1)
         self.irrep_out_2 = Irreps(irrep_out_2)
         self.instructions = self.get_expansion_path(self.irrep_in, self.irrep_out_1, self.irrep_out_2)
+        register_couplings(self, ((i[4], i[5], i[3]) for i in self.instructions))
 
     def PureContraction(self):
         return PureContraction(self.irrep_out_1, self.irrep_out_2, self.irrep_in)
@@ -88,7 +90,7 @@ class PureExpansion(nn.Module):
             mul_ir_out2 = self.irrep_out_2[idx_out2]
 
             x1 = x_in_splited[idx_in]
-            w3j_matrix = o3.wigner_3j(l_out1, l_out2, l_in).to(x_in.device).type(x1.dtype)
+            w3j_matrix = coupling(self, l_out1, l_out2, l_in, x1)
             
             mul_channel = torch.ones(mul_tuple, device=x_in.device, dtype=x1.dtype)
             
@@ -147,8 +149,9 @@ class PureContraction(nn.Module):
         self.irrep_in_2 = Irreps(irrep_in_2)
         self.irrep_out = Irreps(irrep_out)
         self.instructions = self.get_contraction_path(self.irrep_in_1, self.irrep_in_2, self.irrep_out)
+        register_couplings(self, ((i[3], i[4], i[5]) for i in self.instructions))
         
-        self.path_counts = self._count_paths()
+        self.register_buffer("path_counts", self._count_paths(), persistent=False)
 
     def PureExpansion(self):
         return PureExpansion(self.irrep_in_1, self.irrep_in_2, self.irrep_out)
@@ -181,7 +184,7 @@ class PureContraction(nn.Module):
                 batch_num, mul_ir_in1.mul, mul_ir_in1.ir.dim, mul_ir_in2.mul, mul_ir_in2.ir.dim
             )
             
-            w3j_matrix = o3.wigner_3j(l_in1, l_in2, l_out).to(x_in.device).type(x1_reshaped.dtype)
+            w3j_matrix = coupling(self, l_in1, l_in2, l_out, x1_reshaped)
             mul_channel = torch.ones(mul_tuple, device=x_in.device, dtype=x1_reshaped.dtype)
 
             result = torch.einsum("buivj, ijk, wuv -> bwk", x1_reshaped, w3j_matrix, mul_channel)
@@ -229,13 +232,14 @@ class ParamContraction(nn.Module):
         self.irrep_in_2 = Irreps(irrep_in_2)
         self.irrep_out = Irreps(irrep_out)
         self.instructions = self.get_contraction_path(self.irrep_in_1, self.irrep_in_2, self.irrep_out)
+        register_couplings(self, ((i[3], i[4], i[5]) for i in self.instructions))
 
         self.use_bias = use_bias
 
         self.num_path_weight = sum(prod(ins[-1]) for ins in self.instructions)
         self.num_bias = sum(prod(ins[-1][2:]) for ins in self.instructions)
 
-        self.path_counts = self._count_paths()
+        self.register_buffer("path_counts", self._count_paths(), persistent=False)
 
         if self.num_path_weight > 0:
             self.path_weights = nn.Parameter(torch.rand(self.num_path_weight))
@@ -272,7 +276,7 @@ class ParamContraction(nn.Module):
             x1_reshaped = x_in_blocks[idx_in1][idx_in2].reshape(
                 batch_num, mul_ir_in1.mul, mul_ir_in1.ir.dim, mul_ir_in2.mul, mul_ir_in2.ir.dim
             )
-            w3j_matrix = o3.wigner_3j(l_in1, l_in2, l_out).to(x_in.device).type(x1_reshaped.dtype)
+            w3j_matrix = coupling(self, l_in1, l_in2, l_out, x1_reshaped)
             # mul_channel = torch.ones(mul_tuple, device=x_in.device, dtype=x1_reshaped.dtype)
 
             if weights is None:

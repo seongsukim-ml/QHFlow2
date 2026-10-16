@@ -291,75 +291,39 @@ def _build_final_matrix_optimized(
     non_diagonal_matrix,
     orbital_mask,
 ):
-    """Optimized implementation with cached edge lookups and mask reuse."""
-    final_matrix = []
-    if hasattr(data, "full_edge_index"):
-        dst, src = data.full_edge_index
+    """Gather a molecular block grid, then remove padded AOs in two kernels.
+
+    Graph metadata is transferred once. Matrix values stay on their original
+    device and retain autograd, including arbitrarily ordered directed edges.
+    """
+    edges = data.full_edge_index if hasattr(data, "full_edge_index") else data.edge_index_full
+    dst, src = edges.detach().cpu().tolist()
+    ptr = data.ptr.detach().cpu().tolist()
+    atoms = data.atoms.reshape(-1).detach().cpu().tolist()
+    masks = {z: orbital_mask[z].detach().cpu().tolist() for z in set(atoms)}
+    diagonal = diagonal_matrix if isinstance(diagonal_matrix, torch.Tensor) else torch.stack(diagonal_matrix)
+    if isinstance(non_diagonal_matrix, torch.Tensor):
+        off = non_diagonal_matrix
+    elif len(non_diagonal_matrix):
+        off = torch.stack(non_diagonal_matrix)
     else:
-        dst, src = data.edge_index_full
-
-    # Build fast lookup for edge blocks to avoid repeated torch.where calls
-    # Works for both CPU and CUDA tensors by moving indices to CPU once.
-    src_list = src.detach().cpu().tolist()
-    dst_list = dst.detach().cpu().tolist()
-    edge_lookup = {(s, d): idx for idx, (s, d) in enumerate(zip(src_list, dst_list))}
-
-    # Determine device of matrix blocks (supports list or tensor inputs)
-    if isinstance(diagonal_matrix, torch.Tensor):
-        matrix_device = diagonal_matrix.device
-    else:
-        matrix_device = (
-            diagonal_matrix[0].device if len(diagonal_matrix) > 0 else torch.device("cpu")
-        )
-
-    # Pre-compute orbital masks per atom index (avoid repeated .item() calls)
-    atom_numbers = data.atoms.squeeze().detach().cpu().tolist()
-    mask_cache = {}
-    node_masks = []
-    for atom_num in atom_numbers:
-        if atom_num not in mask_cache:
-            mask_tensor = orbital_mask[atom_num]
-            if mask_tensor.device != matrix_device:
-                mask_tensor = mask_tensor.to(matrix_device)
-            mask_cache[atom_num] = mask_tensor
-        node_masks.append(mask_cache[atom_num])
-
-    ptr_list = data.ptr.detach().cpu().tolist()
-    for graph_idx in range(len(ptr_list) - 1):
-        graph_start = ptr_list[graph_idx]
-        graph_end = ptr_list[graph_idx + 1]
-        matrix_block_col = []
-
-        for src_idx in range(graph_start, graph_end):
-            src_mask = node_masks[src_idx]
-            matrix_col = []
-
-            for dst_idx in range(graph_start, graph_end):
-                dst_mask = node_masks[dst_idx]
-                if src_idx == dst_idx:
-                    block = (
-                        diagonal_matrix[src_idx]
-                        .index_select(-2, dst_mask)
-                        .index_select(-1, src_mask)
-                    )
-                else:
-                    edge_idx = edge_lookup.get((src_idx, dst_idx))
-                    if edge_idx is None:
-                        raise KeyError(
-                            f"Missing non-diagonal block for edge ({src_idx}, {dst_idx})"
-                        )
-                    block = (
-                        non_diagonal_matrix[edge_idx]
-                        .index_select(-2, dst_mask)
-                        .index_select(-1, src_mask)
-                    )
-                matrix_col.append(block)
-
-            matrix_block_col.append(torch.cat(matrix_col, dim=-2))
-
-        final_matrix.append(torch.cat(matrix_block_col, dim=-1))
-
-    return final_matrix
+        off = diagonal.new_empty((0, *diagonal.shape[-2:]))
+    blocks = torch.cat((diagonal, off), dim=0)
+    width = diagonal.shape[-1]
+    edge_lookup = {(d, s): len(atoms) + i for i, (d, s) in enumerate(zip(dst, src))}
+    result = []
+    for start, end in zip(ptr[:-1], ptr[1:]):
+        n = end - start
+        indices = [d if d == s else edge_lookup[(d, s)]
+                   for d in range(start, end) for s in range(start, end)]
+        block_indices = torch.tensor(indices, device=blocks.device, dtype=torch.long)
+        grid = blocks.index_select(0, block_indices).reshape(n, n, width, width)
+        dense = grid.permute(0, 2, 1, 3).reshape(n * width, n * width)
+        keep = torch.tensor([local * width + ao
+                             for local, z in enumerate(atoms[start:end]) for ao in masks[z]],
+                            device=blocks.device, dtype=torch.long)
+        result.append(dense.index_select(0, keep).index_select(1, keep))
+    return result
 
 
 def _matrix_transform_list(hamiltonian_list, data, convention_rule):

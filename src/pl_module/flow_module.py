@@ -2635,6 +2635,7 @@ class LitModel_flow(LitModel):
         num_timesteps=100,
         min_t=DEFAULT_MIN_T,
         sample_random=True,
+        return_trajectory=True,
     ):
         """
         Sample from the flow model using neural ODE integration.
@@ -2657,6 +2658,7 @@ class LitModel_flow(LitModel):
                 num_timesteps=num_timesteps,
                 min_t=min_t,
                 sample_random=sample_random,
+                return_trajectory=return_trajectory,
             )
         else:
             return self.sample_md17(
@@ -2788,6 +2790,7 @@ class LitModel_flow(LitModel):
         num_timesteps=100,
         min_t=DEFAULT_MIN_T,
         sample_random=True,
+        return_trajectory=True,
     ):
         """
         Sample from flow model for QH9 dataset (block-diagonal structure).
@@ -2858,8 +2861,8 @@ class LitModel_flow(LitModel):
                 raise ValueError(f"Unknown init type: {self.init_p0_type}")
 
         # Store trajectories
-        hamiltonian_traj = [batch.init_ham_t.cpu()]
-        predictions = [None]  # len(predictions) = num_timesteps + 1
+        hamiltonian_traj = [batch.init_ham_t.cpu()] if return_trajectory else []
+        predictions = [None] if return_trajectory else []
         
         # Neural ODE integration
         for idx, next_t in enumerate(lin_t[1:]):
@@ -2887,21 +2890,22 @@ class LitModel_flow(LitModel):
             vector_field = (target_H - cur_H) / (1 - cur_t)
             ham_t = cur_H + vector_field * dt.reshape(-1, 1, 1)
             
-            # Store trajectories
-            hamiltonian_traj.append(ham_t.cpu())
-            if self.qh9:
-                predictions.append(
-                    {
-                        "hamiltonian_diagonal_blocks": outputs[
-                            "hamiltonian_diagonal_blocks"
-                        ].cpu(),
-                        "hamiltonian_non_diagonal_blocks": outputs[
-                            "hamiltonian_non_diagonal_blocks"
-                        ].cpu(),
-                    }
-                )
-            else:
-                predictions.append(outputs["hamiltonian"].cpu())
+            if return_trajectory:
+                # Store trajectories
+                hamiltonian_traj.append(ham_t.cpu())
+                if self.qh9:
+                    predictions.append(
+                        {
+                            "hamiltonian_diagonal_blocks": outputs[
+                                "hamiltonian_diagonal_blocks"
+                            ].cpu(),
+                            "hamiltonian_non_diagonal_blocks": outputs[
+                                "hamiltonian_non_diagonal_blocks"
+                            ].cpu(),
+                        }
+                    )
+                else:
+                    predictions.append(outputs["hamiltonian"].cpu())
 
             # Update state
             cur_t = next_t
@@ -2919,10 +2923,11 @@ class LitModel_flow(LitModel):
             }
             if self.use_non_diagonal_hamiltonian_scale:
                 res_outputs["hamiltonian_non_diagonal_blocks"] = res_outputs["hamiltonian_non_diagonal_blocks"] / self.non_diagonal_hamiltonian_scale
-            res_outputs["node_attr"] = outputs["node_attr"]
-            res_outputs["node_attr_init"] = outputs["node_attr_init"]
-            res_outputs["fii"] = outputs["fii"]
-            res_outputs["fij"] = outputs["fij"]
+            # Projected O(3) models expose observables without parity-ambiguous
+            # latent features. Sampling must not require those optional keys.
+            for key in ("node_attr", "node_attr_init", "fii", "fij"):
+                if key in outputs:
+                    res_outputs[key] = outputs[key]
             if "full_edge_index" in outputs.keys():
                 res_outputs["full_edge_index"] = outputs["full_edge_index"]
                 res_outputs["full_edge_distance_vec"] = outputs["full_edge_distance_vec"]
@@ -2989,7 +2994,8 @@ class LitModel_flow(LitModel):
             Tuple of (trajectory, sample) if save_pred=True
         """
         try:
-            sample, traj, pred = self.sample(batch_one, num_timesteps=num_timesteps)
+            sample, traj, pred = self.sample(batch_one, num_timesteps=num_timesteps,
+                                             return_trajectory=save_pred)
             if log:
                 metrics = self.metric(sample, batch_one, metric_weights=self.metric_weights)
                 for key in metrics.keys():
