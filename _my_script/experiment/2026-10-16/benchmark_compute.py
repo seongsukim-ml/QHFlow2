@@ -156,7 +156,8 @@ def run_compile_cases(args):
     cases = [(model, batch, scope) for model, batch in
              [('QHFlow2_s',32), ('QHFlow2_O3_s',32), ('QHFlow2_m',32), ('QHFlow2_l',16)]
              for scope in [None, 'heads']]
-    cases += [('QHFlow2_s',32,'model'), ('QHFlow2_s',32,'muon')]
+    # Whole-model compilation and compiled native Muon were already measured.
+    # This run tests the repaired, selectively compiled tensor kernels.
     results = []
     for model, batch, scope in cases:
         out = args.output / f"{model}-{scope or 'eager'}-b{batch}"

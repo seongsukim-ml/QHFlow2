@@ -232,6 +232,11 @@ class ParamContraction(nn.Module):
         self.irrep_in_2 = Irreps(irrep_in_2)
         self.irrep_out = Irreps(irrep_out)
         self.instructions = self.get_contraction_path(self.irrep_in_1, self.irrep_in_2, self.irrep_out)
+        self._input1_layout = tuple((sl.start, sl.stop, item.mul, item.ir.dim)
+                                    for sl, item in zip(self.irrep_in_1.slices(), self.irrep_in_1))
+        self._input2_layout = tuple((sl.start, sl.stop, item.mul, item.ir.dim)
+                                    for sl, item in zip(self.irrep_in_2.slices(), self.irrep_in_2))
+        self._output_dims = tuple(item.dim for item in self.irrep_out)
         register_couplings(self, ((i[3], i[4], i[5]) for i in self.instructions))
 
         self.use_bias = use_bias
@@ -258,8 +263,8 @@ class ParamContraction(nn.Module):
     def forward(self, x_in, weights=None, bias_weights=None):
         batch_num = x_in.shape[0]
         x_in_blocks = [
-            [x_in[:, s1, s2] for s2 in self.irrep_in_2.slices()]
-            for s1 in self.irrep_in_1.slices()
+            [x_in[:, a:b, c:d] for c, d, _, _ in self._input2_layout]
+            for a, b, _, _ in self._input1_layout
         ]
 
         outputs = {}
@@ -270,11 +275,11 @@ class ParamContraction(nn.Module):
             l_in1, l_in2, l_out = ins[3], ins[4], ins[5]
             mul_tuple = [ins[-1][2], ins[-1][0], ins[-1][1]]
 
-            mul_ir_in1 = self.irrep_in_1[idx_in1]
-            mul_ir_in2 = self.irrep_in_2[idx_in2]
+            mul1, dim1 = self._input1_layout[idx_in1][2:]
+            mul2, dim2 = self._input2_layout[idx_in2][2:]
 
             x1_reshaped = x_in_blocks[idx_in1][idx_in2].reshape(
-                batch_num, mul_ir_in1.mul, mul_ir_in1.ir.dim, mul_ir_in2.mul, mul_ir_in2.ir.dim
+                batch_num, mul1, dim1, mul2, dim2
             )
             w3j_matrix = coupling(self, l_in1, l_in2, l_out, x1_reshaped)
             # mul_channel = torch.ones(mul_tuple, device=x_in.device, dtype=x1_reshaped.dtype)
@@ -317,13 +322,13 @@ class ParamContraction(nn.Module):
         final_tensors = []
         path_counts = self.path_counts.to(x_in.device) 
 
-        for i, mul_ir in enumerate(self.irrep_out):
+        for i, output_dim in enumerate(self._output_dims):
             if i in outputs:
                 normalized_output = outputs[i] / path_counts[i]
                 final_tensors.append(normalized_output.reshape(batch_num, -1))
             else:
                 final_tensors.append(
-                    torch.zeros(batch_num, mul_ir.dim, device=x_in.device, dtype=x_in.dtype)
+                    torch.zeros(batch_num, output_dim, device=x_in.device, dtype=x_in.dtype)
                 )
         output = torch.cat(final_tensors, dim=-1)
         return output

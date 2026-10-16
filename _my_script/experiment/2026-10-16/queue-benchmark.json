@@ -1,13 +1,13 @@
 {
   "jobs": [
     {
-      "id": "qhflow2-compute-v020rc2-benchmark-20261016",
+      "id": "qhflow2-compute-final-benchmark-20261016",
       "launcher": "/dataset/seongsu/shared-home/workspace/project/MALOQ/_my_script/experiment/2026-10-16/qhflow2_compute_v020rc2_benchmark.sh",
       "args": [
         "benchmark",
         "all",
         "{gpus}",
-        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-compute-v020rc2-benchmark-20261016"
+        "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-compute-final-benchmark-20261016"
       ],
       "gpu_count": 1,
       "gpu_mode": "exclusive",
