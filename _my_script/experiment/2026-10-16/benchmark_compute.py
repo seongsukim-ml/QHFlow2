@@ -91,12 +91,13 @@ def child(args):
     if args.variant != 'baseline':
         assert sample_metrics, 'Sampling metrics must actually be present'
         assert all(torch.isfinite(v).all() for v in logged.values() if isinstance(v,torch.Tensor))
-    extra = check_dynamic_and_equivariance(module, graphs, optimizer, args.compile_scope)
     result={'variant':args.variant,'model':args.model,'microbatch':args.batch,'effective_batch':32,
             'train_seconds_per_update':statistics.median(timings),'train_timings':timings,
             'validation_8_graph_seconds':validation,'sample_metric_count':len(sample_metrics),
             'peak_memory_mib':train_peak,'data_load_32_graph_seconds':data_load_seconds,'source_commit':subprocess.check_output(['git','-C',str(code),'rev-parse','HEAD'],text=True).strip(),
-            'checks':extra, 'compile_scope':args.compile_scope,'preparation_seconds':preparation_seconds,'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
+            'compile_scope':args.compile_scope,'preparation_seconds':preparation_seconds,'training_ids':ids.tolist(),'validation_ids':val_ids.tolist()}
+    (args.output/'preliminary-result.json').write_text(json.dumps(result,indent=2)+'\n')
+    result['checks'] = check_dynamic_and_equivariance(module, graphs, optimizer, args.compile_scope)
     (args.output/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result),flush=True);dataset.close()
 
@@ -129,7 +130,7 @@ def check_dynamic_and_equivariance(module, graphs, optimizer, scope):
             rotations.append(-torch.eye(3, device='cuda'))
         for rotation in rotations:
             perm = torch.eye(3, device='cuda')[[1, 2, 0]]
-            d = o3.Irreps('3x0e+2x1o+1x2e').D_from_matrix(perm@rotation@perm.T)
+            d = o3.Irreps('3x0e+2x1o+1x2e').D_from_matrix((perm@rotation@perm.T).cpu()).to(h)
             rotated = data.clone()
             rotated.pos = data.pos@rotation.T
             for key in ('diagonal_init_ham', 'diagonal_overlap'):
