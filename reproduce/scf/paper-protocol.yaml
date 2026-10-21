@@ -1,0 +1,17 @@
+# Appendix E.4 settings; original molecule selection remains unverified.
+# max_cycle=50 is an explicit replay choice, not documented by the paper.
+mode: scf
+threads: 1
+dft:
+  backend: gpu
+  xc: b3lyp
+  basis: def2-svp
+  density_fit: true
+  auxbasis: null
+  grid_level: 3
+  grid_response: false
+  auxbasis_response: true
+  conv_tol: 1.0e-13
+  max_cycle: 50
+orbitals:
+  mode: generalized

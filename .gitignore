@@ -36,6 +36,8 @@ debug_outputs/
 .cursorrc
 /.cursor
 *.csv
+!/reproduce/scf/recorded-300.csv
+!/reproduce/scf/recorded-300-cycles.csv
 *.pt
 *.ckpt
 lightning_logs/

@@ -41,7 +41,7 @@ Sizes preserve the previous small/middle/large/extra-large widths and depths:
 | s | 64 / 32 | 3 / 2 | 32 / 1 | 16 / 2 |
 | m | 128 / 64 | 3 / 2 | 16 / 2 | 8 / 4 |
 | l | 256 / 64 | 4 / 2 | 4 / 8 | 2 / 16 |
-| xl | 512 / 128 | 4 / 3 | 1 / 32 | 1 / 32 |
+| xl | 512 / 128 | 5 / 3 | 1 / 32 | 1 / 32 |
 
 These conservative microbatches give effective batch 32 on one device. They
 are preparation defaults, not GPU memory measurements. All models use H0 and S
@@ -96,12 +96,16 @@ That cache installs its additional packages locally and reads the existing
 `proj-ml-dft-qhflow3-replay-sail` and `proj-dft-baselines-maloq-sc26` site packages
 without modifying either shared environment.
 
+## Current release presets
+
+Use [the five audited release profiles](../reproduce/README.md#training) for the recorded S/O(3)-S/M/L/XL batch and GPU layouts. The table above gives architecture preparation defaults.
+
 ## Prepare or launch
 
 Run from the current code checkout:
 
 ```bash
-cd /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-equivariance-fix/src
+cd /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-checkpoint-configs-20261021/src
 
 # Inspect the code release and exact source commit before preparing a run.
 python3 -m qhflow2_version --json

@@ -1,0 +1,16 @@
+# Recovered March 2026 SCF experiment, not verified as original Figure 4.
+mode: scf
+threads: 1
+dft:
+  backend: gpu
+  xc: b3lyp5
+  basis: def2-svp
+  density_fit: false
+  auxbasis: null
+  grid_level: 3
+  grid_response: false
+  auxbasis_response: true
+  conv_tol: 1.0e-09
+  max_cycle: 200
+orbitals:
+  mode: generalized

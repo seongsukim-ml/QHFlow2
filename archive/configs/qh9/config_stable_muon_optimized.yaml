@@ -1,0 +1,20 @@
+# Same architecture, objective and effective batch as config_stable_muon.
+defaults:
+  - config_stable_muon
+  - _self_
+
+dataset:
+  # The Hamiltonian-only objective and orbital validation do not consume Q
+  # tensors or pre-cut occupied coefficients. Compute orbital metrics from
+  # H/S as before, without generating unused training features.
+  compute_q_tensor: false
+  include_cut_orbital_coefficients: false
+  pin_memory: true
+  persistent_workers: true
+
+# Lightning still disables gradients, while tensors retain version counters
+# needed to invalidate the per-validation-batch geometry/index caches safely.
+inference_mode: false
+compile:
+  scope: blocks
+  mode: default

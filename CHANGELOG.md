@@ -5,8 +5,19 @@ source and configuration files; `model.version` selects an architecture.
 
 ## Unreleased — benchmark/checkpoint update and config audit, 2026-10-21
 
+- Publish four verified inference checkpoints on Hugging Face while preserving
+  all 16 original checkpoints; GitHub release assets remain in a draft.
+- Add five release training profiles matching the recorded final configurations,
+  and a training entrypoint with evaluation shards that do not repeat molecules.
+  Move other training/evaluation experiments into an indexed, hashed archive.
+- Recover 300 molecular identities and 1,800 paired SCF cycle records from the
+  March 2026 re-experiment. Explicitly keep original Figure 4 attribution open:
+  the recovered run's settings differ from the February paper's description.
+- Add checkpoint-to-NPZ inference and reproducible SCF/one-shot energy-force
+  evaluation with explicit units, solver policies, hashes and failure records.
 - Add the README benchmark image, update date, original-paper references,
-  spectral gate/O(3) labels, observed training GPU hours and samples/s.
+  spectral gate/O(3) labels, and reserved training GPU hours/samples/s columns
+  marked `(on train)` pending a later reporting update. Recorded timings are retained.
 - Prepare exact best-validation inference exports for S, O(3)-S, M and L
   with configs, metrics, provenance and checksums; XL is still training.
   See the [draft checkpoint update](docs/releases/v0.2.0-rc.2-checkpoints.md).

@@ -42,7 +42,7 @@ MODE_DESCRIPTIONS = {
     "eval": "Evaluation mode - Similar to test but with additional metrics and analysis (Deprecated)",
 }
 
-@hydra.main(config_path="../config_md17", config_name="config_flow-lw10")
+@hydra.main(config_path="../../archive/configs/md17", config_name="config_flow-lw10")
 def main(conf):
     # Setup output directory
     output_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)

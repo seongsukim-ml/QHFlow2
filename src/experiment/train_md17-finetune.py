@@ -30,7 +30,7 @@ NUM_THREADS = 16
 logger.info(f"Using torch.set_num_threads({NUM_THREADS})")
 torch.set_num_threads(NUM_THREADS)
 
-@hydra.main(config_path="../config_md17", config_name="config_flow-lw10-wa")
+@hydra.main(config_path="../../archive/configs/md17", config_name="config_flow-lw10-wa")
 def main(conf):
     # Validate fine-tuning configuration
     validate_finetune_config(conf)
