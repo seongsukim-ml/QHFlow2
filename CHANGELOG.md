@@ -5,9 +5,8 @@ source and configuration files; `model.version` selects an architecture.
 
 ## Unreleased — benchmark/checkpoint update and config audit, 2026-10-21
 
-- Display ERIC as a percentage and add original S/M/L/XL training GPU hours
-  reconstructed from W&B histories. Preserve timing records,
-  resume/duplicate handling, checkpoint batch settings and hardware limitations.
+- Display ERIC as a percentage. Omit original-paper training GPU hours at the
+  maintainer's request; retain the attempted reconstruction only in the archive.
 - Separate 1-step and 3-step inference columns, with a reproducible checkpoint
   timing runner; leave unmeasured speed cells empty pending an exclusive GPU.
 - Display saved updated H/orbital metrics to three decimals and SCF percentages

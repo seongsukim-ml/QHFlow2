@@ -29,3 +29,8 @@ running a historical experiment. `experiment.train_md17` and its fine-tuning
 entrypoint now point directly at `archive/configs/md17`; QH9 fine-tuning points
 at `archive/configs/qh9`. Legacy scripts retain historical machine-specific
 paths and are evidence, not maintained launchers. See [old usage](LEGACY_USAGE.md).
+
+## Historical timing audit
+
+[benchmark_timing](benchmark_timing/README.md) preserves the excluded original-model
+training-cost reconstruction for review; it is not a published benchmark result.
