@@ -81,7 +81,8 @@ molecular/AO coordinate convention required a dedicated end-to-end audit. The
 `ordering_fixed` name describes this specific correction, not a certification
 of full-model equivariance. The subsequent audit produced the separate
 `QHFlow2_order_fixed` and `QHFlow2_O3` implementations and complete-model tests
-included in `v0.2.0-rc.1`. Benchmark evaluation remains pending.
+included in `v0.2.0-rc.1`. The subsequent completed benchmarks for S/M/L
+and O(3)-S are documented in the [2026-10-21 update](releases/v0.2.0-rc.2-checkpoints.md).
 
 To run the regression checks from the repository root with the model's
 dependencies installed:
@@ -110,7 +111,8 @@ These eight trained variants are planned releases. The initial experimental
 branch provides the ordering correction for `QHFlow_so2_v5_1`; the Stable/Muon
 implementation is now published as code prerelease `v0.2.0-rc.1` and supplies
 the new architectures and training configurations in `main`.
-The configurations are available now. Updated trained checkpoints and detailed
-benchmark results are planned for `v0.2.0` after retraining and evaluation.
+S/M/L and O(3)-S now have completed benchmark results and draft checkpoint
+bundles. XL training is in progress; O(3)-M/L/XL benchmarks remain planned.
+The full eight-variant checkpoint release remains planned for `v0.2.0`.
 The legacy implementation remains available under its original model names
 for reproducibility. See the [versioning and release guide](RELEASING.md).

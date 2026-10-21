@@ -1,4 +1,7 @@
 # Fresh QH9Stable model: corrected packing, AO frame, spectral gating.
+# Width/depth audited against published QH9Stable-random checkpoints (2026-10-21).
+# Total parameters: 187,993,401; trainable: 187,993,145.
+# The O(3) projection shares these weights; see docs/MODEL_CONFIGS.md.
 model_name: QHFlow2-O(3)-l
 version: QHFlow2_O3
 hidden_size: 256

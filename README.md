@@ -6,58 +6,7 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 
 🌟 This repository contains an implementation of the QHFlow2 for DFT Hamiltonian prediction. This repository is still updating.
 
-## Code releases
-
-Current code release: **[v0.2.0-rc.1](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1)**.
-This prerelease includes corrected SO(3)/O(3) models and QH9Stable Muon training
-configurations. Retrained benchmark checkpoints and results are still pending.
-
-| Release | Contents |
-| --- | --- |
-| [`ver.0.1.0`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/ver.0.1.0) | Historical code snapshot, including the legacy equivariance issue |
-| [`v0.2.0-rc.1`](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) | PySCF Q tensors, legacy models, corrected SO(3)/O(3) models, Stable/Muon preparation |
-| [`v0.2.0-rc.2`](docs/releases/v0.2.0-rc.2.md) (development candidate) | Validated compute optimizations and selective torch.compile, O(3) sampling correction, checkpoint continuation support |
-
-All model families now live in `main` under distinct model names. Use a release
-tag to pin source code, and a model configuration to select the architecture.
-Existing model names and default configurations retain legacy behavior.
-From the repository root, `python3 src/qhflow2_version.py --json` prints the code
-version and Git provenance without importing training dependencies. New training
-checkpoints record these fields and the selected model name.
-
-See the [changelog](CHANGELOG.md), [versioning and release guide](docs/RELEASING.md),
-and [Stable/Muon training guide](docs/QH9STABLE_MUON.md).
-
-## Known legacy equivariance issue and corrected models
-
-We identified a feature-ordering bug in the legacy eSCN-to-e3nn interface that
-breaks rotational equivariance for multi-channel spherical features. The bug
-arose in QHFlow2 while adapting feature conventions from prior models. In
-follow-up experiments, we observed similar performance after correcting this
-ordering issue.
-
-The original model behavior is retained for checkpoint reproducibility. The
-historical packing-only implementation, `QHFlow_so2_v5_1_ordering_fixed`, is
-preserved alongside the complete corrected models `QHFlow2_order_fixed` and
-`QHFlow2_O3`. Legacy checkpoints require their original model configuration;
-the corrected architectures require new training.
-We plan to retrain the following model families with **Muon** and update them
-for benchmarking:
-
-- **QHFlow2 (order-fixed):** QHFlow2-s, QHFlow2-m, QHFlow2-l, QHFlow2-xl.
-- **QHFlow2-O(3):** QHFlow2-O(3)-s, QHFlow2-O(3)-m, QHFlow2-O(3)-l, QHFlow2-O(3)-xl.
-
-The new configurations and end-to-end equivariance checks are included in
-`v0.2.0-rc.1`. Updated checkpoints and detailed benchmark results are planned
-for release after retraining and benchmark evaluation.
-See the [issue description, validation scope, and release plan](docs/EQUIVARIANCE_STATUS.md).
-
-The [versioned source](https://github.com/seongsukim-ml/QHFlow2/tree/v0.2.0-rc.1)
-provides the corrected SO(3) architecture and two-pass O(3) group-averaged models
-in all four sizes, plus QH9Stable-only training configurations. Muon
-starts at **1e-3**; norm/embedding and other non-matrix parameters use AdamW at
-**1e-4**. See the [implementation and training guide](docs/QH9STABLE_MUON.md).
-Full training and benchmark checkpoint release remain planned work.
+[Latest published release](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) · [Updated benchmarks](#qh9stable-benchmark-update) · [Stable/Muon training guide](docs/QH9STABLE_MUON.md) · [Version history](#version-history)
 
 ## Packages and Requirements
 
@@ -185,6 +134,35 @@ Dataset and split names used in checkpoint paths:
 
 When running from `src/`, use the checkpoint path in the `ckpt` argument (e.g. `ckpt=../ckpts/...`).
 
+## QH9Stable benchmark update
+
+Updated **2026-10-21** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md)** (draft release).
+
+![QH9Stable original-paper and updated-version results](docs/assets/qh9-stable-updated.png)
+
+- **Results and units.** Original-paper metrics, including QHNetV2, reproduce the supplied paper tables. QHFlow2 parameter counts follow the [checkpoint/config audit](docs/MODEL_CONFIGS.md); updated counts are trainable parameters (XL: initialized model). Updated results use the best validation checkpoint, seed 42, all **13,084** official QH9Stable random-split test molecules and **three ODE steps**. H, occupied orbital energies, HOMO, LUMO and GAP are in μEh; Sc is in percent. Original E/F values retain their source units; updated E/F and other unavailable values are shown as dashes.
+- **Model update.** Order fix + **gate change (spectral)** + Muon at **1e-3**; norm, embedding and other unsupported parameters use AdamW at **1e-4**. Updated S/M also enable the Hamiltonian-input path. **+ O(3) group averaging** denotes a separately trained QHFlow2-O(3)-s, using shared-weight identity/inversion averaging. These results combine architecture and training changes and are not a single-change ablation.
+- **Training cost and speed.** Measurements use H100 80GB GPUs and effective global batch 32. Train GPU hours approximate the retained checkpoint lineage's observed training time × GPU count, including validation/checkpointing within each segment, excluding startup, restart/queue gaps, discarded attempts/steps and final test evaluation. Samples / s is global molecule throughput: total samples / total elapsed time over consecutive 25-step training log windows within each epoch of the final run, including checkpoint I/O in those windows and excluding validation boundaries. O(3) molecules are counted once. Final configurations: S/O(3)-S/M **1 GPU**, L **2 GPUs**, XL **4 GPUs**; L's GPU hours include its earlier 1-GPU phase.
+- **XL in progress (\*).** The XL cost/speed values are partial measurements through **step 1,250**, recorded at **2026-10-21 18:46 KST**. Its benchmark metrics and checkpoint are pending. The completed S/O(3)-S/M/L runs each reached 260,000 steps; their packaged weights come from validation-selected step 258,409.
+
+### Updated checkpoints
+
+The four completed checkpoints are prepared for the **v0.2.0-rc.2 draft Release**.
+The download links below become public when the release is published after code review and push.
+Each archive contains `weights.ckpt`, exact configuration, test metrics, source metadata,
+a checkpoint license notice and SHA-256 checksums. Weights match the benchmark checkpoints
+exactly; optimizer state is excluded, so these files are for inference rather than exact training continuation.
+
+| Model | Checkpoint archive |
+| --- | --- |
+| QHFlow2-s | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar) |
+| QHFlow2-s + O(3) group averaging | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar) |
+| QHFlow2-m | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar) |
+| QHFlow2-l | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar) |
+
+See [checkpoint metadata and loading instructions](docs/releases/v0.2.0-rc.2-checkpoints.md).
+The existing Google Drive links above contain the original checkpoint collection.
+
 ## Usage
 
 ### Prerequisites
@@ -257,6 +235,75 @@ python -m experiment.train_qh9 mode=predict dataset=QH9Stable dataset.split=rand
 **Output Location:**
 - Predictions are typically saved in the `outputs/` directory
 - Each run creates timestamped subdirectories for organization
+
+## Version History
+
+### [v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md) — updated 2026-10-21 (draft)
+
+Completed Stable/Muon benchmarks and checkpoint bundles for QHFlow2-s/m/l and
+QHFlow2-s + O(3) group averaging; XL is training on four GPUs. The benchmark
+image includes measured training cost and throughput. Validated compute
+optimizations and selective torch.compile preserve checkpoint state keys;
+see the [compute report](docs/releases/v0.2.0-rc.2.md) and
+[geometry follow-up](docs/releases/v0.2.0-rc.2-geometry.md).
+
+The [checkpoint/config audit](docs/MODEL_CONFIGS.md) verifies every size's
+width, depth and parameter counts. S/M/L layer counts are unchanged. The XL
+preset now matches the published five-layer checkpoint architecture; older
+four-layer XL weights require their saved configuration or an explicit
+`model.num_gnn_layers=4` override. The `src/qhflow2_version.py --json` command
+reports the source version and Git provenance.
+
+### [v0.2.0-rc.1](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) — 2026-10-14
+
+Code prerelease with the following updates:
+
+- Replaced Psi4 with PySCF for Q-tensor generation.
+- Added corrected SO(3) models and identity/inversion-averaged O(3) models in
+  **s/m/l/xl** sizes, with end-to-end equivariance checks.
+- Added QH9Stable random-split training configurations: Muon starts at **1e-3**;
+  norm, embedding, and other non-matrix parameters use AdamW at **1e-4**.
+- Added code-version and model metadata to new checkpoints. All model families
+  are available in `main`; release tags pin the source and model configs select
+  the architecture.
+
+<details>
+<summary>Equivariance correction and checkpoint compatibility</summary>
+
+This release addresses a feature-ordering bug in the legacy eSCN-to-e3nn
+interface that breaks rotational equivariance for multi-channel spherical
+features. The bug arose in QHFlow2 while adapting feature conventions from prior
+models. In follow-up experiments, we observed similar performance after
+correcting the ordering issue; the updated Muon benchmarks above combine this correction with
+spectral gating and optimizer changes.
+
+The original model names and default configurations retain their behavior for
+checkpoint reproducibility. The historical packing-only implementation,
+`QHFlow_so2_v5_1_ordering_fixed`, remains available alongside the complete
+corrected models `QHFlow2_order_fixed` and `QHFlow2_O3`. Legacy checkpoints
+require their original model configuration; the corrected architectures require
+new training.
+
+See the [equivariance history and validation scope](docs/EQUIVARIANCE_STATUS.md)
+and [release notes](docs/releases/v0.2.0-rc.1.md) for details.
+
+</details>
+
+### [ver.0.1.0](https://github.com/seongsukim-ml/QHFlow2/releases/tag/ver.0.1.0) — 2026-10-07
+
+Historical code prerelease with the original model implementations. The tag and
+source snapshot are preserved for reproducibility.
+
+### Planned: v0.2.0
+
+We plan to retrain **QHFlow2-s/m/l/xl (order-fixed)** and
+**QHFlow2-O(3)-s/m/l/xl** with Muon on QH9Stable and release updated checkpoints
+and detailed benchmark results. The training configurations are available in
+`v0.2.0-rc.1`. S/M/L and O(3)-S now have completed benchmarks and draft checkpoint
+bundles; XL is in progress. O(3)-M/L/XL benchmarks remain planned.
+
+See the [full changelog](CHANGELOG.md) and
+[versioning and release guide](docs/RELEASING.md).
 
 ## Citation
 ```

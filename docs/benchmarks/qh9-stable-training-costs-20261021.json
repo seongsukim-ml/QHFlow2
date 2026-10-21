@@ -1,0 +1,345 @@
+{
+  "generated_at": "2026-10-21T09:46:15.235422+00:00",
+  "update_date": "2026-10-21",
+  "timezone": "Asia/Seoul",
+  "gpu_hours_definition": "Sum of observed first-to-last training event spans in the retained checkpoint lineage times GPU count. Includes validation/checkpointing within each span. Excludes startup, queue/restart gaps, discarded steps/attempts, smoke tests and final test evaluation. Approximate useful training cost, not total allocated GPU time.",
+  "samples_per_second_definition": "Aggregate processed samples / elapsed seconds across consecutive 25-step training-only log windows within the same epoch in the final execution configuration; global effective batch 32. Excludes validation/epoch boundaries and startup; includes checkpoint I/O within qualifying windows. O(3) molecules counted once.",
+  "models": {
+    "QHFlow2-s": {
+      "status": "completed",
+      "train_gpu_hours": 31.05090187833333,
+      "samples_per_second": 102.81621652615915,
+      "throughput_gpu_count": 1,
+      "effective_batch": 32,
+      "throughput_windows": 10061,
+      "throughput_samples": 8048800,
+      "throughput_seconds": 78283.370775,
+      "last_step": 260000,
+      "last_logged_at": "2026-10-18T13:02:10.330410+00:00",
+      "segments": [
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-s-order-fixed-stable-muon-s42-20261016",
+          "progress_sha256": "f7c3ce43ced7e87702d1a2d74f33a38cf95a38bfa4ba8f8edea3d666f69c20a7",
+          "snapshot_bytes": 1026429,
+          "source": {
+            "code_version": "0.2.0-rc.1",
+            "release_tag": "v0.2.0-rc.1",
+            "git_commit": "48dceffa389d7b6d892a811e7aa7873a48cff594",
+            "git_dirty": false
+          },
+          "resume_step": 0,
+          "first_logged_step": 1,
+          "last_step": 6000,
+          "first_logged_at": "2026-10-16T10:10:36.537349+00:00",
+          "last_logged_at": "2026-10-16T13:50:50.325183+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 13213.787834,
+          "gpu_hours": 3.670496620555556
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-s-geometry-resume-stable-muon-s42-20261017/attempt-3",
+          "progress_sha256": "aa003749db9e0a44f9a2dfd97886386a085e81236323fc0a4af278e51b280470",
+          "snapshot_bytes": 47343,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 6000,
+          "first_logged_step": 6001,
+          "last_step": 6500,
+          "first_logged_at": "2026-10-16T16:09:08.879693+00:00",
+          "last_logged_at": "2026-10-16T16:11:42.435427+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 153.555734,
+          "gpu_hours": 0.04265437055555556
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-s-loader-safe-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "b630dbc9e22de318c056149d2797bd678ac7faa50b82cd305c32c730fbff270e",
+          "snapshot_bytes": 62457938,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 6500,
+          "first_logged_step": 6501,
+          "last_step": 260000,
+          "first_logged_at": "2026-10-17T09:41:54.427216+00:00",
+          "last_logged_at": "2026-10-18T13:02:10.330410+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 98415.903194,
+          "gpu_hours": 27.33775088722222
+        }
+      ]
+    },
+    "QHFlow2-O(3)-s": {
+      "status": "completed",
+      "train_gpu_hours": 47.20899581194445,
+      "samples_per_second": 64.12315617555136,
+      "throughput_gpu_count": 1,
+      "effective_batch": 32,
+      "throughput_windows": 10061,
+      "throughput_samples": 8048800,
+      "throughput_seconds": 125520.958107,
+      "last_step": 260000,
+      "last_logged_at": "2026-10-19T04:31:00.085961+00:00",
+      "segments": [
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-o3-s-stable-muon-s42-20261016",
+          "progress_sha256": "97a172431541a26426156fde7804c5d9927f2317bee13e419a064db7bb36d405",
+          "snapshot_bytes": 736250,
+          "source": {
+            "code_version": "0.2.0-rc.1",
+            "release_tag": "v0.2.0-rc.1",
+            "git_commit": "48dceffa389d7b6d892a811e7aa7873a48cff594",
+            "git_dirty": false
+          },
+          "resume_step": 0,
+          "first_logged_step": 0,
+          "last_step": 6000,
+          "first_logged_at": "2026-10-16T10:11:31.749548+00:00",
+          "last_logged_at": "2026-10-16T14:29:11.680445+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 15459.930897,
+          "gpu_hours": 4.294425249166666
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-o3-s-geometry-resume-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "b039205515f059520ebc9c8cbc7a3f3a30c1de979fa85015d8d0a4226360d357",
+          "snapshot_bytes": 47327,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 6000,
+          "first_logged_step": 6001,
+          "last_step": 6500,
+          "first_logged_at": "2026-10-16T16:05:53.312096+00:00",
+          "last_logged_at": "2026-10-16T16:10:01.785565+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 248.473469,
+          "gpu_hours": 0.06902040805555555
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-o3-s-loader-safe-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "2cc8bdccf14b2b97ebaf82bc3598e468d014325ac8cbe4565485582f43c7b395",
+          "snapshot_bytes": 62384470,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 6500,
+          "first_logged_step": 6501,
+          "last_step": 260000,
+          "first_logged_at": "2026-10-17T09:40:16.105404+00:00",
+          "last_logged_at": "2026-10-19T04:31:00.085961+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 154243.980557,
+          "gpu_hours": 42.845550154722225
+        }
+      ]
+    },
+    "QHFlow2-m": {
+      "status": "completed",
+      "train_gpu_hours": 47.82588528944444,
+      "samples_per_second": 59.51031443960898,
+      "throughput_gpu_count": 1,
+      "effective_batch": 32,
+      "throughput_windows": 10191,
+      "throughput_samples": 8152800,
+      "throughput_seconds": 136998.099855,
+      "last_step": 260000,
+      "last_logged_at": "2026-10-19T08:17:42.491238+00:00",
+      "segments": [
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-m-order-fixed-stable-muon-s42-20261016",
+          "progress_sha256": "8a1c78b31fa37240cc226ead62fcdae8bc38385295c4247b816a9ff710e0ad27",
+          "snapshot_bytes": 170018,
+          "source": {
+            "code_version": "0.2.0-rc.1",
+            "release_tag": "v0.2.0-rc.1",
+            "git_commit": "39bce6eb93bd51eea42fb1b74f722a8c2338fa28",
+            "git_dirty": false
+          },
+          "resume_step": 0,
+          "first_logged_step": 0,
+          "last_step": 2000,
+          "first_logged_at": "2026-10-16T13:20:36.598985+00:00",
+          "last_logged_at": "2026-10-16T14:20:26.936066+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 3590.337081,
+          "gpu_hours": 0.9973158558333334
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-m-geometry-resume-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "a9e6a1b5bd98e36a406fa25fb68cdda1bd7de0ad776d5ad2ff899cc054ddb0a9",
+          "snapshot_bytes": 100541,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 2000,
+          "first_logged_step": 2001,
+          "last_step": 3250,
+          "first_logged_at": "2026-10-16T16:05:56.063557+00:00",
+          "last_logged_at": "2026-10-16T16:17:04.620351+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 668.556794,
+          "gpu_hours": 0.18571022055555556
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-m-loader-safe-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "e722baa82f99b677b460e0e6de41a3f707f85e87158b2a3814b1533560e41ccb",
+          "snapshot_bytes": 63175862,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 3250,
+          "first_logged_step": 3251,
+          "last_step": 260000,
+          "first_logged_at": "2026-10-17T09:39:08.198071+00:00",
+          "last_logged_at": "2026-10-19T08:17:42.491238+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 167914.293167,
+          "gpu_hours": 46.64285921305555
+        }
+      ]
+    },
+    "QHFlow2-l": {
+      "status": "completed",
+      "train_gpu_hours": 117.70909604472222,
+      "samples_per_second": 44.15565352228968,
+      "throughput_gpu_count": 2,
+      "effective_batch": 32,
+      "throughput_windows": 7442,
+      "throughput_samples": 5953600,
+      "throughput_seconds": 134832.111521,
+      "last_step": 260000,
+      "last_logged_at": "2026-10-20T09:53:29.249053+00:00",
+      "segments": [
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-order-fixed-stable-muon-s42-20261016",
+          "progress_sha256": "67d0b13e078bf386e563fa1d2e6a4e310d2460eb72c992242e733c2f2a24b8af",
+          "snapshot_bytes": 85530,
+          "source": {
+            "code_version": "0.2.0-rc.1",
+            "release_tag": "v0.2.0-rc.1",
+            "git_commit": "39bce6eb93bd51eea42fb1b74f722a8c2338fa28",
+            "git_dirty": false
+          },
+          "resume_step": 0,
+          "first_logged_step": 0,
+          "last_step": 1000,
+          "first_logged_at": "2026-10-16T13:21:03.368309+00:00",
+          "last_logged_at": "2026-10-16T14:31:18.616407+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 4215.248098,
+          "gpu_hours": 1.1709022494444445
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-geometry-resume-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "dd5b56510cb8dd55695dccc04e07cddd18184eb996bbfb4b79625c6751606144",
+          "snapshot_bytes": 175833,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 1000,
+          "first_logged_step": 1000,
+          "last_step": 3250,
+          "first_logged_at": "2026-10-16T16:07:51.218494+00:00",
+          "last_logged_at": "2026-10-16T16:54:18.222817+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 2787.004323,
+          "gpu_hours": 0.7741678675
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-loader-safe-stable-muon-s42-20261017/attempt-1",
+          "progress_sha256": "29fb677fae10c060f73de0294bd8e48255ff42646e5b1bcfac15b205481e4747",
+          "snapshot_bytes": 17097173,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 3250,
+          "first_logged_step": 3250,
+          "last_step": 72500,
+          "first_logged_at": "2026-10-17T09:37:46.399549+00:00",
+          "last_logged_at": "2026-10-18T13:58:26.647393+00:00",
+          "gpu_count": 1,
+          "elapsed_seconds": 102040.247844,
+          "gpu_hours": 28.34451329
+        },
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-ddp-pinned-stable-muon-s42-20261018/attempt-1",
+          "progress_sha256": "63e6ed8f797f5f834274a27636e8c05b0055f4b791f8f4b581e129249f6b5b9d",
+          "snapshot_bytes": 33576663,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 72500,
+          "first_logged_step": 72501,
+          "last_step": 260000,
+          "first_logged_at": "2026-10-18T14:10:54.126305+00:00",
+          "last_logged_at": "2026-10-20T09:53:29.249053+00:00",
+          "gpu_count": 2,
+          "elapsed_seconds": 157355.122748,
+          "gpu_hours": 87.41951263777777
+        }
+      ]
+    },
+    "QHFlow2-xl": {
+      "status": "in_progress",
+      "train_gpu_hours": 2.7391825233333336,
+      "samples_per_second": 16.31234354082794,
+      "throughput_gpu_count": 4,
+      "effective_batch": 32,
+      "throughput_windows": 49,
+      "throughput_samples": 39200,
+      "throughput_seconds": 2403.088183,
+      "last_step": 1250,
+      "last_logged_at": "2026-10-21T09:46:17.539639+00:00",
+      "segments": [
+        {
+          "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-xl5-ddp4-stable-muon-s42-20261021/attempt-1",
+          "progress_sha256": "ee840dc673962fbbf834ae4e8481abe5cae7f3654787281b017c2530d5ac66e4",
+          "snapshot_bytes": 110919,
+          "source": {
+            "code_version": "0.2.0-rc.2",
+            "release_tag": "v0.2.0-rc.2",
+            "git_commit": "807e01a0b4c43ec50dc2a13f2fb66c34c065ad05",
+            "git_dirty": false
+          },
+          "resume_step": 0,
+          "first_logged_step": 1,
+          "last_step": 1250,
+          "first_logged_at": "2026-10-21T09:05:12.275368+00:00",
+          "last_logged_at": "2026-10-21T09:46:17.539639+00:00",
+          "gpu_count": 4,
+          "elapsed_seconds": 2465.264271,
+          "gpu_hours": 2.7391825233333336
+        }
+      ]
+    }
+  }
+}
