@@ -7,6 +7,7 @@
       "sha256": "9aa5bcf11437565a2c40b7c7bd7b16baa13f31cd0a815f1dfd5cb7546ef0670f",
       "checkpoint": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-s-loader-safe-stable-muon-s42-20261017/attempt-1/training/checkpoints/epoch078-step00258409.ckpt",
       "trainable_parameters": 12374649,
+      "ode_steps": 3,
       "raw_metrics": {
         "hamiltonian": 1.0714736657724325e-05,
         "orbital_energies": 8.424663235038766e-05,
@@ -22,6 +23,60 @@
         "HOMO": 92.75791368679407,
         "LUMO": 222.7739467073252,
         "GAP": 276.43819960411946
+      },
+      "evaluations": {
+        "3": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_epoch",
+            "orbital_energies": "test/sample_orbital_energies_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_epoch",
+            "HOMO": "test/sample_HOMO_epoch",
+            "LUMO": "test/sample_LUMO_epoch",
+            "GAP": "test/sample_GAP_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 1.0714736657724325e-05,
+            "orbital_energies": 8.424663235038766e-05,
+            "orbital_coefficients": 0.9967779489042644,
+            "HOMO": 9.275791368679406e-05,
+            "LUMO": 0.0002227739467073252,
+            "GAP": 0.00027643819960411947
+          },
+          "display_metrics": {
+            "hamiltonian": 10.714736657724325,
+            "orbital_energies": 84.24663235038766,
+            "orbital_coefficients": 99.67779489042644,
+            "HOMO": 92.75791368679407,
+            "LUMO": 222.7739467073252,
+            "GAP": 276.43819960411946
+          }
+        },
+        "1": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_1_epoch",
+            "orbital_energies": "test/sample_orbital_energies_1_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_1_epoch",
+            "HOMO": "test/sample_HOMO_1_epoch",
+            "LUMO": "test/sample_LUMO_1_epoch",
+            "GAP": "test/sample_GAP_1_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 1.0723744252079694e-05,
+            "orbital_energies": 8.506152441631414e-05,
+            "orbital_coefficients": 0.9967800137636154,
+            "HOMO": 9.410981905990837e-05,
+            "LUMO": 0.00021485242709848678,
+            "GAP": 0.0002674173792255412
+          },
+          "display_metrics": {
+            "hamiltonian": 10.723744252079694,
+            "orbital_energies": 85.06152441631414,
+            "orbital_coefficients": 99.67800137636154,
+            "HOMO": 94.10981905990838,
+            "LUMO": 214.85242709848677,
+            "GAP": 267.4173792255412
+          }
+        }
       }
     },
     {
@@ -31,6 +86,7 @@
       "sha256": "7cda78e63f8e953203a2f76db74e39521a0f64e22fa8b98010c789eb90c87a0b",
       "checkpoint": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-o3-s-loader-safe-stable-muon-s42-20261017/attempt-1/training/checkpoints/epoch078-step00258409.ckpt",
       "trainable_parameters": 12374649,
+      "ode_steps": 3,
       "raw_metrics": {
         "hamiltonian": 9.12533818677646e-06,
         "orbital_energies": 6.838617173566693e-05,
@@ -46,6 +102,60 @@
         "HOMO": 77.28063985698638,
         "LUMO": 193.56251145442664,
         "GAP": 232.94878285383476
+      },
+      "evaluations": {
+        "3": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_epoch",
+            "orbital_energies": "test/sample_orbital_energies_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_epoch",
+            "HOMO": "test/sample_HOMO_epoch",
+            "LUMO": "test/sample_LUMO_epoch",
+            "GAP": "test/sample_GAP_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 9.12533818677646e-06,
+            "orbital_energies": 6.838617173566693e-05,
+            "orbital_coefficients": 0.9978912569664244,
+            "HOMO": 7.728063985698638e-05,
+            "LUMO": 0.00019356251145442665,
+            "GAP": 0.00023294878285383476
+          },
+          "display_metrics": {
+            "hamiltonian": 9.12533818677646,
+            "orbital_energies": 68.38617173566692,
+            "orbital_coefficients": 99.78912569664244,
+            "HOMO": 77.28063985698638,
+            "LUMO": 193.56251145442664,
+            "GAP": 232.94878285383476
+          }
+        },
+        "1": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_1_epoch",
+            "orbital_energies": "test/sample_orbital_energies_1_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_1_epoch",
+            "HOMO": "test/sample_HOMO_1_epoch",
+            "LUMO": "test/sample_LUMO_1_epoch",
+            "GAP": "test/sample_GAP_1_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 9.131942826453077e-06,
+            "orbital_energies": 6.835705900346934e-05,
+            "orbital_coefficients": 0.997898106450102,
+            "HOMO": 7.855107932602343e-05,
+            "LUMO": 0.00019032461199778092,
+            "GAP": 0.00022733977308469352
+          },
+          "display_metrics": {
+            "hamiltonian": 9.131942826453077,
+            "orbital_energies": 68.35705900346935,
+            "orbital_coefficients": 99.7898106450102,
+            "HOMO": 78.55107932602343,
+            "LUMO": 190.32461199778092,
+            "GAP": 227.33977308469352
+          }
+        }
       }
     },
     {
@@ -55,6 +165,7 @@
       "sha256": "f2f28b9b5fe6380caf4eaabe450be58753ac7763d12ec83ac7dca058a028b725",
       "checkpoint": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-m-loader-safe-stable-muon-s42-20261017/attempt-1/training/checkpoints/epoch078-step00258409.ckpt",
       "trainable_parameters": 44245689,
+      "ode_steps": 3,
       "raw_metrics": {
         "hamiltonian": 7.084643474611734e-06,
         "orbital_energies": 5.1006461251480416e-05,
@@ -70,6 +181,60 @@
         "HOMO": 54.14314249144059,
         "LUMO": 105.02999950351582,
         "GAP": 129.0451807604135
+      },
+      "evaluations": {
+        "3": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_epoch",
+            "orbital_energies": "test/sample_orbital_energies_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_epoch",
+            "HOMO": "test/sample_HOMO_epoch",
+            "LUMO": "test/sample_LUMO_epoch",
+            "GAP": "test/sample_GAP_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 7.084643474611734e-06,
+            "orbital_energies": 5.1006461251480416e-05,
+            "orbital_coefficients": 0.9978871640368234,
+            "HOMO": 5.414314249144059e-05,
+            "LUMO": 0.00010502999950351583,
+            "GAP": 0.0001290451807604135
+          },
+          "display_metrics": {
+            "hamiltonian": 7.084643474611734,
+            "orbital_energies": 51.00646125148042,
+            "orbital_coefficients": 99.78871640368234,
+            "HOMO": 54.14314249144059,
+            "LUMO": 105.02999950351582,
+            "GAP": 129.0451807604135
+          }
+        },
+        "1": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_1_epoch",
+            "orbital_energies": "test/sample_orbital_energies_1_epoch",
+            "orbital_coefficients": "test/sample_orbital_coefficients_1_epoch",
+            "HOMO": "test/sample_HOMO_1_epoch",
+            "LUMO": "test/sample_LUMO_1_epoch",
+            "GAP": "test/sample_GAP_1_epoch"
+          },
+          "raw_metrics": {
+            "hamiltonian": 7.094775662192366e-06,
+            "orbital_energies": 5.106595921577933e-05,
+            "orbital_coefficients": 0.997896731709211,
+            "HOMO": 5.5105574310123596e-05,
+            "LUMO": 0.00010130746246096957,
+            "GAP": 0.00012625389206778883
+          },
+          "display_metrics": {
+            "hamiltonian": 7.094775662192366,
+            "orbital_energies": 51.06595921577933,
+            "orbital_coefficients": 99.7896731709211,
+            "HOMO": 55.10557431012359,
+            "LUMO": 101.30746246096957,
+            "GAP": 126.25389206778883
+          }
+        }
       }
     },
     {
@@ -79,6 +244,7 @@
       "sha256": "6f640b36da6d41e076c4d2d5f60b0bae1cafdfb577a716993d9cc59fa1b0dd50",
       "checkpoint": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-l-ddp-pinned-stable-muon-s42-20261018/attempt-1/training/checkpoints/epoch078-step00258409.ckpt",
       "trainable_parameters": 187993145,
+      "ode_steps": 3,
       "raw_metrics": {
         "hamiltonian": 4.538152287543544e-06,
         "orbital_energies": 4.4049440127134876e-05,
@@ -94,8 +260,66 @@
         "HOMO": 36.93054440357929,
         "LUMO": 98.74930038352046,
         "GAP": 105.90734060840572
+      },
+      "evaluations": {
+        "3": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian",
+            "orbital_energies": "test/sample_orbital_energies",
+            "orbital_coefficients": "test/sample_orbital_coefficients",
+            "HOMO": "test/sample_HOMO",
+            "LUMO": "test/sample_LUMO",
+            "GAP": "test/sample_GAP"
+          },
+          "raw_metrics": {
+            "hamiltonian": 4.538152287543544e-06,
+            "orbital_energies": 4.4049440127134876e-05,
+            "orbital_coefficients": 0.9983389143506657,
+            "HOMO": 3.693054440357929e-05,
+            "LUMO": 9.874930038352047e-05,
+            "GAP": 0.00010590734060840571
+          },
+          "display_metrics": {
+            "hamiltonian": 4.538152287543544,
+            "orbital_energies": 44.04944012713488,
+            "orbital_coefficients": 99.83389143506656,
+            "HOMO": 36.93054440357929,
+            "LUMO": 98.74930038352046,
+            "GAP": 105.90734060840572
+          }
+        },
+        "1": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_1",
+            "orbital_energies": "test/sample_orbital_energies_1",
+            "orbital_coefficients": "test/sample_orbital_coefficients_1",
+            "HOMO": "test/sample_HOMO_1",
+            "LUMO": "test/sample_LUMO_1",
+            "GAP": "test/sample_GAP_1"
+          },
+          "raw_metrics": {
+            "hamiltonian": 4.546627753150828e-06,
+            "orbital_energies": 4.357676575330702e-05,
+            "orbital_coefficients": 0.9983493187080554,
+            "HOMO": 3.705906822502889e-05,
+            "LUMO": 9.94272373430364e-05,
+            "GAP": 0.00010632603866504141
+          },
+          "display_metrics": {
+            "hamiltonian": 4.546627753150828,
+            "orbital_energies": 43.57676575330702,
+            "orbital_coefficients": 99.83493187080555,
+            "HOMO": 37.05906822502889,
+            "LUMO": 99.4272373430364,
+            "GAP": 106.32603866504141
+          }
+        }
       }
     }
   ],
-  "display_decimals": 3
+  "display_decimals": 3,
+  "display_order_ode_steps": [
+    3,
+    1
+  ]
 }

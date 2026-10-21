@@ -50,9 +50,12 @@ model definitions when loading checkpoints.
 
 ## Inference speed
 
-The table separates **Inference samples/s (1-step)** and **(3-step)**. These
-cells remain dashes until measured on an exclusive GPU. Updated XL is still
-training and retains `(on train)`. Accuracy columns are still three-step results.
+The table places **Steps** after Param. and pairs each completed updated
+model's **3-step then 1-step** results. One **Inference samples/s** column
+matches the step count on each row. These speed cells remain dashes until
+measured on an exclusive GPU. Updated XL retains `(on train)`. Original-paper
+rows preserve their reported metrics without assigning a new step label; the
+speed benchmark still records both step counts for all eight checkpoints.
 
 The [checkpoint/cohort manifest](inference/benchmark-manifest.json) pins exact
 inputs and local paths (replace paths on another machine, preserving hashes).
@@ -93,6 +96,10 @@ The image displays saved updated-model H/orbital metrics to three decimal
 places and recomputed SCF percentages to two. Original-paper accuracy values
 keep their source precision. [current-results.json](benchmark/current-results.json)
 preserves unrounded metrics, unit-scaled values and source/checkpoint evidence.
+Each model's `evaluations` contains separate `3` and `1` records with exact
+source keys (`test/sample_*` for the configured three-step evaluation and
+`test/sample_*_1` for one step, optionally ending in `_epoch`). The top-level
+`raw_metrics` and `display_metrics` retain the three-step values for compatibility.
 The extra digits are a display change, not a new evaluation or an uncertainty
 estimate. Updated E/F and SCF cells stay missing until independently evaluated.
 
