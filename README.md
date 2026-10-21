@@ -147,7 +147,7 @@ Updated **2026-10-21** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-r
 
 ### Updated checkpoints
 
-The four completed checkpoints are prepared for the **v0.2.0-rc.2 draft Release**.
+The four completed checkpoints are attached to the **v0.2.0-rc.2 draft Release**.
 The download links below become public when the release is published after code review and push.
 Each archive contains `weights.ckpt`, exact configuration, test metrics, source metadata,
 a checkpoint license notice and SHA-256 checksums. Weights match the benchmark checkpoints
