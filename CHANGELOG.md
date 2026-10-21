@@ -7,8 +7,10 @@ source and configuration files; `model.version` selects an architecture.
 
 - Display ERIC as a percentage. Omit original-paper training GPU hours at the
   maintainer's request; retain the attempted reconstruction only in the archive.
-- Separate 1-step and 3-step inference columns, with a reproducible checkpoint
-  timing runner; leave unmeasured speed cells empty pending an exclusive GPU.
+- Pair completed updated models' recorded 3-step and 1-step accuracy in two
+  rows, with a Steps column, shared model/cost labels, and grey O(3) rows. Match
+  each row to one inference-speed column; leave speeds empty pending an exclusive
+  GPU measurement using the reproducible checkpoint timing runner.
 - Display saved updated H/orbital metrics to three decimals and SCF percentages
   to two; retain unrounded source values and original-paper precision.
 - Publish four verified inference checkpoints on Hugging Face while preserving
