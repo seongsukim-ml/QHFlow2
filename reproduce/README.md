@@ -48,44 +48,6 @@ Historical MD17, ablation, fine-tuning and optimization settings are explicitly
 opt-in through [archive](../archive/README.md). Do not mix legacy and corrected
 model definitions when loading checkpoints.
 
-### Original-model training costs
-
-[original-costs.json](training/original-costs.json) reports observed training
-GPU hours for the original-paper QHFlow2 sizes, with historical training
-throughput retained as evidence only (not an inference measurement). The
-[run manifest](training/original-runs.json) records W&B IDs, published checkpoint
-URLs and architecture/batch settings. The compressed
-[timing history](training/original-history.csv.gz) contains only the timing and
-step fields needed to reproduce the calculation, including duplicate API rows.
-
-```bash
-PYTHONPATH=src python -m reproduction.training_costs \
-  --history reproduce/training/original-history.csv.gz \
-  --runs reproduce/training/original-runs.json \
-  --output /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-stable-table-comparison-20261021/original-training-costs/recomputed.json
-```
-
-The histories cover 5,200 distinct training log points per model, from optimizer
-step 49 through 259,999. Identical API duplicates count once. A rollback in step
-or a change greater than 10 seconds in `timestamp - runtime` marks a resume;
-later resumes replace the overwritten tail of prior sessions. GPU hours sum
-the first-to-last training-event spans of retained sessions, including validation
-and checkpointing inside them. Startup, restart gaps, discarded tails, and later
-evaluation are excluded. The first 49 steps and gaps between session endpoints
-are not timed, so these are approximate observed costs rather than full allocation.
-
-Samples/s is processed molecules divided by elapsed time across consecutive
-50-optimizer-step intervals within the same epoch in the final retained session.
-This excludes epoch-boundary validation and includes checkpoint I/O inside valid
-windows. All original models used one GPU and effective batch 32; the published
-XL checkpoint has microbatch 8 and accumulation 4. The original run names and
-checkpoint architecture settings establish the associations. Later evaluation
-reused these W&B run IDs and overwrote the current config/metadata; its batch
-sizes, visible GPU count and overall runtime are not training evidence. Original
-GPU types cannot be reliably recovered from those current metadata files.
-Hardware may differ from the updated runs, so the table is not a matched-hardware
-comparison of optimization speedups. The original-paper H/E/F results are unchanged.
-
 ## Inference speed
 
 The table separates **Inference samples/s (1-step)** and **(3-step)**. These
