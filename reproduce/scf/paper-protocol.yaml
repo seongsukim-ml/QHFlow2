@@ -1,4 +1,4 @@
-# Appendix E.4 settings; original molecule selection remains unverified.
+# Appendix E.4 settings; recorded-300.csv is the maintainer-confirmed Figure 4 cohort.
 # max_cycle=50 is an explicit replay choice, not documented by the paper.
 mode: scf
 threads: 1

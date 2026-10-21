@@ -133,7 +133,8 @@ Updated **2026-10-21** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-r
 
 - **Results and units.** Original-paper metrics, including QHNetV2, reproduce the supplied paper tables. QHFlow2 parameter counts follow the [checkpoint/config audit](docs/MODEL_CONFIGS.md); updated counts are trainable parameters (XL: initialized model). Updated results use the best validation checkpoint, seed 42, all **13,084** official QH9Stable random-split test molecules and **three ODE steps**. H, occupied orbital energies, HOMO, LUMO and GAP are in μEh; Sc is in percent. Original E/F values retain their source units; updated E/F and other unavailable values are shown as dashes.
 - **Model update.** Order fix + **gate change (spectral)** + Muon at **1e-3**; norm, embedding and other unsupported parameters use AdamW at **1e-4**. Updated S/M also enable the Hamiltonian-input path. **+ O(3) group averaging** denotes a separately trained QHFlow2-O(3)-s, using shared-weight identity/inversion averaging. These results combine architecture and training changes and are not a single-change ablation.
-- **Training cost and speed.** Figures are temporarily withheld; `(on train)` is a provisional reporting label in these columns. S/O(3)-S/M/L training is complete, and the recorded measurements are retained for a later update.
+- **Training cost and speed.** Train GPU hours and Samples / s show recorded measurements for completed S/O(3)-S/M/L runs; only XL displays `(on train)`. GPU hours sum retained training segments, including validation/checkpointing within those segments, and exclude startup, queue/restart gaps, discarded attempts and final testing. Samples / s is aggregate training throughput in the final execution configuration: one GPU for S/O(3)-S/M and two GPUs for L; each O(3) molecule is counted once.
+- **SCF ratio and ERIC.** SCF ratio (%) is `100 × sum(N_model) / sum(N_MinAO)` (lower is better; MinAO = 100%). ERIC is `mean((N_model + 1) / N_MinAO)`, including one initial Hamiltonian build under the [ERIC accounting convention](https://arxiv.org/html/2604.21657v1#S4); it is not a wall-time speedup. The six available original-model entries are recomputed from the [300-molecule paired records](reproduce/scf/recorded-300-cycles.csv), on the same cohort as [original-paper Figure 4](https://arxiv.org/html/2602.16897v1#S4.F4), confirmed by the maintainer on 2026-10-21. ERIC is a new post-hoc calculation. The recovered March solver settings are retained in [provenance](reproduce/scf/provenance.json), including differences from Appendix E.4; these added columns are not transcribed paper-table values. Updated-model SCF metrics have not been evaluated and remain dashes. See the [reproducible summary](reproduce/scf/recorded-300-summary.json).
 - **Checkpoint status.** S/O(3)-S/M/L each completed 260,000 steps; their packaged weights come from validation-selected step 258,409. XL is still training, with benchmark metrics and its checkpoint pending.
 
 ### Updated checkpoints
@@ -162,10 +163,11 @@ The five release presets match the recorded final S, O(3)-S, M, L and XL trainin
 Muon starts at 1e-3 and AdamW at 1e-4; global batch size is 32.
 
 For **Relative reduction of SCF cycles on QH9**, the
-[molecule list](reproduce/scf/recorded-300.csv) links all 300 recovered March 2026
-re-experiment samples to original QH9 indices and molecular formulas. The
-[provenance note](reproduce/scf/provenance.json) distinguishes these verified records
-from Figure 4 of the original paper, whose exact source cohort remains unverified.
+[molecule list](reproduce/scf/recorded-300.csv) links the 300 original-paper Figure 4
+molecules to original QH9 indices and molecular formulas. The maintainer confirmed
+on 2026-10-21 that the recovered March 2026 records use this same molecule list.
+The [provenance note](reproduce/scf/provenance.json) records that confirmation,
+geometry matches and the recovered solver settings.
 The [paired cycle records](reproduce/scf/recorded-300-cycles.csv) cover six models.
 
 DFT evaluation records explicit functional, basis, overlap policy, grid/gradient options,

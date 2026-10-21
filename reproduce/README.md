@@ -52,8 +52,9 @@ model definitions when loading checkpoints.
 
 ### Molecule identities and Figure 4 provenance
 
-[recorded-300.csv](scf/recorded-300.csv) gives the **recovered March 2026 SCF
-re-experiment** cohort. Every molecule was matched to the local QH9 raw shard by
+[recorded-300.csv](scf/recorded-300.csv) gives the **original-paper Figure 4
+cohort**. On 2026-10-21 the maintainer confirmed that the recovered March 2026
+SCF records use the same 300 molecules. Every molecule was matched to the local QH9 raw shard by
 atomic numbers and coordinates (all 300 uniquely matched within 2e-6 Å), and
 independently checked against the historical test split. Fields include:
 
@@ -69,16 +70,41 @@ pairs, convergence flags and final energies. Selection was NumPy `default_rng(42
 The explicit CSV is authoritative for replay; do not reinterpret file numbers
 as global dataset indices or use a different split order.
 
-**Original Figure 4 is not yet fully traced.** The original paper's
+**Molecule attribution is confirmed; solver settings are preserved explicitly.** The original paper's
 [Appendix E.4](https://arxiv.org/html/2602.16897v1#A5.SS4) specifies B3LYP/def2-SVP,
 grid 3, `conv_tol=1e-13`, GPU4PySCF and density fitting. Recovered March records
 instead specify B3LYP5, `1e-9`, with no density fitting in their source script.
-Their dates postdate the February paper. They are not relabeled as Figure 4's
-original molecules or settings. [provenance.json](scf/provenance.json) preserves
-source paths, hashes and this unresolved attribution. `paper-protocol.yaml`
+The molecule-list confirmation does not replace those recorded solver settings.
+[provenance.json](scf/provenance.json) preserves source paths, hashes and the
+maintainer's confirmation. `paper-protocol.yaml`
 encodes the documented protocol, while `recorded-protocol.yaml` replays the
 recovered experiment. The old runtime versions were not saved in those results;
 an exact numerical replay is therefore not certified.
+
+### Recompute the table's SCF columns
+
+The six original-model SCF entries use the recovered cycle records on this
+300-molecule cohort. They are separate from the full-test H/orbital/E/F metrics.
+The summary verifies unique identities, complete 300/300 pairing, convergence
+and the shared MinAO baseline; missing or nonconverged pairs cause an error.
+
+```bash
+PYTHONPATH=src python -m reproduction.scf_metrics \
+  --cohort reproduce/scf/recorded-300.csv \
+  --cycles reproduce/scf/recorded-300-cycles.csv \
+  --output /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-stable-table-comparison-20261021/scf-summary.json
+```
+
+This reproduces [recorded-300-summary.json](scf/recorded-300-summary.json).
+**SCF ratio (%)** is `100 × sum(N_model) / sum(N_MinAO)`; its reduction is
+`100 - ratio`. **ERIC** is the molecule-wise mean of `(N_model + 1) / N_MinAO`.
+The +1 accounts for an initial Hamiltonian/Fock build, following the
+[ERIC convention](https://arxiv.org/html/2604.21657v1#S4), and is independent of
+the number of model ODE steps. ERIC is computed post hoc from saved counts;
+the historical files did not instrument every Fock build or inference cost.
+Neither metric measures wall-time speedup. The README labels the cohort and
+recorded protocol; it does not present these added values as transcribed
+paper-table measurements. New version checkpoints need their own SCF evaluation.
 
 ### Checkpoint to traceable predictions
 
@@ -137,6 +163,8 @@ a new output directory and is reported as a separate runtime.
 - SCF compares MinAO, predicted-H and dataset-H initialization with the same solver settings.
   Cycle ratio is **100 × sum(model cycles) / sum(MinAO cycles)**. Reduction is
   100 minus that ratio; neither quantity includes an extra initial-guess cycle.
+  Predicted-H ERIC separately uses **mean((N_model + 1) / N_MinAO)** and records
+  that initial Hamiltonian build explicitly. Dataset-H is a reference, not an ML ERIC entry.
 - Energy/force evaluation extracts the original v4 algorithm without UMA,
   plotting or mutable shared caches. The default preserves its adaptive
   `1e-8` / `1e-3` overlap-eigenvalue **padding** rule and 0.03 Ha switch. Padding
