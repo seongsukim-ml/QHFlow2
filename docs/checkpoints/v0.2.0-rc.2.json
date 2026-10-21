@@ -1,0 +1,83 @@
+{
+  "version": "v0.2.0-rc.2",
+  "update_date": "2026-10-21",
+  "models": [
+    {
+      "model": "QHFlow2-s",
+      "file": "qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar",
+      "bytes": 50329600,
+      "sha256": "64ea4c2ae5ef3a94edd4890fd063fbdded22b48ca48d30ad5d6c9764891872d8",
+      "weights_sha256": "03bc2ec51ebefb5449f667ea7e8f73deed07d4061ba2ad73e3c0e9df7148a9e7",
+      "source_sha256": "fb60bd049ff1402e770bdda5f6786242491c85a738241d3882de91cc7f19e143",
+      "parameters": {
+        "total": 12374713,
+        "trainable": 12374649
+      },
+      "best_step": 258409,
+      "validation": {
+        "all_tensors_exact": true,
+        "strict_cpu_load": true,
+        "safe_weights_only_load": true
+      },
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar"
+    },
+    {
+      "model": "QHFlow2-O(3)-s",
+      "file": "qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar",
+      "bytes": 50329600,
+      "sha256": "61b584b504baaf9aa0b796a9850106c800fbe3cfb0baf3897be70188ed1b11d1",
+      "weights_sha256": "acd8c52e08abca6ab5024fddcb86a8483c92b4432bb2d59d4f7872c924aa9f59",
+      "source_sha256": "fdb78e6e35e3b60013c0ab24e11d1b761ab4d220fc85a62e8df9a159e279c5d4",
+      "parameters": {
+        "total": 12374713,
+        "trainable": 12374649
+      },
+      "best_step": 258409,
+      "validation": {
+        "all_tensors_exact": true,
+        "strict_cpu_load": true,
+        "safe_weights_only_load": true
+      },
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar"
+    },
+    {
+      "model": "QHFlow2-m",
+      "file": "qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar",
+      "bytes": 178032640,
+      "sha256": "20d74854af85dcdec5968439590aa9ec996d6f30651c30b1593dc3720bf011ef",
+      "weights_sha256": "fc2d2686ca3ac0c431ca72ae881b7a5a7083634f58ce94ed6d1c0e22bf220dea",
+      "source_sha256": "b1b329aba5570158874a6b504ee3abd451dc8557001576fa4794bff2832c8f3c",
+      "parameters": {
+        "total": 44245817,
+        "trainable": 44245689
+      },
+      "best_step": 258409,
+      "validation": {
+        "all_tensors_exact": true,
+        "strict_cpu_load": true,
+        "safe_weights_only_load": true
+      },
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar"
+    },
+    {
+      "model": "QHFlow2-l",
+      "file": "qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar",
+      "bytes": 753459200,
+      "sha256": "0726a483f853019d1166e4b67ea328d144fb14a62f0448d2a10808c65c576085",
+      "weights_sha256": "54f8c5a2aa3a16198197f9458c3492c8427334d50839491c51e2442c102a23e8",
+      "source_sha256": "3104cb38353a44015fb999b42b5c72c14e0bdd41c4e1c1f05b44ef4a9923e398",
+      "parameters": {
+        "total": 187993401,
+        "trainable": 187993145
+      },
+      "best_step": 258409,
+      "validation": {
+        "all_tensors_exact": true,
+        "strict_cpu_load": true,
+        "safe_weights_only_load": true
+      },
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar"
+    }
+  ],
+  "xl": "Training in progress; no benchmark checkpoint included."
+}

@@ -142,15 +142,21 @@ loader tests check all eight variants and split coverage.
 The CPU preflight exercises the real flow corruption, Hamiltonian loss,
 backward, and Muon/AdamW step on QH9Stable training samples. These checks are
 implementation validation, not benchmark accuracy or GPU throughput results.
-No full training run or new trained benchmark checkpoint is included here.
+That preparation did not include full training. Completed S/M/L and O(3)-S
+benchmarks and draft checkpoint bundles are now documented in the
+[2026-10-21 update](releases/v0.2.0-rc.2-checkpoints.md).
 
 The preparation completed **58 tests**, CPU optimizer steps for **all eight
 models**, and a Lightning automatic-optimization plus validation smoke for
 `QHFlow2_O3_s`. The complete-model rotation tests use three transforms in
 float32/float64; their tolerances are 5e-5 and 1e-9, respectively. The parameter
-counts per size are 12,374,713 / 44,245,817 / 187,993,401 / 930,068,537 for
-s/m/l/xl in either family. In particular, xl is a large model and its GPU
-memory requirements still need profiling before a full launch.
+counts in that historical preparation were 12,374,713 / 44,245,817 /
+187,993,401 / 930,068,537 for s/m/l/xl in either family. The XL preset
+then had four backbone layers. The 2026-10-21 checkpoint audit aligns it
+with the published five-layer architecture: **1,013,184,313 total parameters**
+(1,013,183,801 trainable). S/M/L are unchanged. See
+[the audited model configurations](MODEL_CONFIGS.md) for exact counts,
+legacy checkpoint compatibility and the four-layer resume override.
 
 Local validation artifacts are under
 `/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-stable-muon-preparation-20261014/`.

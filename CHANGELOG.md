@@ -3,6 +3,25 @@
 Code releases are independent of trained checkpoint releases. Git tags pin the
 source and configuration files; `model.version` selects an architecture.
 
+## Unreleased — benchmark/checkpoint update and config audit, 2026-10-21
+
+- Add the README benchmark image, update date, original-paper references,
+  spectral gate/O(3) labels, observed training GPU hours and samples/s.
+- Prepare exact best-validation inference exports for S, O(3)-S, M and L
+  with configs, metrics, provenance and checksums; XL is still training.
+  See the [draft checkpoint update](docs/releases/v0.2.0-rc.2-checkpoints.md).
+- Keep release history below the usage guide and retain the existing
+  collapsed explanation of the legacy equivariance issue.
+
+- Verify all four published QH9Stable-random checkpoint state shapes against
+  the legacy model, including its effective Hamiltonian-input flag.
+- Correct XL backbone depth from four to five in the legacy, corrected and
+  O(3) presets. Existing four-layer checkpoints require an explicit
+  `model.num_gnn_layers=4` override; S/M/L widths and depths are unchanged.
+- Make the disabled H-input flag explicit in legacy S/M presets and record
+  exact total/trainable counts for both model families in
+  [MODEL_CONFIGS.md](docs/MODEL_CONFIGS.md).
+
 ## 0.2.0-rc.2 — development candidate, 2026-10-16
 
 - Cache constant coupling tensors and the unweighted noise expansion; vectorize

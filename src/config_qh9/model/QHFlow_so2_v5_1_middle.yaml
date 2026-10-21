@@ -1,10 +1,13 @@
+# Published QH9Stable-random checkpoint shape audit: 2026-10-21.
+# Total parameters: 43,305,785; trainable: 43,305,657.
 model_name: QHFlow_so2_v5_1
 version: QHFlow_so2_v5_1
 
 hidden_size: 128
 bottle_hidden_size: 64
 use_block_S: True
-use_block_H: True
+use_block_H: True # historical key; ignored by the factory
+use_block_H_fix: False # matches the published checkpoint
 num_gnn_layers: 3
 num_ham_gnn_layers: 2
 # dataset_type: "md17"
