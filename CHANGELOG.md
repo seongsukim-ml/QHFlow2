@@ -11,13 +11,16 @@ source and configuration files; `model.version` selects an architecture.
   and a training entrypoint with evaluation shards that do not repeat molecules.
   Move other training/evaluation experiments into an indexed, hashed archive.
 - Recover 300 molecular identities and 1,800 paired SCF cycle records from the
-  March 2026 re-experiment. Explicitly keep original Figure 4 attribution open:
-  the recovered run's settings differ from the February paper's description.
+  March 2026 records. The maintainer confirmed on 2026-10-21 that these are the
+  original Figure 4 molecules; preserve the recovered solver settings separately.
+- Add SCF cycle ratio and post-hoc ERIC columns, with reproducible aggregation
+  of all 300 paired molecules for six original models. Updated models retain
+  dashes until evaluated; incomplete or nonconverged cohorts have no headline mean.
 - Add checkpoint-to-NPZ inference and reproducible SCF/one-shot energy-force
   evaluation with explicit units, solver policies, hashes and failure records.
 - Add the README benchmark image, update date, original-paper references,
-  spectral gate/O(3) labels, and reserved training GPU hours/samples/s columns
-  marked `(on train)` pending a later reporting update. Recorded timings are retained.
+  spectral gate/O(3) labels, and measured training GPU hours/samples/s for
+  completed S/O(3)-S/M/L runs. Only XL is marked `(on train)`.
 - Prepare exact best-validation inference exports for S, O(3)-S, M and L
   with configs, metrics, provenance and checksums; XL is still training.
   See the [draft checkpoint update](docs/releases/v0.2.0-rc.2-checkpoints.md).

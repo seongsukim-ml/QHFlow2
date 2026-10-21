@@ -1,4 +1,4 @@
-# Recovered March 2026 SCF experiment, not verified as original Figure 4.
+# Recovered March 2026 settings on the maintainer-confirmed Figure 4 cohort.
 mode: scf
 threads: 1
 dft:

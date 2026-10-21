@@ -1,5 +1,5 @@
 {
-  "status": "historical_march_2026_reexperiment_verified; original_Figure_4_attribution_unverified",
+  "status": "original_Figure_4_molecule_cohort_confirmed_by_maintainer; recovered_records_geometry_verified",
   "paper": "https://arxiv.org/html/2602.16897v1#S4.F4",
   "count": 300,
   "selection": "sorted numpy.default_rng(42).choice(13084, 300, replace=False); indices address the original unsorted test split",
@@ -202,5 +202,11 @@
         "energy_diff_max_ha": 2.01339389604982e-10
       }
     }
+  },
+  "figure4_confirmation": {
+    "date": "2026-10-21",
+    "source": "Repository maintainer confirmation in this task",
+    "statement": "The recovered 300-molecule list is the same list used for original-paper Figure 4.",
+    "scope": "Molecule identities; recorded solver settings and timestamps are preserved without substitution."
   }
 }

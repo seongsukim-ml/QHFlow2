@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "cohort_count": 300,
+  "sources": {
+    "recorded-300.csv": "5e57943493f8bf2f5766f1b982aed8b02a8c0bbdb18e049c8592399526105bec",
+    "recorded-300-cycles.csv": "d2f6f8dda07bed823d3067351e8704c6e79813790b79420d4ccdcaf2d55d9c2b"
+  },
+  "cycle_ratio_definition": "100 * sum(N_model) / sum(N_MINAO); lower is better",
+  "cycle_reduction_definition": "100 - cycle_ratio_percent; higher is better",
+  "eric_definition": "mean((N_model + 1) / N_MINAO); lower is better",
+  "eric_scope": "Post-hoc count-based metric with one initial Hamiltonian build; no inference timing or directly measured Fock-build counts",
+  "provenance_note": "Cohort attribution and solver settings are recorded separately in provenance.json",
+  "models": {
+    "qhflow2_large": {
+      "count": 300,
+      "model_cycles_total": 1570,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 47.460701330108826,
+      "cycle_reduction_percent": 52.539298669891174,
+      "eric": 0.5664812779812779,
+      "initialization_cycles": 1
+    },
+    "qhflow2_middle": {
+      "count": 300,
+      "model_cycles_total": 1719,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 51.96493349455864,
+      "cycle_reduction_percent": 48.03506650544136,
+      "eric": 0.6116730121730122,
+      "initialization_cycles": 1
+    },
+    "qhflow2_small": {
+      "count": 300,
+      "model_cycles_total": 1845,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 55.77388149939541,
+      "cycle_reduction_percent": 44.22611850060459,
+      "eric": 0.6501849261849262,
+      "initialization_cycles": 1
+    },
+    "qhflow2_xl": {
+      "count": 300,
+      "model_cycles_total": 1523,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 46.03990326481257,
+      "cycle_reduction_percent": 53.96009673518743,
+      "eric": 0.5525683020683021,
+      "initialization_cycles": 1
+    },
+    "qhflow_260k": {
+      "count": 300,
+      "model_cycles_total": 1940,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 58.64570737605804,
+      "cycle_reduction_percent": 41.35429262394196,
+      "eric": 0.6789819994819996,
+      "initialization_cycles": 1
+    },
+    "qhnet_residue": {
+      "count": 300,
+      "model_cycles_total": 2154,
+      "minao_cycles_total": 3308,
+      "cycle_ratio_percent": 65.11487303506651,
+      "cycle_reduction_percent": 34.88512696493349,
+      "eric": 0.7437654197654198,
+      "initialization_cycles": 1
+    }
+  }
+}

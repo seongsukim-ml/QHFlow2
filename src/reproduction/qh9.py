@@ -16,6 +16,7 @@ import numpy as np
 import yaml
 
 from .physics import build_mf, host, one_shot, orbitals, solve_scf
+from .scf_metrics import aggregate_cycles
 
 
 def sha(path):
@@ -198,10 +199,15 @@ def summarize(records, mode):
         summary.update(paired_converged=len(paired), nonconverged=[r["dataset_index"] for r in good if r not in paired])
         # No hidden removal of difficult molecules from a publication number.
         if len(paired) == len(records) and paired:
-            baseline = sum(r["solves"]["minao"]["cycles"] for r in paired)
-            if baseline <= 0:
-                raise ValueError("MinAO cycle count must be positive")
-            summary["cycle_ratio_percent"] = {label: 100 * sum(r["solves"][label]["cycles"] for r in paired) / baseline for label in ("predicted", "dataset_hamiltonian")}
+            metrics = {label: aggregate_cycles(
+                [r["solves"][label]["cycles"] for r in paired],
+                [r["solves"]["minao"]["cycles"] for r in paired],
+                initialization_cycles=1 if label == "predicted" else 0,
+            ) for label in ("predicted", "dataset_hamiltonian")}
+            for field in ("cycle_ratio_percent", "cycle_reduction_percent"):
+                summary[field] = {label: value[field] for label, value in metrics.items()}
+            summary["eric"] = metrics["predicted"]["eric"]
+            summary["eric_definition"] = "mean((N_predicted + 1) / N_MINAO); one initial Hamiltonian build, excluding inference time"
             summary["aggregation"] = "100 * sum(model cycles) / sum(MinAO cycles); no +1 correction"
     elif len(good) == len(records) and good:
         de = np.array([r["predicted"]["energy_Ha"] - r["reference"]["energy_Ha"] for r in good])

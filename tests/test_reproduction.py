@@ -14,6 +14,7 @@ from common.metric import cal_orbital_and_energies
 from experiment.train_release import evaluation_indices
 from reproduction.physics import build_mf, one_shot, orbitals, solve_scf
 from reproduction.qh9 import evaluate, prepare, read_cohort, sha, summarize, write_json
+from reproduction.scf_metrics import aggregate_cycles, summarize_recorded
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,6 +47,44 @@ def test_recovered_cohort_pairs_all_models():
     assert len(cycles) == 1800
     for model in {r["model"] for r in cycles}:
         assert {int(r["dataset_index"]) for r in cycles if r["model"] == model} == {r["dataset_index"] for r in rows}
+
+
+def test_cycle_ratio_and_eric_have_distinct_aggregation_and_overhead():
+    # Unequal denominators distinguish a ratio of sums from a mean of ratios.
+    m = aggregate_cycles([2, 8], [4, 16])
+    assert m["cycle_ratio_percent"] == 50
+    assert m["cycle_reduction_percent"] == 50
+    assert m["eric"] == pytest.approx((3 / 4 + 9 / 16) / 2)
+    rows = [dict(dataset_index=i, status="ok", solves={
+        "minao": dict(converged=True, cycles=b),
+        "predicted": dict(converged=True, cycles=n),
+        "dataset_hamiltonian": dict(converged=True, cycles=1),
+    }) for i, (n, b) in enumerate(zip([2, 8], [4, 16]))]
+    assert summarize(rows, "scf")["eric"] == m["eric"]
+    rows[0]["solves"]["predicted"]["converged"] = False
+    assert "eric" not in summarize(rows, "scf")
+
+
+@pytest.mark.parametrize("model,baseline", [([], []), ([1], [0]), ([1], [2, 3]), ([-1], [2]), ([1.5], [2])])
+def test_cycle_metrics_reject_invalid_pairs(model, baseline):
+    with pytest.raises(ValueError):
+        aggregate_cycles(model, baseline)
+
+
+def test_recorded_scf_summary_matches_source_and_rejects_missing_pairs(tmp_path):
+    cohort = ROOT / "reproduce/scf/recorded-300.csv"
+    cycles = ROOT / "reproduce/scf/recorded-300-cycles.csv"
+    summary = summarize_recorded(cohort, cycles)
+    assert summary == json.loads((ROOT / "reproduce/scf/recorded-300-summary.json").read_text())
+    evidence = json.loads((ROOT / "reproduce/scf/provenance.json").read_text())["evidence"]
+    assert len(summary["models"]) == 6
+    for label, value in summary["models"].items():
+        assert value["count"] == 300
+        assert value["cycle_reduction_percent"] == pytest.approx(evidence[label]["summary"]["cycle_reduction_pct"])
+    incomplete = tmp_path / "incomplete.csv"
+    incomplete.write_text("\n".join(cycles.read_text().splitlines()[:-1]) + "\n")
+    with pytest.raises(ValueError, match="missing, duplicate or mismatched"):
+        summarize_recorded(cohort, incomplete)
 
 
 @pytest.mark.parametrize("mode", ["legacy_fixed", "legacy_adaptive"])
