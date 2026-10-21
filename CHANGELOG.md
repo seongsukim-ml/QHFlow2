@@ -5,6 +5,13 @@ source and configuration files; `model.version` selects an architecture.
 
 ## Unreleased — benchmark/checkpoint update and config audit, 2026-10-21
 
+- Display ERIC as a percentage and add original S/M/L/XL training GPU hours
+  reconstructed from W&B histories. Preserve timing records,
+  resume/duplicate handling, checkpoint batch settings and hardware limitations.
+- Separate 1-step and 3-step inference columns, with a reproducible checkpoint
+  timing runner; leave unmeasured speed cells empty pending an exclusive GPU.
+- Display saved updated H/orbital metrics to three decimals and SCF percentages
+  to two; retain unrounded source values and original-paper precision.
 - Publish four verified inference checkpoints on Hugging Face while preserving
   all 16 original checkpoints; GitHub release assets remain in a draft.
 - Add five release training profiles matching the recorded final configurations,
@@ -19,7 +26,7 @@ source and configuration files; `model.version` selects an architecture.
 - Add checkpoint-to-NPZ inference and reproducible SCF/one-shot energy-force
   evaluation with explicit units, solver policies, hashes and failure records.
 - Add the README benchmark image, update date, original-paper references,
-  spectral gate/O(3) labels, and measured training GPU hours/samples/s for
+  spectral gate/O(3) labels, and measured training GPU hours for
   completed S/O(3)-S/M/L runs. Only XL is marked `(on train)`.
 - Prepare exact best-validation inference exports for S, O(3)-S, M and L
   with configs, metrics, provenance and checksums; XL is still training.

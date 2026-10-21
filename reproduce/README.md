@@ -48,6 +48,92 @@ Historical MD17, ablation, fine-tuning and optimization settings are explicitly
 opt-in through [archive](../archive/README.md). Do not mix legacy and corrected
 model definitions when loading checkpoints.
 
+### Original-model training costs
+
+[original-costs.json](training/original-costs.json) reports observed training
+GPU hours for the original-paper QHFlow2 sizes, with historical training
+throughput retained as evidence only (not an inference measurement). The
+[run manifest](training/original-runs.json) records W&B IDs, published checkpoint
+URLs and architecture/batch settings. The compressed
+[timing history](training/original-history.csv.gz) contains only the timing and
+step fields needed to reproduce the calculation, including duplicate API rows.
+
+```bash
+PYTHONPATH=src python -m reproduction.training_costs \
+  --history reproduce/training/original-history.csv.gz \
+  --runs reproduce/training/original-runs.json \
+  --output /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-stable-table-comparison-20261021/original-training-costs/recomputed.json
+```
+
+The histories cover 5,200 distinct training log points per model, from optimizer
+step 49 through 259,999. Identical API duplicates count once. A rollback in step
+or a change greater than 10 seconds in `timestamp - runtime` marks a resume;
+later resumes replace the overwritten tail of prior sessions. GPU hours sum
+the first-to-last training-event spans of retained sessions, including validation
+and checkpointing inside them. Startup, restart gaps, discarded tails, and later
+evaluation are excluded. The first 49 steps and gaps between session endpoints
+are not timed, so these are approximate observed costs rather than full allocation.
+
+Samples/s is processed molecules divided by elapsed time across consecutive
+50-optimizer-step intervals within the same epoch in the final retained session.
+This excludes epoch-boundary validation and includes checkpoint I/O inside valid
+windows. All original models used one GPU and effective batch 32; the published
+XL checkpoint has microbatch 8 and accumulation 4. The original run names and
+checkpoint architecture settings establish the associations. Later evaluation
+reused these W&B run IDs and overwrote the current config/metadata; its batch
+sizes, visible GPU count and overall runtime are not training evidence. Original
+GPU types cannot be reliably recovered from those current metadata files.
+Hardware may differ from the updated runs, so the table is not a matched-hardware
+comparison of optimization speedups. The original-paper H/E/F results are unchanged.
+
+## Inference speed
+
+The table separates **Inference samples/s (1-step)** and **(3-step)**. These
+cells remain dashes until measured on an exclusive GPU. Updated XL is still
+training and retains `(on train)`. Accuracy columns are still three-step results.
+
+The [checkpoint/cohort manifest](inference/benchmark-manifest.json) pins exact
+inputs and local paths (replace paths on another machine, preserving hashes).
+The frozen protocol uses all eight completed original/updated checkpoints,
+one H100 80GB, FP32 with high matmul precision, no torch.compile, batch 8,
+128 fixed seed-42 test molecules, one complete warmup sweep per step count,
+and three timed sweeps. Every model uses identical molecule order and batching.
+The original XL checkpoint is included; the unfinished updated XL is excluded.
+The small common batch makes this a comparison at a fixed batch size, not a
+claim about peak throughput attainable with model-specific batching.
+
+```bash
+PYTHONPATH=src python -m reproduction.inference_speed \
+  --manifest /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-inference-1step-3step-20261021/benchmark-manifest.json \
+  --output /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-inference-1step-3step-20261021/manual-measurements
+```
+
+Use a fresh output directory. `--validate` verifies the checkpoint and split
+hashes without using CUDA. `--cpu-smoke --model updated-s` checks the actual
+loading/sampling path; its timings are marked non-publishable. Only the
+checkpoint manifest's explicitly trusted original exports permit legacy pickle
+loading. Each original weight download is pinned to an immutable HF revision.
+
+For each step count, inference runs the actual flow sampler, including the
+prior, geometry and Hamiltonian-block predictions. Data is already on-device;
+loading, H2D transfers, batch cloning, full-matrix assembly, accuracy metrics,
+SCF and energy/force calculations are outside timing. CUDA is synchronized
+before and after each batch. The rate is 128 divided by the median total timed
+seconds per sweep. Raw per-batch/sweep timings and memory are saved, alongside
+checkpoint/source hashes, molecule IDs and GPU/runtime metadata. No step count
+is extrapolated from the other. O(3) identity/inversion work is included and each
+molecule counts once. This GPU benchmark has no CPU fallback or silent batch
+reduction. The prepared job waits if no GPU is exclusively available.
+
+### Accuracy display precision
+
+The image displays saved updated-model H/orbital metrics to three decimal
+places and recomputed SCF percentages to two. Original-paper accuracy values
+keep their source precision. [current-results.json](benchmark/current-results.json)
+preserves unrounded metrics, unit-scaled values and source/checkpoint evidence.
+The extra digits are a display change, not a new evaluation or an uncertainty
+estimate. Updated E/F and SCF cells stay missing until independently evaluated.
+
 ## SCF and DFT energy/forces
 
 ### Molecule identities and Figure 4 provenance
@@ -97,7 +183,8 @@ PYTHONPATH=src python -m reproduction.scf_metrics \
 
 This reproduces [recorded-300-summary.json](scf/recorded-300-summary.json).
 **SCF ratio (%)** is `100 × sum(N_model) / sum(N_MinAO)`; its reduction is
-`100 - ratio`. **ERIC** is the molecule-wise mean of `(N_model + 1) / N_MinAO`.
+`100 - ratio`. **ERIC (%)** is `100 × mean((N_model + 1) / N_MinAO)`.
+The summary retains the dimensionless `eric` value; the table multiplies it by 100.
 The +1 accounts for an initial Hamiltonian/Fock build, following the
 [ERIC convention](https://arxiv.org/html/2604.21657v1#S4), and is independent of
 the number of model ODE steps. ERIC is computed post hoc from saved counts;
