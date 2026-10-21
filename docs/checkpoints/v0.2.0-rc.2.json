@@ -19,7 +19,8 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar"
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-s/weights.ckpt"
     },
     {
       "model": "QHFlow2-O(3)-s",
@@ -38,7 +39,8 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar"
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt"
     },
     {
       "model": "QHFlow2-m",
@@ -57,7 +59,8 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar"
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt"
     },
     {
       "model": "QHFlow2-l",
@@ -76,8 +79,10 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar"
+      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt"
     }
   ],
-  "xl": "Training in progress; no benchmark checkpoint included."
+  "xl": "Training in progress; no benchmark checkpoint included.",
+  "huggingface_revision": "91fa3150d75d1d63bb69d4f81089bddbe7fd9000"
 }

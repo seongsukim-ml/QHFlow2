@@ -40,7 +40,7 @@ logger.info(f"Using torch.set_num_threads({NUM_THREADS})")
 torch.set_num_threads(NUM_THREADS)
 
 
-@hydra.main(config_path="../config_qh9", config_name="config_flow-cont-ft-wa")
+@hydra.main(config_path="../../archive/configs/qh9", config_name="config_flow-cont-ft-wa")
 def main(conf):
     # Validate QH9 fine-tuning configuration
     validate_qh9_finetune_config(conf)

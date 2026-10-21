@@ -57,28 +57,19 @@ basis defined in code. Psi4 and a working-directory `auxiliary.gbs` file are
 not required. Existing Q tensor shapes and orbital ordering are preserved.
 
 ## Directory and Files
-The project follows this directory structure:
+Current training and reproduction entrypoints are listed in [reproduce/README.md](reproduce/README.md).
+
+```text
+src/config_qh9/       Current release presets and original-checkpoint model definitions
+src/experiment/       Training entrypoints (train_release for the updated version)
+src/reproduction/     Checkpoint inference, molecule identity checks, SCF and DFT evaluation
+reproduce/            Protocol YAMLs, molecule lists, provenance and commands
+docs/                 Benchmarks, checkpoint metadata and release history
+archive/              Earlier configs, evaluation scripts and experiment notebooks
 ```
-.
-├── src/                       # Source code (run Python from here)
-│   ├── experiment/            # Entrypoints: train_md17, train_qh9, train_*_finetune
-│   ├── config_md17/           # MD17/rMD17 configs (config_flow-lw10, config_flow-lw10-wa)
-│   ├── config_qh9/            # QH9 configs (config_flow_v2_simple, config_flow-cont-ft-wa)
-│   ├── common/                # Shared setup, data utils, training utils
-│   ├── dataset_module/       # Dataset loaders and LMDB sharding
-│   ├── models/                # QHFlow / QHNet
-│   ├── pl_module/             # PyTorch Lightning modules
-│   ├── dft_process/           # DFT measurement and post-processing scripts
-│   ├── md/                    # MD simulation and SCF/MLFF utilities
-│   └── utils.py
-├── _experiment_scripts/       # Example training/prediction shell scripts
-├── _mlff_scripts/             # MLFF/DFT measurement scripts
-├── _data_scripts/             # Data processing and DB utilities
-├── dataset/                   # Data root (auto or manual download)
-├── requirements.txt
-├── ckpts/                     # Pretrained/finetuned checkpoints (or download from Drive)
-└── README.md
-```
+
+The [archive index](archive/README.md) explains how to recover historical commands.
+Archived configurations are excluded from the current training config search path.
 
 ## Dataset
 Datasets are provided via Google Drive. Download and place each dataset folder under `dataset/`.
@@ -142,99 +133,44 @@ Updated **2026-10-21** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-r
 
 - **Results and units.** Original-paper metrics, including QHNetV2, reproduce the supplied paper tables. QHFlow2 parameter counts follow the [checkpoint/config audit](docs/MODEL_CONFIGS.md); updated counts are trainable parameters (XL: initialized model). Updated results use the best validation checkpoint, seed 42, all **13,084** official QH9Stable random-split test molecules and **three ODE steps**. H, occupied orbital energies, HOMO, LUMO and GAP are in μEh; Sc is in percent. Original E/F values retain their source units; updated E/F and other unavailable values are shown as dashes.
 - **Model update.** Order fix + **gate change (spectral)** + Muon at **1e-3**; norm, embedding and other unsupported parameters use AdamW at **1e-4**. Updated S/M also enable the Hamiltonian-input path. **+ O(3) group averaging** denotes a separately trained QHFlow2-O(3)-s, using shared-weight identity/inversion averaging. These results combine architecture and training changes and are not a single-change ablation.
-- **Training cost and speed.** Measurements use H100 80GB GPUs and effective global batch 32. Train GPU hours approximate the retained checkpoint lineage's observed training time × GPU count, including validation/checkpointing within each segment, excluding startup, restart/queue gaps, discarded attempts/steps and final test evaluation. Samples / s is global molecule throughput: total samples / total elapsed time over consecutive 25-step training log windows within each epoch of the final run, including checkpoint I/O in those windows and excluding validation boundaries. O(3) molecules are counted once. Final configurations: S/O(3)-S/M **1 GPU**, L **2 GPUs**, XL **4 GPUs**; L's GPU hours include its earlier 1-GPU phase.
-- **XL in progress (\*).** The XL cost/speed values are partial measurements through **step 1,250**, recorded at **2026-10-21 18:46 KST**. Its benchmark metrics and checkpoint are pending. The completed S/O(3)-S/M/L runs each reached 260,000 steps; their packaged weights come from validation-selected step 258,409.
+- **Training cost and speed.** Figures are temporarily withheld; `(on train)` is a provisional reporting label in these columns. S/O(3)-S/M/L training is complete, and the recorded measurements are retained for a later update.
+- **Checkpoint status.** S/O(3)-S/M/L each completed 260,000 steps; their packaged weights come from validation-selected step 258,409. XL is still training, with benchmark metrics and its checkpoint pending.
 
 ### Updated checkpoints
 
-The four completed checkpoints are attached to the **v0.2.0-rc.2 draft Release**.
-The download links below become public when the release is published after code review and push.
-Each archive contains `weights.ckpt`, exact configuration, test metrics, source metadata,
-a checkpoint license notice and SHA-256 checksums. Weights match the benchmark checkpoints
-exactly; optimizer state is excluded, so these files are for inference rather than exact training continuation.
+The four completed checkpoints are available now on
+[Hugging Face](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main/QH9Stable-random/v0.2.0-rc.2).
+Each model folder contains unchanged inference weights, the exact saved training config,
+metrics, provenance, license and checksums. Optimizer state is excluded.
+GitHub archive copies remain in the **v0.2.0-rc.2 draft Release** pending review and publication.
 
-| Model | Checkpoint archive |
+| Model | Hugging Face weights |
 | --- | --- |
-| QHFlow2-s | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar) |
-| QHFlow2-s + O(3) group averaging | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar) |
-| QHFlow2-m | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar) |
-| QHFlow2-l | [Download](https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar) |
+| QHFlow2-s | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-s/weights.ckpt) |
+| QHFlow2-s + O(3) group averaging | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt) |
+| QHFlow2-m | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt) |
+| QHFlow2-l | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt) |
 
 See [checkpoint metadata and loading instructions](docs/releases/v0.2.0-rc.2-checkpoints.md).
-The existing Google Drive links above contain the original checkpoint collection.
+The original 16 QH9 checkpoints remain available in the [same Hugging Face repository](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main), alongside the Google Drive collection.
 
-## Usage
+## Reproduction
 
-### Prerequisites
-All commands should be run from the `src` directory.
+Use the [reproduction guide](reproduce/README.md) for the current training presets,
+checkpoint inference and the [SCF / energy-force protocol](reproduce/README.md#scf-and-dft-energyforces).
+The five release presets match the recorded final S, O(3)-S, M, L and XL training configurations.
+Muon starts at 1e-3 and AdamW at 1e-4; global batch size is 32.
 
-### Available Datasets:
-- **MD17 DATASET**: `ethanol`, `malondialdehyde`, `uracil`, `water`
-- **RMD17 DATASET**: `rmd-aspirin`, `rmd-naphthalene`, `rmd-salicylic_acid`
-- **QH9 DATASET**: `QH9Stable`, `QH9Dynamic`
-  - **QH9Stable SPLIT (dataset.split)**: `random`, `size_ood`
-  - **QH9Dynamic SPLIT (dataset.split)**: `geometry`, `mol`
+For **Relative reduction of SCF cycles on QH9**, the
+[molecule list](reproduce/scf/recorded-300.csv) links all 300 recovered March 2026
+re-experiment samples to original QH9 indices and molecular formulas. The
+[provenance note](reproduce/scf/provenance.json) distinguishes these verified records
+from Figure 4 of the original paper, whose exact source cohort remains unverified.
+The [paired cycle records](reproduce/scf/recorded-300-cycles.csv) cover six models.
 
-### Tips
-
-**Training Tips:**
-- You can enable Weights & Biases logging with `wandb.mode=online`
-- Training automatically resumes when interrupted
-- Use `CUDA_VISIBLE_DEVICES` to specify GPU devices: `CUDA_VISIBLE_DEVICES=0,1 python -m experiment.train_md17 dataset=water`
-
-**Performance Tips:**
-- For faster training, you can use multiple GPUs. For example, `CUDA_VISIBLE_DEVICES=0,1,2,3` with `strategy=ddp devices=4`
-- Monitor GPU memory usage and adjust batch size if needed
-
-**Debugging Tips:**
-- Check logs in the `logs/` directory for detailed training information
-- Monitor validation metrics to ensure proper training progress
-
-### Train
-
-Detailed train/predict scripts are in `_experiment_scripts/`.
-
-```bash
-python -m experiment.train_md17 dataset=${DATASET}
-python -m experiment.train_qh9  dataset=${DATASET} dataset.split=${SPLIT}
-```
-
-**Examples:**
-
-```bash
-# Train MD17 model
-python -m experiment.train_md17 dataset=ethanol wandb.mode=online
-
-# Train QH9 model
-python -m experiment.train_qh9 dataset=QH9Stable dataset.split=random wandb.mode=online
-```
-
-### Prediction (Saving the Output)
-
-This mode is used to predict test files and save individual Hamiltonian matrices for each sample. The predictions are saved to disk for further analysis.
-
-**Output Format:**
-- Hamiltonian matrices are saved as individual files
-- Each prediction corresponds to a test sample
-- Files are organized by dataset and model configuration
-
-```bash
-python -m experiment.train_md17 mode=predict dataset=${DATASET} ckpt=${CKPT}
-python -m experiment.train_qh9 mode=predict dataset=${DATASET} dataset.split=${SPLIT} ckpt=${CKPT}
-```
-
-**Examples:**
-```bash
-# MD17 prediction
-python -m experiment.train_md17 mode=predict dataset=water ckpt=../ckpts/md17/water/checkpoints/weights.ckpt
-
-# QH9 prediction
-python -m experiment.train_qh9 mode=predict dataset=QH9Stable dataset.split=random ckpt=../ckpts/QH9Stable/random/checkpoints/weights.ckpt
-```
-
-**Output Location:**
-- Predictions are typically saved in the `outputs/` directory
-- Each run creates timestamped subdirectories for organization
+DFT evaluation records explicit functional, basis, overlap policy, grid/gradient options,
+input/checkpoint hashes, package versions, per-molecule results and failures.
+Original-paper E/F values are preserved; this cleanup does not claim a new full-test evaluation.
 
 ## Version History
 
@@ -242,7 +178,7 @@ python -m experiment.train_qh9 mode=predict dataset=QH9Stable dataset.split=rand
 
 Completed Stable/Muon benchmarks and checkpoint bundles for QHFlow2-s/m/l and
 QHFlow2-s + O(3) group averaging; XL is training on four GPUs. The benchmark
-image includes measured training cost and throughput. Validated compute
+image reserves columns for training cost and throughput. Validated compute
 optimizations and selective torch.compile preserve checkpoint state keys;
 see the [compute report](docs/releases/v0.2.0-rc.2.md) and
 [geometry follow-up](docs/releases/v0.2.0-rc.2-geometry.md).

@@ -1,0 +1,810 @@
+{
+  "source_commit": "6176e9f967db8e4d997f24654016d513f9b0c354",
+  "note": "Credential strings were removed from two legacy shell scripts before archival. Other bytes are preserved. Historical scripts may contain machine-specific paths.",
+  "files": [
+    {
+      "original": "src/config_qh9/config_flow-cont-10lw-no-time_new.yaml",
+      "archive": "archive/configs/qh9/config_flow-cont-10lw-no-time_new.yaml",
+      "sha256": "94ca8e239b972453d94891397b96e0d79cd73e82b827d8beba10da5f1d70e051",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/config_flow-cont-10lw.yaml",
+      "archive": "archive/configs/qh9/config_flow-cont-10lw.yaml",
+      "sha256": "9a934048c6bb9bb67592b9d768053dd74079ea23e4ef4f85ca80d4c3b8518c9b",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/config_flow-cont-ft-wa.yaml",
+      "archive": "archive/configs/qh9/config_flow-cont-ft-wa.yaml",
+      "sha256": "3a429d5f6a9fb537810046eb8758daab939d06d7dde8d328978a8d31d71ad1ad",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/config_flow_v2_simple.yaml",
+      "archive": "archive/configs/qh9/config_flow_v2_simple.yaml",
+      "sha256": "ac0b2c49a0d09451aa46004fe9d9a84c76cdaa7ea6969bba801dca19ba5af020",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/config_flow_v2_simple_wa.yaml",
+      "archive": "archive/configs/qh9/config_flow_v2_simple_wa.yaml",
+      "sha256": "19f2c4f93d78ece65eb8cb4691022341812eb385d2a9301b0f87510d90ad6e71",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/config_stable_muon.yaml",
+      "archive": "archive/configs/qh9/config_stable_muon.yaml",
+      "sha256": "b9fba650c9b6b1c70e3c51be0aa312ffc8a828a48737e18f9f67f7698fa53363",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/config_stable_muon_optimized.yaml",
+      "archive": "archive/configs/qh9/config_stable_muon_optimized.yaml",
+      "sha256": "ab1e51ab4df01f10072a83203eaf047fce3a8c0561e90e9245bbfcb4c808ef4e",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/config_stable_muon_optimized_o3.yaml",
+      "archive": "archive/configs/qh9/config_stable_muon_optimized_o3.yaml",
+      "sha256": "325f38f5ff91ac15af69ed6fb67ddb301c9f3ac7af4171c8a457ee19c207df35",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/dataset/QH9Dynamic.yaml",
+      "archive": "archive/configs/qh9/dataset/QH9Dynamic.yaml",
+      "sha256": "52658bb30050c337c327c50656140fca974087f74df21a8369b94193aeef7695",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/dataset/QH9Dynamic_mol.yaml",
+      "archive": "archive/configs/qh9/dataset/QH9Dynamic_mol.yaml",
+      "sha256": "090611b6155445b2aa0228e793cee6b811e714787d2bf8114f6b2384aa0e5a73",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/dataset/QH9Stable.yaml",
+      "archive": "archive/configs/qh9/dataset/QH9Stable.yaml",
+      "sha256": "d5549e9938beefff25aefe7bfbe35bd8237e007fc8a0715d392dd5c4e01daee6",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/dataset/QH9Stable_ood.yaml",
+      "archive": "archive/configs/qh9/dataset/QH9Stable_ood.yaml",
+      "sha256": "afb0f18de4fcbc4db71941390950aa928f94f08a6bbff549faf8204cfa609314",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow.yaml",
+      "sha256": "8126011fabd4d48b96dae9f08b6d1a0a2bb085c921314a238e58dad631ce3575",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_O3_l.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_O3_l.yaml",
+      "sha256": "16c7251271c105671243d9dffd7048a7daeac2c286f26568aca773b23adfba2b",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_O3_m.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_O3_m.yaml",
+      "sha256": "e1c25b487a004bc22dfa675259056f55e8464b49b9cc397a884f5521d840b37b",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_O3_s.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_O3_s.yaml",
+      "sha256": "fdbd97e12ec2c91747f2b29ea16d721bfef316ab3d268acea4fda84ed5e926c8",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_O3_xl.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_O3_xl.yaml",
+      "sha256": "409bff8700d2f7b5aa19d4fb84be592c0069999a8183dd3a486c3d48ef88570e",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_l.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_l.yaml",
+      "sha256": "f54717185a5a5d5746c39daac09db2286b811884094953146aa2a4c75fc60d72",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_m.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_m.yaml",
+      "sha256": "d222de8d74b7198d804e7cb0017ec7133a017e2306b3cf2d71dddbaf890a32da",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_s.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_s.yaml",
+      "sha256": "568db2db333c0ca1a55ff9dac8ba497c77d91b3bbf03b4f02ee732e1f1040865",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow2_xl.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow2_xl.yaml",
+      "sha256": "b47dbca5c254796ac042ad6dd08b5a342db4a13ac177d5623539a68cfaa44e16",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1.yaml",
+      "sha256": "97e6db0178c876a50e498df98dbdcf40d2016b62a639f24e88d464f98c38a357",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_extra_large.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_extra_large.yaml",
+      "sha256": "78e7ba981bf5e8c0d0d672aaec6dbfc8af4bbd4d67b81f045cf5780f80536295",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_large.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_large.yaml",
+      "sha256": "98fad3f415624a6b6f954e0a8514352612b0bba6518b695eebe762f2a8529e9d",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle.yaml",
+      "sha256": "9b3a934b19d78b65c206c6a8e03d68fe56ed2219f608421374047629750c4f1b",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle_SO2.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle_SO2.yaml",
+      "sha256": "4b85c6d7a4927c735a27ccf7f1fbc38a19b4f391f814473dce019453b8101e42",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle_SO3.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle_SO3.yaml",
+      "sha256": "dc892eef34f82166701d5659b537b8909250c66d15b0619cafac948765df222f",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle_no_t.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle_no_t.yaml",
+      "sha256": "b24826040a59f49c50a6bac3b254ebc1075dfdf16eb80069bd332b83930960af",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle_no_t_SO2.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle_no_t_SO2.yaml",
+      "sha256": "dd02b3160f909f828332eeffc210f3577e53f6f5abb09b70948934aacff8fd31",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_middle_no_t_SO3.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_middle_no_t_SO3.yaml",
+      "sha256": "231e006d06ff68c22259a35bba746bd7cf523f1dfb43aa65439d7d639e2487d3",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_ordering_fixed_small.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_ordering_fixed_small.yaml",
+      "sha256": "a21689236cc5297b99fee9a2804213fc3070f140601e8b5fac73a6508d5be9a8",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/model/QHFlow_so2_v5_1_small.yaml",
+      "archive": "archive/configs/qh9/model/QHFlow_so2_v5_1_small.yaml",
+      "sha256": "751200a9d7b9f15803fb731bb53c93d206ed78870033c0a25b830ee94c3b51f6",
+      "retained_active": true
+    },
+    {
+      "original": "src/config_qh9/model/QHNet.yaml",
+      "archive": "archive/configs/qh9/model/QHNet.yaml",
+      "sha256": "712e4bc74a52cedd2067b08e3fd10727965d5b44fdd6f068f03308a6ad0c6cea",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/qhnet-residual.yaml",
+      "archive": "archive/configs/qh9/qhnet-residual.yaml",
+      "sha256": "22f5bf2d916a1d4c4b0aa42418141d27b0f62bb0295645b2e43cdba482771567",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_qh9/qhnet.yaml",
+      "archive": "archive/configs/qh9/qhnet.yaml",
+      "sha256": "6982f262181cb1621eadf88c565650479cc697a97bf0794f0bf6827169e3797c",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/config_base.yaml",
+      "archive": "archive/configs/md17/config_base.yaml",
+      "sha256": "1ee9f7b0d6b58d2618632c9eb3bca65201c898f0212231f309cd93e7bc3dc865",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/config_flow-lw10-wa.yaml",
+      "archive": "archive/configs/md17/config_flow-lw10-wa.yaml",
+      "sha256": "ebfe197bc882d63c44003725a06c636e83a053e906149aed3d9f0ef258725714",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/config_flow-lw10.yaml",
+      "archive": "archive/configs/md17/config_flow-lw10.yaml",
+      "sha256": "5d2c291b9173c8d4105051d62e8eb05b55cd5efa642f351448cfd3ca78a80612",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/ethanol.yaml",
+      "archive": "archive/configs/md17/dataset/ethanol.yaml",
+      "sha256": "1a0d1b201e34e43482945ef8c15746ae2fb70f13295c83e147b929f77477075d",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/ethanol_shard.yaml",
+      "archive": "archive/configs/md17/dataset/ethanol_shard.yaml",
+      "sha256": "8afc45b7b0df598453fde49c39e2f68b9ec1758aa7ec9c83daa7480102c0e066",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/malondialdehyde.yaml",
+      "archive": "archive/configs/md17/dataset/malondialdehyde.yaml",
+      "sha256": "c67419bce023615bc18bb1280ce68eb311c5d508e138057cc6a3bb79a5605714",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/malondialdehyde_shard.yaml",
+      "archive": "archive/configs/md17/dataset/malondialdehyde_shard.yaml",
+      "sha256": "868a18700794bff8ac23b6be175007035f543b7b63c14027080e13a37d8051a4",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/rmd-aspirin.yaml",
+      "archive": "archive/configs/md17/dataset/rmd-aspirin.yaml",
+      "sha256": "28fbb91ff389e008e28cd6c0a8a7202503f18beab4d3b8fb3d6bee9e1ff0c58c",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/rmd-ethanol.yaml",
+      "archive": "archive/configs/md17/dataset/rmd-ethanol.yaml",
+      "sha256": "99f473e103ae171391245e48252e52e5448a2ff5be12b48e2d64a75b6215d2b0",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/rmd-naphthalene.yaml",
+      "archive": "archive/configs/md17/dataset/rmd-naphthalene.yaml",
+      "sha256": "0eb8a5bd7ea5406d8e3aa3018cd66a51f78f55dbd4b3dba744bf45dcd8c87ec4",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/rmd-salicylic_acid.yaml",
+      "archive": "archive/configs/md17/dataset/rmd-salicylic_acid.yaml",
+      "sha256": "73f0ac184d53bcbad60f45e0f7b4d1aa622041c855e20a503e9de26658a104c6",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/uracil.yaml",
+      "archive": "archive/configs/md17/dataset/uracil.yaml",
+      "sha256": "b1f9b91efcc588fed230d6c65ac6b45de85b725507f6a3b0ac98487c999b29c0",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/uracil_shard.yaml",
+      "archive": "archive/configs/md17/dataset/uracil_shard.yaml",
+      "sha256": "27f5ba1eb7bdf2dba272f3dbbeb581d6e5052d54138891edac267a57f6cc6a03",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/water.yaml",
+      "archive": "archive/configs/md17/dataset/water.yaml",
+      "sha256": "2b12a53d5c24a2952a31e917acfab53123659681ea1f1e0dcf4d50c9df634ef0",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/dataset/water_shard.yaml",
+      "archive": "archive/configs/md17/dataset/water_shard.yaml",
+      "sha256": "f6d38a875533df3a52a7cd4de380aa77988fd0e15887ae43ffeb5193417c7d3e",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHFlow.yaml",
+      "archive": "archive/configs/md17/model/QHFlow.yaml",
+      "sha256": "97f3ea7a220f72491bfd2a98fa275af1dcdcf7ca074de0dcbb6bbb16ada190df",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHFlow_rmd.yaml",
+      "archive": "archive/configs/md17/model/QHFlow_rmd.yaml",
+      "sha256": "eb9dcb761ff8c7c6726e160792cd0a6c53c0f3ffeb970ce96b301caf534c727b",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHFlow_so2_v5_1.yaml",
+      "archive": "archive/configs/md17/model/QHFlow_so2_v5_1.yaml",
+      "sha256": "647d3158f4c74bea1af9dc6a99896cdd78584c94379a100e83559a445e2c6a25",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHFlow_so2_v5_1_ordering_fixed_small.yaml",
+      "archive": "archive/configs/md17/model/QHFlow_so2_v5_1_ordering_fixed_small.yaml",
+      "sha256": "ba8303a5c3b7fc0431bcd439d49c722970f8871895d61820ab01b7c3007e0bb0",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHFlow_so2_v5_1_small_v2.yaml",
+      "archive": "archive/configs/md17/model/QHFlow_so2_v5_1_small_v2.yaml",
+      "sha256": "f7a81d334d7ae979aab3cbf38f7f05f029da62b4ea414dd783e7ef6bd178f05e",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHNet.yaml",
+      "archive": "archive/configs/md17/model/QHNet.yaml",
+      "sha256": "fa2890f276abaa44a45dbc45653044e7408b60e8a35ff82de77df6280ea869de",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/model/QHNet_rmd.yaml",
+      "archive": "archive/configs/md17/model/QHNet_rmd.yaml",
+      "sha256": "66ac0bdfacb50549317f4eaeaa4174f87a2f538ada42350a7dfcf34aed25aba6",
+      "retained_active": false
+    },
+    {
+      "original": "src/config_md17/qhnet.yaml",
+      "archive": "archive/configs/md17/qhnet.yaml",
+      "sha256": "9d6f01fee4f5f5e6da6d3e5938c1610bfda80fed400f825c6e5d1bc5e0fbe2f4",
+      "retained_active": false
+    },
+    {
+      "original": "_experiment_scripts/train_script_md_rmd_b10.sh",
+      "archive": "archive/legacy/_experiment_scripts/train_script_md_rmd_b10.sh",
+      "sha256": "5bb6cd2850af4294a50d72a6cc2da14607b009c280c2f0d96ed7ec29acac3ab2",
+      "retained_active": false
+    },
+    {
+      "original": "_experiment_scripts/train_script_rmd_b10_train_scale.sh",
+      "archive": "archive/legacy/_experiment_scripts/train_script_rmd_b10_train_scale.sh",
+      "sha256": "08012c705bcf63720c8a7470dfa0a855f2960203db6f1bc47f130de902ae204d",
+      "retained_active": false
+    },
+    {
+      "original": "_experiment_scripts/train_scripts_baseline.sh",
+      "archive": "archive/legacy/_experiment_scripts/train_scripts_baseline.sh",
+      "sha256": "e1cf04c0757fc47fae3774c4f044e2520c18b6a37c8de4fc421364d7bb049b78",
+      "retained_active": false
+    },
+    {
+      "original": "_experiment_scripts/train_scripts_qm9_qhflow2.sh",
+      "archive": "archive/legacy/_experiment_scripts/train_scripts_qm9_qhflow2.sh",
+      "sha256": "b0256d796ef2b99910f7b151a49d02ae2746af8dbe73e36deda1071f0fca542d",
+      "retained_active": false
+    },
+    {
+      "original": "_mlff_scripts/README.md",
+      "archive": "archive/legacy/_mlff_scripts/README.md",
+      "sha256": "ec39ac1062db4d779867fb20b65a5effa8f5f3001726098ddb2f2a7a545a7163",
+      "retained_active": false
+    },
+    {
+      "original": "_mlff_scripts/dft_measure_QH9.sh",
+      "archive": "archive/legacy/_mlff_scripts/dft_measure_QH9.sh",
+      "sha256": "c980c88a6c1009e88b20377da81ee51b191e6c39c726c20de0f07feaaa3e3688",
+      "retained_active": false
+    },
+    {
+      "original": "_mlff_scripts/dft_measure_md17.sh",
+      "archive": "archive/legacy/_mlff_scripts/dft_measure_md17.sh",
+      "sha256": "a882918f9363e84c5c2b6f1b690c27e495abce8c6f77f7611df98e0e08eb1cad",
+      "retained_active": false
+    },
+    {
+      "original": "_mlff_scripts/dft_measure_rmd17.sh",
+      "archive": "archive/legacy/_mlff_scripts/dft_measure_rmd17.sh",
+      "sha256": "60825991c22a1c5166a31cb8b722b7fad747560f096096539a2a837b3f66db60",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/README.md",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/README.md",
+      "sha256": "196621811e65ad6fb59d1fa42ce582b52f5f4f6d9ea86c89d169038115e394a6",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/README_compute.md",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/README_compute.md",
+      "sha256": "a5623022c64100ddb08d7704aacbdc867f342c31521acfa1e83ba1182fa8e7af",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/benchmark_compute.py",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/benchmark_compute.py",
+      "sha256": "57341626f5fdfc371a54673721856ec9804743bf7d0014bfc5d121c5767ae5bf",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-benchmark.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-benchmark.json",
+      "sha256": "65a23615b70a6a4d3ba245b7eab292f35c23e98b7389592eefa35554811e111a",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-compile-blocks.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-compile-blocks.json",
+      "sha256": "486aabc0a4d4c955d5040c0f27508828f6be18cd9927eedafbda333cd7e44f65",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-compile.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-compile.json",
+      "sha256": "85e11e277ccf30792e6e9cceb7a2c3dd6ab597e2295fcf348a80e1571ca55a4b",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-dynamic-compile.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-dynamic-compile.json",
+      "sha256": "05396bcbf73b74e89e7c54e0483c2a507c2e672aab87702c588c2a9090479df0",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-final-parity.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-final-parity.json",
+      "sha256": "78e886a2e5a03f8d561f55760b9a59314ec4a12879da79cd2460c3084ef523ec",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-full.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-full.json",
+      "sha256": "40ccf9c6e519ed672c6eb91d10e5636be810c8c9c7901e4e5301d03f77655324",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-geometry.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-geometry.json",
+      "sha256": "15b0530c0dd96fa59027ad80a813a04c757aefcd24d98bf9c9cae0f61402b94a",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/queue-smoke.json",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/queue-smoke.json",
+      "sha256": "66e7d79c67acc45c1f95fd5b58fd7ddf07619fc43cf8823f79d972b4d92bbce0",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/run_optimized_resume.py",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/run_optimized_resume.py",
+      "sha256": "50a91dca0b4a709cad6547da82a6e949c78e6cf98604cee461cc8def90837b35",
+      "retained_active": false
+    },
+    {
+      "original": "_my_script/experiment/2026-10-16/run_stable_muon.py",
+      "archive": "archive/legacy/_my_script/experiment/2026-10-16/run_stable_muon.py",
+      "sha256": "38aab70f1d0a08eee81cbb8fc2b07b4a63599fadc8b174148fe01113ad49dae7",
+      "retained_active": false
+    },
+    {
+      "original": "_auto_script/README_geometry.md",
+      "archive": "archive/legacy/_auto_script/README_geometry.md",
+      "sha256": "ad971c1f4b31f0d5f19d3593cb1eb5d229207c9852098c35988b3e338ebb159b",
+      "retained_active": false
+    },
+    {
+      "original": "_auto_script/benchmark_geometry.py",
+      "archive": "archive/legacy/_auto_script/benchmark_geometry.py",
+      "sha256": "dd62a5d0ee28f678d8a479283382ab7cd1b47e882583d28b1faa6cb43bf2e847",
+      "retained_active": false
+    },
+    {
+      "original": "_auto_script/report_geometry.py",
+      "archive": "archive/legacy/_auto_script/report_geometry.py",
+      "sha256": "0cfa194ab49b4f5f57a86696e31fce4e226410fbfdb03d3223a9bf4a6cba4c71",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/__init__.py",
+      "archive": "archive/legacy/src/dft_process/post_process/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/dft_measure_script.sh",
+      "archive": "archive/legacy/src/dft_process/post_process/dft_measure_script.sh",
+      "sha256": "2e003a6fd54fee411510400350a68de49c1ef6710558c9475f40f84bb2581146",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/md17_measure_energy_force_uma.py",
+      "archive": "archive/legacy/src/dft_process/post_process/md17_measure_energy_force_uma.py",
+      "sha256": "2fbbb53464663f4e5a975cd26eb5bb9a2fac78c906588adcaccd7332f088b4db",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/md17_measure_energy_force_uma_v2.py",
+      "archive": "archive/legacy/src/dft_process/post_process/md17_measure_energy_force_uma_v2.py",
+      "sha256": "944c83a80d152bb3f548238997c4bfb15dc1b34a8e75609faf8d3760782ee0ac",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/md17_measure_energy_force_uma_v3.py",
+      "archive": "archive/legacy/src/dft_process/post_process/md17_measure_energy_force_uma_v3.py",
+      "sha256": "40c51a9fefbc938fcde22ad79e5d6c76d62dfc7d5bdf55f3ea755cd7024a733d",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma.py",
+      "sha256": "0f65fac5da224bd1f18414bcab910dfe0564cb20181aaeb75860c690b5d659f0",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_gpu_v3.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_gpu_v3.py",
+      "sha256": "d97c6674532e8e448b740125ce7ab8ccfc051fac537183a781d96d704f7d50e8",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_gpu_v4.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_gpu_v4.py",
+      "sha256": "b6cc1b2febb4c72e0f0a98ec0c80d79643e32c443bb62c8c809b02dde3c20ae1",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_gpu_v5.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_gpu_v5.py",
+      "sha256": "a162fe09ce077ffb5149b8dca0d0f56dc0137ada7f6193beefaf8bb9081d0975",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_v2.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_v2.py",
+      "sha256": "c076c93d3f2338485b0b1c02beb24113877157a5d5cf95375cfb5047f9c443a3",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_v3 copy 2.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_v3 copy 2.py",
+      "sha256": "56765f2a3e32972e6a54d616366551c5422d2698f51dc28cb55059d0c0c86e64",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_v3 copy.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_v3 copy.py",
+      "sha256": "2b8066f560db17d98435012b6683bccff439687f6084d3aa0ca7ff2ca86f96ac",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/post_process/measure_energy_force_uma_v3.py",
+      "archive": "archive/legacy/src/dft_process/post_process/measure_energy_force_uma_v3.py",
+      "sha256": "87017c0cfdb81b9b34bf46bf709d728098b3c2a479a5e8fba35ea9f19dac1222",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/auxiliary.gbs",
+      "archive": "archive/legacy/src/md/test_script/auxiliary.gbs",
+      "sha256": "f055266326915fab0bcf9bf2d51e6da084601e18f7f5004f052e321e4abf1c37",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test.ipynb",
+      "sha256": "c1f48688514deb89c04cb3e3d90dd8f4d55ef70a3a4a0bce3136287fab01205d",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test.py",
+      "archive": "archive/legacy/src/md/test_script/dft_test.py",
+      "sha256": "76d948d35fed7de0b211b0b509305b1d9a7007e46713864c4665836aacb77370",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test2.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test2.ipynb",
+      "sha256": "70669dfe72637ee33e4b3481906b1c0b73b06bb524abf962b758127a549ff5f5",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test3.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test3.ipynb",
+      "sha256": "444774665c3dd8e9cd323bce8101fe1399ec63741b7bd6d05cea5444d0fece7c",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test3_gpu copy.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test3_gpu copy.ipynb",
+      "sha256": "8a8420ae3941838d0419d5697a77025f1811ee57f9f529cbfeedacbbd575f53e",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test3_gpu_qh9.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test3_gpu_qh9.ipynb",
+      "sha256": "f4326822a1cb93c29732dc31ae0d3397a4dfaca65f5db6ba076deea13876e16e",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test3_gpu_qh9_2.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test3_gpu_qh9_2.ipynb",
+      "sha256": "77ad7fcd78001115ef7cb44bd65c940959de2400ef1e3e7cceb07acc3063c9bf",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test_sal.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test_sal.ipynb",
+      "sha256": "787f16fe3ae5a1ab89d641d84d72d0c13a6c63c2975c5430a59bc913ad9661f5",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/dft_test_sal2.ipynb",
+      "archive": "archive/legacy/src/md/test_script/dft_test_sal2.ipynb",
+      "sha256": "f4d2dfdbad9a9693fe1bbd5410f42291bd366aeba8518a7694095fa2279a1a7b",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/ethanol-OH-gpu copy.ipynb",
+      "archive": "archive/legacy/src/md/test_script/ethanol-OH-gpu copy.ipynb",
+      "sha256": "a43a0700f7062e59a6f9d670ea0222e54ae2a82b382487183bdeca2fd3b5f523",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/ethanol-OH-gpu-experiment.py",
+      "archive": "archive/legacy/src/md/test_script/ethanol-OH-gpu-experiment.py",
+      "sha256": "2f04d98d270de87bb7019022f32135464f54b14e0473c59904813779df18ae2a",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/extract_important_values.py",
+      "archive": "archive/legacy/src/md/test_script/extract_important_values.py",
+      "sha256": "fd234952ac54e97303c8820a95d587c8952638184780255502ccbd7e2d59f14d",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/open_trajectory.ipynb",
+      "archive": "archive/legacy/src/md/test_script/open_trajectory.ipynb",
+      "sha256": "67d9c4f4d0613ed45b04dd07aa6f9d244c5651533b22dd550fa374bb0bcb63d4",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_dft_no_gpu_energies.npy",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_dft_no_gpu_energies.npy",
+      "sha256": "1de7a269bf51d7dc8f6acca4cada0b79ca5c9b58dbb3dfddd01d26599c57a16c",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_dft_no_gpu.png",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_dft_no_gpu.png",
+      "sha256": "3bbb3117e1b07a751c330f6667746ca75c6d1aeca52f97857e4ca14cee369ffc",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_dft_no_gpu_exclude.png",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_dft_no_gpu_exclude.png",
+      "sha256": "854a827522a645a0a754bb8982bdb4efae642f272800b5e230db8a6a795a7e33",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_scflow.png",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_scflow.png",
+      "sha256": "881e94cf85be9365b3456e3810fc99ded36f76c8757a38ecb0c1e96c34478f05",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_scflow_exclude.png",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_dissociation_curves_scflow_exclude.png",
+      "sha256": "95d2cbd2070db05742f0ad886cdabae12559d5b22efc3ae7b94c2dad7dcd6860",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/outputs_no_gpu/v1/ethanol_scflow_energies.npy",
+      "archive": "archive/legacy/src/md/test_script/outputs_no_gpu/v1/ethanol_scflow_energies.npy",
+      "sha256": "a37bbe48150b4cd5d647339d741a8af64c9c1dbcf7959805bedb309d6c08ba81",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/rmd-salicylic_acid_sample.json",
+      "archive": "archive/legacy/src/md/test_script/rmd-salicylic_acid_sample.json",
+      "sha256": "ca7e160fc710c18a1556d71a1f009840a41f93a2b45cae6795c8f1ccdb61074d",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/scf_reduction.py",
+      "archive": "archive/legacy/src/md/test_script/scf_reduction.py",
+      "sha256": "e864ddd61d76563620739e10836b30f7bd8e8e25b38318f57c304df7d984f2c6",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/size_transferability.py",
+      "archive": "archive/legacy/src/md/test_script/size_transferability.py",
+      "sha256": "db8a57b01e8136054a67f88a2779d063a660278e1f24e4736ff4fb5243c34cc9",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/test_analysis/analysis.ipynb",
+      "archive": "archive/legacy/src/md/test_script/test_analysis/analysis.ipynb",
+      "sha256": "194c1f4875a320d8014a1f9e6da2838398ca32d48bf66cff8ee1bc0013fded8f",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script/test_analysis/analysis.py",
+      "archive": "archive/legacy/src/md/test_script/test_analysis/analysis.py",
+      "sha256": "4bda38ce2797fbd21a3c318fc37da5305afb618ef30e574ae2704b5de0e0e6d6",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon.py",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon.py",
+      "sha256": "a57f6ee814abd62e8e21fd8145b2f9335049d573717b1a06aa1f8b47278e754a",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon_DFT_traj_MLFF.py",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon_DFT_traj_MLFF.py",
+      "sha256": "4a704179956e9cb5cce8f117d9caa1012fa8cabde94c972a70a558e65b5e2609",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon_DFT_traj_QHFlow.py",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon_DFT_traj_QHFlow.py",
+      "sha256": "35c22a0f07b4452a578efb30762cbe1524d442ddbeef74647bb2105bf4f4ead9",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon_qhflow.py",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon_qhflow.py",
+      "sha256": "60f60873cab7024abe0f556c2c9aa568a691720395a0bcc496d64cd572c0f642",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon_scan_frames.xyz",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon_scan_frames.xyz",
+      "sha256": "531db825df4a96df7a6ffec636dfef1802b763b764c9a02bae2361d540722203",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/malon/malon_scan_frames_org.xyz",
+      "archive": "archive/legacy/src/md/test_script_2/malon/malon_scan_frames_org.xyz",
+      "sha256": "531db825df4a96df7a6ffec636dfef1802b763b764c9a02bae2361d540722203",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/results_malon_qhflow_single_point/malon_energies_single_point.npy",
+      "archive": "archive/legacy/src/md/test_script_2/results_malon_qhflow_single_point/malon_energies_single_point.npy",
+      "sha256": "8fd37fa860a8c4b769ec4bc7e11627a9e28a0c736a1312917cae628658435fc6",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/results_malon_qhflow_single_point/malon_rOH_single_point.npy",
+      "archive": "archive/legacy/src/md/test_script_2/results_malon_qhflow_single_point/malon_rOH_single_point.npy",
+      "sha256": "c3732877590ebde33c4a738b1474ebd49b9d08adbf0afd538e3b0bd0d78bd478",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_2/results_malon_qhflow_single_point/malon_scan_qhflow_single_point.png",
+      "archive": "archive/legacy/src/md/test_script_2/results_malon_qhflow_single_point/malon_scan_qhflow_single_point.png",
+      "sha256": "e0160a4b57164651420b134fe5e1e8e1203602d547a974f2da0da68445535cb0",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_3/auxiliary.gbs",
+      "archive": "archive/legacy/src/md/test_script_3/auxiliary.gbs",
+      "sha256": "f055266326915fab0bcf9bf2d51e6da084601e18f7f5004f052e321e4abf1c37",
+      "retained_active": false
+    },
+    {
+      "original": "src/md/test_script_3/inference_time_report.py",
+      "archive": "archive/legacy/src/md/test_script_3/inference_time_report.py",
+      "sha256": "10f58b210609f691ebf15960f4f0227ac44264b19cb43345d32ab8ad9488eb68",
+      "retained_active": false
+    },
+    {
+      "original": "src/dft_process/dft_measure_script.sh",
+      "archive": "archive/legacy/src/dft_process/dft_measure_script.sh",
+      "sha256": "e129d7f1a8a9c5a0980a97a7a69e4e0696265b536aff0949c3623575df8e5fc4",
+      "retained_active": false
+    },
+    {
+      "original": "Quasar QHFlow2/scripts/run_scf_comparison.sh",
+      "archive": "archive/legacy/scf_march_2026/run_scf_comparison.sh",
+      "sha256": "2d6cff4cb3a9dab97a0404f45ae4a34854c64713673be5f41a0560a3f56e2363",
+      "retained_active": false
+    },
+    {
+      "original": "Quasar QHFlow2/scripts/benchmark_scf_from_pred_flat.py",
+      "archive": "archive/legacy/scf_march_2026/benchmark_scf_from_pred_flat.py",
+      "sha256": "bd9541cf008bfff20ce438dab93cad06a4a25836f893bd7062774c6999e52ac1",
+      "retained_active": false
+    }
+  ]
+}

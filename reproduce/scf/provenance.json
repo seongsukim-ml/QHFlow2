@@ -1,0 +1,206 @@
+{
+  "status": "historical_march_2026_reexperiment_verified; original_Figure_4_attribution_unverified",
+  "paper": "https://arxiv.org/html/2602.16897v1#S4.F4",
+  "count": 300,
+  "selection": "sorted numpy.default_rng(42).choice(13084, 300, replace=False); indices address the original unsorted test split",
+  "index_basis": "All numeric indices are zero-based except source_record_id, which is preserved verbatim, not claimed as a QM9 name. Formula is not a unique identity.",
+  "identity_verification": "All 300 atomic-number sequences and Angstrom coordinates match a unique local raw shard record (max tolerance 2e-6 Angstrom); all matches equal the historical test split lookup. Current test split has the same members in different order.",
+  "max_position_error_Angstrom": 2.7480634834375905e-07,
+  "current_split_sha256": "b6bfadb51aedc894f388ffd786c6c3a682d900aa0ff229a94b678b4c72b898c1",
+  "historical_split_json_sha256": "eaf74adf23f8e6b98ba1a1afc2e2612d31d16dd3d66b2115896c3a8d8e4b3e28",
+  "paper_protocol": {
+    "xc": "B3LYP",
+    "conv_tol": 1e-13,
+    "density_fit": true,
+    "grid_level": 3
+  },
+  "recovered_script_protocol": {
+    "xc": "b3lyp5",
+    "conv_tol": 1e-09,
+    "density_fit": false,
+    "max_cycle": 200,
+    "grid_level": "PySCF default; not explicitly set in old script"
+  },
+  "evidence": {
+    "qhflow2_large": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhflow2_large/results.json",
+      "sha256": "4ee120034a755dad9dbdc582ed6258dce3da3ae5753ab2052a96bbf8bdcb27a1",
+      "config": {
+        "label": "qhflow2_large",
+        "pred_dir": "eval_results/QH9Stable-random/large/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260330_002518"
+      },
+      "summary": {
+        "eigensolve_total_s": 5.539033024106175,
+        "eigensolve_per_mol_ms": 18.46344341368725,
+        "dft_pred_init_total_s": 1310.5673108291812,
+        "dft_pred_init_per_mol_ms": 4368.557702763937,
+        "pred_init_cycles_mean": 5.233333333333333,
+        "pred_init_cycles_median": 5.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 52.539298669891174,
+        "energy_diff_mean_ha": 5.4962659608766745e-11,
+        "energy_diff_max_ha": 2.2430413082474843e-10
+      }
+    },
+    "qhflow2_middle": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhflow2_middle/results.json",
+      "sha256": "79b817a28016681a94fae252d3cbc805c66e2ef9ad222903415bae18958746ee",
+      "config": {
+        "label": "qhflow2_middle",
+        "pred_dir": "eval_results/QH9Stable-random/middle/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260330_000026"
+      },
+      "summary": {
+        "eigensolve_total_s": 6.54125652462244,
+        "eigensolve_per_mol_ms": 21.804188415408134,
+        "dft_pred_init_total_s": 1449.1159649030305,
+        "dft_pred_init_per_mol_ms": 4830.3865496767685,
+        "pred_init_cycles_mean": 5.73,
+        "pred_init_cycles_median": 6.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 48.03506650544135,
+        "energy_diff_mean_ha": 5.299549836005705e-11,
+        "energy_diff_max_ha": 2.0122570276726037e-10
+      }
+    },
+    "qhflow2_small": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhflow2_small/results.json",
+      "sha256": "abbcbb63f468de9f02f3d9c8ac44973ec9a604b96919b914c200a6872bc4bcc1",
+      "config": {
+        "label": "qhflow2_small",
+        "pred_dir": "eval_results/QH9Stable-random/small/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260329_224015"
+      },
+      "summary": {
+        "eigensolve_total_s": 15.320763256866485,
+        "eigensolve_per_mol_ms": 51.069210856221616,
+        "dft_pred_init_total_s": 1828.6021250351332,
+        "dft_pred_init_per_mol_ms": 6095.340416783777,
+        "pred_init_cycles_mean": 6.15,
+        "pred_init_cycles_median": 6.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 44.22611850060459,
+        "energy_diff_mean_ha": 4.7764766956485496e-11,
+        "energy_diff_max_ha": 2.183924152632244e-10
+      }
+    },
+    "qhflow2_xl": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhflow2_xl/results.json",
+      "sha256": "7918b46e9e89fa781d6e1bb9765f65c961f488a9bbc03cfae5edf872e303763b",
+      "config": {
+        "label": "qhflow2_xl",
+        "pred_dir": "eval_results/QH9Stable-random/extra_large/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260330_004753"
+      },
+      "summary": {
+        "eigensolve_total_s": 5.824506010860205,
+        "eigensolve_per_mol_ms": 19.415020036200684,
+        "dft_pred_init_total_s": 1299.279116596561,
+        "dft_pred_init_per_mol_ms": 4330.930388655203,
+        "pred_init_cycles_mean": 5.076666666666667,
+        "pred_init_cycles_median": 5.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 53.96009673518742,
+        "energy_diff_mean_ha": 5.639151368086459e-11,
+        "energy_diff_max_ha": 2.4306245904881507e-10
+      }
+    },
+    "qhflow_260k": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhflow_260k/results.json",
+      "sha256": "9dd676fc030acdff70e3fa39bc8377672e1ef8726930dc76467d35cee0375d74",
+      "config": {
+        "label": "qhflow_260k",
+        "pred_dir": "rebuttal/QHFlow_260k_p1.0-QH9Stable-random_IG_True-US_True/QHFlow_260k_p1.0-QH9Stable-random_IG_True-US_True/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260330_011011"
+      },
+      "summary": {
+        "eigensolve_total_s": 18.102000556886196,
+        "eigensolve_per_mol_ms": 60.34000185628732,
+        "dft_pred_init_total_s": 1599.7156055946834,
+        "dft_pred_init_per_mol_ms": 5332.385351982279,
+        "pred_init_cycles_mean": 6.466666666666667,
+        "pred_init_cycles_median": 6.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 41.35429262394196,
+        "energy_diff_mean_ha": 4.900793252697137e-11,
+        "energy_diff_max_ha": 1.9747403712244704e-10
+      }
+    },
+    "qhnet_residue": {
+      "remote_source": "/home1/irteam/data-vol1/projects/QHFlow2/rebuttal/scf_comparison_v2/qhnet_residue/results.json",
+      "sha256": "9ab8edfed9436f4c2c1c8d4ea1931905b4baac620d8c637d197ba29b79133174",
+      "config": {
+        "label": "qhnet_residue",
+        "pred_dir": "rebuttal/Real_QHNet_residue-QH9Stable-random-UR_True/Real_QHNet_residue-QH9Stable-random-UR_True/pred_flat",
+        "num_samples": 300,
+        "seed": 42,
+        "basis": "def2svp",
+        "xc": "b3lyp5",
+        "conv_tol": 1e-09,
+        "dft_backend": "gpu4pyscf",
+        "timestamp": "20260330_013745"
+      },
+      "summary": {
+        "eigensolve_total_s": 16.227638496551663,
+        "eigensolve_per_mol_ms": 54.09212832183888,
+        "dft_pred_init_total_s": 1682.9642217960209,
+        "dft_pred_init_per_mol_ms": 5609.88073932007,
+        "pred_init_cycles_mean": 7.18,
+        "pred_init_cycles_median": 7.0,
+        "dft_scratch_total_s": 2919.94875042513,
+        "dft_scratch_per_mol_ms": 9733.1625014171,
+        "scratch_cycles_mean": 11.026666666666667,
+        "scratch_cycles_median": 11.0,
+        "cycle_reduction_pct": 34.8851269649335,
+        "energy_diff_mean_ha": 4.8147512643481604e-11,
+        "energy_diff_max_ha": 2.01339389604982e-10
+      }
+    }
+  }
+}

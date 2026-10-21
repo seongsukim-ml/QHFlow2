@@ -1,0 +1,24 @@
+# Extracted one-shot prediction/reference Hamiltonian protocol from legacy gpu_v4.
+mode: energy_force
+threads: 1
+dft:
+  backend: gpu
+  xc: b3lyp
+  basis: def2-svp
+  density_fit: true
+  auxbasis: null
+  grid_level: 3
+  grid_response: false
+  auxbasis_response: true
+  conv_tol: 1.0e-09
+  max_cycle: 50
+orbitals:
+  mode: legacy_adaptive
+  pred_tol: 0.001
+  gt_tol: 1.0e-08
+  pad_eigval: 1.0
+  switch_threshold_Ha: 0.03
+reference_orbitals:
+  mode: legacy_fixed
+  pred_tol: 1.0e-08
+  pad_eigval: 1.0

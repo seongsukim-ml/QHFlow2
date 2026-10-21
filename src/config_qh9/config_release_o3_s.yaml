@@ -1,0 +1,17 @@
+# Final training settings from the recorded v0.2.0-rc.2 run.
+defaults:
+- config_stable_muon_optimized
+- override model: QHFlow2_O3_s
+- _self_
+model:
+  train_batch_size: 32
+  accumulate_grad_batches: 1
+dataset:
+  batch_size: 32
+  train_batch_size: 32
+  valid_batch_size: 32
+  test_batch_size: 32
+accumulate_grad_batches: 1
+hydra:
+  run:
+    dir: /dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-release-o3_s-reproduce-${now:%Y%m%d-%H%M%S}

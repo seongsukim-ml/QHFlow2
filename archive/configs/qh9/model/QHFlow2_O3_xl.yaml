@@ -1,0 +1,20 @@
+# Fresh QH9Stable model: corrected packing, AO frame, spectral gating.
+# Width/depth audited against published QH9Stable-random checkpoints (2026-10-21).
+# Total parameters: 1,013,184,313; trainable: 1,013,183,801.
+# The O(3) projection shares these weights; see docs/MODEL_CONFIGS.md.
+model_name: QHFlow2-O(3)-xl
+version: QHFlow2_O3
+hidden_size: 512
+bottle_hidden_size: 128
+num_gnn_layers: 5
+num_ham_gnn_layers: 3
+sh_lmax: 4
+dataset_type: qh9
+use_block_S: true
+use_block_H: true
+# The existing model factory reads this explicit flag.
+use_block_H_fix: true
+
+# Conservative microbatch; effective batch is 32 on one device.
+train_batch_size: 1
+accumulate_grad_batches: 32

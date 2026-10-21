@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.mark.parametrize("name,paired", [("config_stable_muon_optimized", False),
                                         ("config_stable_muon_optimized_o3", True)])
 def test_presets_activate_compilation_and_versioned_validation(name, paired):
-    with initialize_config_dir(version_base=None, config_dir=str(ROOT / "src/config_qh9")):
+    config_dir = ROOT / ("archive/configs/qh9" if paired else "src/config_qh9")
+    with initialize_config_dir(version_base=None, config_dir=str(config_dir)):
         conf = compose(config_name=name)
     validate_config(conf)
     assert conf.inference_mode is False

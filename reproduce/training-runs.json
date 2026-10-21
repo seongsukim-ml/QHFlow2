@@ -1,0 +1,42 @@
+{
+  "s": {
+    "run": "qhflow2-s-loader-safe-stable-muon-s42-20261017",
+    "source_config_sha256": "9bb4317c0ad678f6cb7d25feb3cef33b87f8f66840809d9f1375023acab8f128",
+    "config": "src/config_qh9/config_release_s.yaml",
+    "resolved_values_match": true,
+    "devices": 1,
+    "effective_batch": 32
+  },
+  "o3_s": {
+    "run": "qhflow2-o3-s-loader-safe-stable-muon-s42-20261017",
+    "source_config_sha256": "44ca58ddd7693066268d7c232ccfd817a647c7bf470e8a0e00587355e3c3d153",
+    "config": "src/config_qh9/config_release_o3_s.yaml",
+    "resolved_values_match": true,
+    "devices": 1,
+    "effective_batch": 32
+  },
+  "m": {
+    "run": "qhflow2-m-loader-safe-stable-muon-s42-20261017",
+    "source_config_sha256": "a6fc92d54a9e1f19725d03541ab342cb4067938229cd94ec771064c15140bc2c",
+    "config": "src/config_qh9/config_release_m.yaml",
+    "resolved_values_match": true,
+    "devices": 1,
+    "effective_batch": 32
+  },
+  "l": {
+    "run": "qhflow2-l-ddp-pinned-stable-muon-s42-20261018",
+    "source_config_sha256": "490b29f05995a5d9f03b7f367917e8bd827f926e509d7dc6c7fee32ef0815593",
+    "config": "src/config_qh9/config_release_l.yaml",
+    "resolved_values_match": true,
+    "devices": 2,
+    "effective_batch": 32
+  },
+  "xl": {
+    "run": "qhflow2-xl5-ddp4-stable-muon-s42-20261021",
+    "source_config_sha256": "fb371efa980e0761d62c9924e7d9c4d0ba2fd275189cf9205c54b84f35e58397",
+    "config": "src/config_qh9/config_release_xl.yaml",
+    "resolved_values_match": true,
+    "devices": 4,
+    "effective_batch": 32
+  }
+}

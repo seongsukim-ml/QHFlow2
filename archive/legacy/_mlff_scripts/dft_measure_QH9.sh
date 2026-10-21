@@ -7,7 +7,7 @@ cd ~/25DFT/QHFlow/src/dft_process/post_process
 
 # huggingface token
 huggingface-cli login
-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
+[REMOVED_CREDENTIAL]
 ########################################################
 # QH9Dynamic-300k-geometry QHFlow_so2_v5_1 (lim4)
 ########################################################
