@@ -1,6 +1,6 @@
 # QHFlow2 reproduction
 
-Updated 2026-10-21 · code/checkpoints v0.2.0-rc.2.
+Updated 2026-10-23 · code/checkpoints v0.2.0-rc.2.
 
 Use the repository root as the working directory and install the
 [Stable/Muon runtime](../docs/QH9STABLE_MUON.md#stable-data-and-runtime).
@@ -52,10 +52,24 @@ model definitions when loading checkpoints.
 
 The table places **Steps** after Param. and pairs each completed updated
 model's **3-step then 1-step** results. One **Inference samples/s** column
-matches the step count on each row. These speed cells remain dashes until
-measured on an exclusive GPU. Updated XL retains `(on train)`. Original-paper
+matches the step count on each row. The measurements below completed on an
+exclusive H100 on 2026-10-21 UTC and passed the GPU isolation check. Updated XL
+retains `(on train)`. Original-paper
 rows preserve their reported metrics without assigning a new step label; the
 speed benchmark still records both step counts for all eight checkpoints.
+
+| Checkpoint family | Model | 1 step (samples/s) | 3 steps (samples/s) |
+| --- | --- | ---: | ---: |
+| Original | QHFlow2-s | 134.81 | 44.23 |
+| Original | QHFlow2-m | 130.98 | 43.38 |
+| Original | QHFlow2-l | 95.48 | 31.94 |
+| Original | QHFlow2-xl | 38.67 | 12.90 |
+| v0.2.0-rc.2 | QHFlow2-s | 136.46 | 49.39 |
+| v0.2.0-rc.2 | QHFlow2-O(3)-s | 68.64 | 24.91 |
+| v0.2.0-rc.2 | QHFlow2-m | 130.78 | 47.73 |
+| v0.2.0-rc.2 | QHFlow2-l | 96.74 | 34.35 |
+
+[Unrounded speed CSV](inference/results.csv), [raw timing and provenance JSON](inference/measurements.json), and [GPU isolation record](inference/isolation.json) preserve the measured evidence. These are batched model-inference rates, not end-to-end DFT rates or single-molecule latency.
 
 The [checkpoint/cohort manifest](inference/benchmark-manifest.json) pins exact
 inputs and local paths (replace paths on another machine, preserving hashes).
@@ -88,7 +102,7 @@ seconds per sweep. Raw per-batch/sweep timings and memory are saved, alongside
 checkpoint/source hashes, molecule IDs and GPU/runtime metadata. No step count
 is extrapolated from the other. O(3) identity/inversion work is included and each
 molecule counts once. This GPU benchmark has no CPU fallback or silent batch
-reduction. The prepared job waits if no GPU is exclusively available.
+reduction. The queue launcher waits if no GPU is exclusively available.
 
 ### Accuracy display precision
 
