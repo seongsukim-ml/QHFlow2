@@ -3,14 +3,15 @@
 Code releases are independent of trained checkpoint releases. Git tags pin the
 source and configuration files; `model.version` selects an architecture.
 
-## Unreleased — benchmark/checkpoint update and config audit, 2026-10-21
+## Unreleased — benchmark/checkpoint update and config audit, 2026-10-23
 
 - Display ERIC as a percentage. Omit original-paper training GPU hours at the
   maintainer's request; retain the attempted reconstruction only in the archive.
 - Pair completed updated models' recorded 3-step and 1-step accuracy in two
   rows, with a Steps column, shared model/cost labels, and grey O(3) rows. Match
-  each row to one inference-speed column; leave speeds empty pending an exclusive
-  GPU measurement using the reproducible checkpoint timing runner.
+  each row to one inference-speed column, now filled from exclusive-H100
+  measurements. Retain raw 1-step/3-step timings for all eight original/updated
+  checkpoints, cohort/source hashes and the passed GPU isolation check.
 - Display saved updated H/orbital metrics to three decimals and SCF percentages
   to two; retain unrounded source values and original-paper precision.
 - Publish four verified inference checkpoints on Hugging Face while preserving
