@@ -5,6 +5,8 @@ source and configuration files; `model.version` selects an architecture.
 
 ## Unreleased — benchmark/checkpoint update and config audit, 2026-10-28
 
+- Add three small, traceable QH9Stable test fixtures and database-free CPU
+  checkpoint smoke inference; retain upstream dataset licensing and checksums.
 - Remove bundled water data/caches from all branch and tag histories while
   preserving source and configurations. Keep checkpoints on Hugging Face; add
   the [historical commit map](docs/history/2026-10-28-cleanup.md) for reproducibility.

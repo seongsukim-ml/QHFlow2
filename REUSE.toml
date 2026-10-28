@@ -39,7 +39,7 @@ SPDX-FileCopyrightText = [
 ]
 SPDX-License-Identifier = "GPL-3.0-only"
 
-# Only QHFlow2 checkpoint weight files trained on QH9 use CC BY-NC-SA 4.0.
+# QHFlow2 checkpoint weight files trained on QH9 use CC BY-NC-SA 4.0.
 # Source code, configuration, documentation, and metadata are excluded.
 [[annotations]]
 path = [
@@ -54,6 +54,13 @@ path = [
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 Seongsu Kim"
+SPDX-License-Identifier = "CC-BY-NC-SA-4.0"
+
+# Redistributed QH9 sample data and derived numerical inputs retain upstream terms.
+[[annotations]]
+path = ["examples/qh9stable/*.npz"]
+precedence = "override"
+SPDX-FileCopyrightText = ["2023 Haiyang Yu and QH9 contributors", "2026 Seongsu Kim"]
 SPDX-License-Identifier = "CC-BY-NC-SA-4.0"
 
 # FairChem/eSCN code and the byte-identical Jd.pt table.

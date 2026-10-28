@@ -5,9 +5,17 @@ Updated 2026-10-28 · code/checkpoints v0.2.0-rc.2.
 Use the repository root as the working directory and install the
 [Stable/Muon runtime](../docs/QH9STABLE_MUON.md#stable-data-and-runtime).
 Current source checkout on the shared server:
-`/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-checkpoint-configs-20261021`.
+`/dataset/seongsu/shared-home/workspace/worktrees/qhflow2-sample-test-data-20261028`.
 The commands below use canonical persistent output paths on that server.
 On another machine, supply your own absolute dataset, checkpoint and output paths.
+
+## Small sample test
+
+[Three QH9Stable test molecules](../examples/qh9stable/README.md) provide a
+0.377 MB fixture with coordinates, reference matrices and model inputs. Check
+them with `PYTHONPATH=src python -m reproduction.sample_data check --manifest examples/qh9stable/manifest.json`.
+The accompanying CPU inference example loads a Hugging Face checkpoint without
+opening the full dataset. This is a smoke test, not a benchmark evaluation.
 
 ## Training
 

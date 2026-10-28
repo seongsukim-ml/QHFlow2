@@ -1,6 +1,8 @@
 # Download datasets separately
 
-Dataset payloads and generated caches are excluded from Git. Follow the
+Full dataset payloads and generated caches are excluded from Git. A small
+[three-molecule test fixture](../examples/qh9stable/README.md) is included
+separately for loading and checkpoint smoke tests. Follow the
 [QH9 download instructions](../README.md#dataset) and
 [Stable/Muon data preparation](../docs/QH9STABLE_MUON.md#stable-data-and-runtime)
 for the current benchmarks. Checkpoints are available separately on

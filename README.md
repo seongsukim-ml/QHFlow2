@@ -8,7 +8,7 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 
 [Latest published release](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) · [Hugging Face checkpoints](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main/QH9Stable-random/v0.2.0-rc.2) · [Updated benchmarks](#qh9stable-benchmark-update) · [Stable/Muon training guide](docs/QH9STABLE_MUON.md) · [Version history](#version-history)
 
-Datasets and checkpoint binaries are downloaded separately. The
+Full datasets and checkpoint binaries are downloaded separately. The
 [2026-10-28 history cleanup](docs/history/2026-10-28-cleanup.md) removes bundled
 data from Git history; use a fresh clone if you have an older checkout.
 
@@ -74,6 +74,17 @@ archive/              Earlier configs, evaluation scripts and experiment noteboo
 
 The [archive index](archive/README.md) explains how to recover historical commands.
 Archived configurations are excluded from the current training config search path.
+
+## Sample test data
+
+[Three small QH9Stable test samples](examples/qh9stable/README.md) are included
+for loading and checkpoint smoke tests (0.377 MB of compressed data). They
+contain coordinates, reference matrices and model inputs, so the full dataset
+is not needed. Checkpoint weights are downloaded separately from Hugging Face.
+
+```bash
+PYTHONPATH=src python -m reproduction.sample_data check --manifest examples/qh9stable/manifest.json
+```
 
 ## Dataset
 Datasets are provided via Google Drive. Download and place each dataset folder under `dataset/`.

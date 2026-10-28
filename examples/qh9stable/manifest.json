@@ -1,0 +1,71 @@
+{
+  "schema": "qhflow2-samples-v1",
+  "dataset": "QH9Stable-random",
+  "purpose": "smoke_test_only",
+  "selection": "First three entries of the recorded official test split; no accuracy-based selection",
+  "split_sha256": "b6bfadb51aedc894f388ffd786c6c3a682d900aa0ff229a94b678b4c72b898c1",
+  "source_index_sha256": "8816ca7462f9d518834afb83c20262308ce85783e6cfba48e3e98420ab01ed65",
+  "loader_sha256": "7deca3ee4e763053c9229d3dcf3a01ea3920388d621e7ceb4de2a568518bd10b",
+  "basis": "def2-svp",
+  "position_unit": "Angstrom",
+  "hamiltonian_unit": "Hartree",
+  "overlap_unit": "dimensionless",
+  "reference_ao_convention": "native_pyscf",
+  "input_ao_convention": "pyscf_def2svp_to_e3nn, padded 14-orbital blocks",
+  "changes": "Lossless NPZ subset and model input blocks from the existing QHFlow2 read-only loader; no rounding",
+  "license": "CC-BY-NC-SA-4.0",
+  "source": "https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9",
+  "records": [
+    {
+      "dataset_index": 11,
+      "molecule_id": "QH9Stable:11",
+      "test_position": 0,
+      "source_record_id": 11,
+      "source_lmdb_index": [
+        0,
+        11,
+        11
+      ],
+      "source_record_sha256": "4fa0372a4922e2cf76e0d491b9c4a3f02c1579da49773de823b758bf11e7ecd6",
+      "num_atoms": 6,
+      "num_orbitals": 57,
+      "file": "sample_000011.npz",
+      "bytes": 100026,
+      "sha256": "4e2c3bdeab7e31cfef2848715e3535af9a73d33b14bcb5d7268dadbc5fee659c"
+    },
+    {
+      "dataset_index": 24,
+      "molecule_id": "QH9Stable:24",
+      "test_position": 1,
+      "source_record_id": 24,
+      "source_lmdb_index": [
+        0,
+        24,
+        24
+      ],
+      "source_record_sha256": "1b1aa9574e9c4f399729419e214e4ed14a89a09816ef26cef8b323fc6d1a1152",
+      "num_atoms": 4,
+      "num_orbitals": 56,
+      "file": "sample_000024.npz",
+      "bytes": 89541,
+      "sha256": "70b4e836cdc32d2774fdb96786d0f9396d7085f1a03b01d92c9c1710b3a8ad55"
+    },
+    {
+      "dataset_index": 31,
+      "molecule_id": "QH9Stable:31",
+      "test_position": 2,
+      "source_record_id": 31,
+      "source_lmdb_index": [
+        0,
+        31,
+        31
+      ],
+      "source_record_sha256": "cd9cc33060a3ea73bbcc421618e4691179d6b06ab0097213e6751e1110853fa6",
+      "num_atoms": 8,
+      "num_orbitals": 76,
+      "file": "sample_000031.npz",
+      "bytes": 187339,
+      "sha256": "125c955117175a3a6ba1e9280cff6fdca36b3a8d4792aa9de195630813f7c8a4"
+    }
+  ]
+}

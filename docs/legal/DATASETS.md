@@ -12,15 +12,14 @@ Each dataset retains its own upstream terms.
 
 ## Data currently tracked in Git
 
-This repository tracks the SchNOrb water raw archive/database and processed
-PyTorch/LMDB forms under:
+The three small QH9Stable test fixtures under `examples/qh9stable/` contain
+lossless numerical records and derived model inputs. They retain the upstream
+CC-BY-NC-SA-4.0 terms and include attribution, a license copy, a citation,
+processing provenance and checksums. Their loader/exporter is MIT source code.
 
-- `dataset/water/`
-- `dataset/water_shard/`
-
-The original SchNOrb MIT terms continue to apply to the raw data. QHFlow2's
-generated indexes, splits, and container metadata are also released under MIT,
-without changing the license of the underlying records.
+The previously bundled SchNOrb water raw data and PyTorch/LMDB caches were
+removed in the [2026-10-28 Git history cleanup](../history/2026-10-28-cleanup.md).
+Full datasets and checkpoint binaries are downloaded separately.
 
 ## Google Drive packages
 
@@ -37,5 +36,5 @@ Do not copy QH9 data into an MIT-only package. QH9 remains non-commercial under
 CC-BY-NC-SA-4.0.
 
 This is the QH9 dataset's upstream license, not a CC license grant for QHFlow2
-source code. Among artifacts authored and released by QHFlow2, CC-BY-NC-SA-4.0
-is assigned only to checkpoint weights trained on QH9.
+source code. It also covers redistributed QH9 sample data and its derived
+numerical representations, separately from the QH9-trained checkpoint weights.

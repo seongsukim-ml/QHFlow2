@@ -1,0 +1,11 @@
+schema_version: 1
+name: QH9Stable random-split sample test data
+upstream: https://github.com/divelab/AIRS/tree/main/OpenDFT/QHBench/QH9
+license: CC-BY-NC-SA-4.0
+attribution: Haiyang Yu and QH9 contributors; QHFlow2 export by Seongsu Kim (2026)
+selection: First three entries of the recorded official QH9Stable random test split
+sample_count: 3
+dataset_indices: [11, 24, 31]
+changes: Lossless NPZ containers and existing QHFlow2 model input blocks; no numerical rounding
+purpose: Loading and inference smoke tests only; not a representative benchmark
+manifest: manifest.json
