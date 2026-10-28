@@ -127,25 +127,25 @@ When running from `src/`, use the checkpoint path in the `ckpt` argument (e.g. `
 
 ## QH9Stable benchmark update
 
-Updated **2026-10-23** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md)** (draft release).
+Updated **2026-10-28** · Updated version **[v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md)** (draft release).
 
 ![QH9Stable original-paper and updated-version results](docs/assets/qh9-stable-updated.png)
 
-- **Results and units.** Original-paper metrics, including QHNetV2, reproduce the supplied paper tables. QHFlow2 parameter counts follow the [checkpoint/config audit](docs/MODEL_CONFIGS.md); updated counts are trainable parameters (XL: initialized model). Updated results use the best validation checkpoint, seed 42, all **13,084** official QH9Stable random-split test molecules and **3-step / 1-step evaluations**, shown as paired rows for each completed updated model. H, occupied orbital energies, HOMO, LUMO and GAP are in μEh; Sc is in percent. Original E/F values retain their source units; updated E/F and other unavailable values are shown as dashes.
+- **Results and units.** Original-paper metrics, including QHNetV2, reproduce the supplied paper tables. QHFlow2 parameter counts follow the [checkpoint/config audit](docs/MODEL_CONFIGS.md); updated counts are measured trainable parameters from the evaluated checkpoints. Updated results use the best validation checkpoint, seed 42, all **13,084** official QH9Stable random-split test molecules and **3-step / 1-step evaluations**, shown as paired rows for each completed updated model. H, occupied orbital energies, HOMO, LUMO and GAP are in μEh; Sc is in percent. Original E/F values retain their source units; updated E/F and other unavailable values are shown as dashes.
 - **Model update.** Order fix + **gate change (spectral)** + Muon at **1e-3**; norm, embedding and other unsupported parameters use AdamW at **1e-4**. Updated S/M also enable the Hamiltonian-input path. **+ O(3) group averaging** denotes a separately trained QHFlow2-O(3)-s, using shared-weight identity/inversion averaging. These results combine architecture and training changes and are not a single-change ablation.
-- **Training cost.** Training GPU hours are shown only for completed updated S/O(3)-S/M/L. They sum observed spans in the retained resume lineage, including validation/checkpointing within spans and excluding restart downtime. Updated S/O(3)-S/M use one GPU and L uses two. Only updated XL displays `(on train)`. Original-paper training GPU hours are intentionally omitted. [Updated-run evidence](docs/benchmarks/qh9-stable-training-costs-20261021.json).
-- **Steps** identifies paired **3-step then 1-step** rows for each completed updated model. A single **Inference (samples/s)** column corresponds to the step count on that row. Model, parameter count and training GPU hours appear once per pair; both O(3) rows are grey. Original-paper rows retain their reported results without assigning a new step label. Measured on 2026-10-21 UTC on an exclusive GPU; each rate is 128 divided by the median total timed seconds across three sweeps after warmup. Dashes denote unavailable measurements. The protocol uses one H100 80GB, FP32 (high matmul precision), eager execution without torch.compile, batch 8, and the same fixed 128-molecule official test subset for all eight completed checkpoints. Actual flow sampling is timed separately at each step count after warmup, including the prior, geometry and Hamiltonian-block prediction; loading, device transfer, batch cloning, full-matrix assembly, accuracy metrics and DFT are excluded. Each O(3) molecule counts once. Training samples/s is retained only in historical evidence and is not used as inference speed. Both accuracy rows come from the same recorded full-test evaluation and validation-selected checkpoint; source metric keys are retained in the unrounded results. [Protocol, command and all eight models’ measured speeds](reproduce/README.md#inference-speed).
+- **Training cost.** Training GPU hours are shown only for completed updated S/O(3)-S/M/L/XL. They sum observed spans in the retained resume lineage, including validation/checkpointing within spans and excluding restart downtime. Updated S/O(3)-S/M use one GPU, L uses two, and XL uses four. XL completed training with 649.8 observed GPU hours. Original-paper training GPU hours are intentionally omitted. [Updated-run evidence](docs/benchmarks/qh9-stable-training-costs-20261021.json).
+- **Steps** identifies paired **3-step then 1-step** rows for each completed updated model. A single **Inference (samples/s)** column corresponds to the step count on that row. Model, parameter count and training GPU hours appear once per pair; both O(3) rows are grey. Original-paper rows retain their reported results without assigning a new step label. Measured on 2026-10-21 UTC (original models and updated S/O(3)-S/M/L) and 2026-10-28 UTC (updated XL), on an exclusive GPU; each rate is 128 divided by the median total timed seconds across three sweeps after warmup. Dashes denote unavailable measurements. The protocol uses one H100 80GB, FP32 (high matmul precision), eager execution without torch.compile, batch 8, and the same fixed 128-molecule official test subset for all nine completed checkpoints. Actual flow sampling is timed separately at each step count after warmup, including the prior, geometry and Hamiltonian-block prediction; loading, device transfer, batch cloning, full-matrix assembly, accuracy metrics and DFT are excluded. Each O(3) molecule counts once. Training samples/s is retained only in historical evidence and is not used as inference speed. Both accuracy rows come from the same recorded full-test evaluation and validation-selected checkpoint; source metric keys are retained in the unrounded results. [Protocol, command and all nine models’ measured speeds](reproduce/README.md#inference-speed).
 - **Display precision.** Updated H/orbital results are rounded from saved full-precision metrics to three decimal places; SCF ratio and ERIC use two decimal places. Original-paper accuracy retains its reported precision. More digits expose recorded differences and do not imply statistical significance. [Unrounded updated results](reproduce/benchmark/current-results.json).
 - **SCF ratio and ERIC.** SCF ratio (%) is `100 × sum(N_model) / sum(N_MinAO)` (lower is better; MinAO = 100%). ERIC (%) is `100 × mean((N_model + 1) / N_MinAO)`, including one initial Hamiltonian build under the [ERIC accounting convention](https://arxiv.org/html/2604.21657v1#S4); it is not a wall-time speedup. The six available original-model entries are recomputed from the [300-molecule paired records](reproduce/scf/recorded-300-cycles.csv), on the same cohort as [original-paper Figure 4](https://arxiv.org/html/2602.16897v1#S4.F4), confirmed by the maintainer on 2026-10-21. ERIC is a new post-hoc calculation. The recovered March solver settings are retained in [provenance](reproduce/scf/provenance.json), including differences from Appendix E.4; these added columns are not transcribed paper-table values. Updated-model SCF metrics have not been evaluated and remain dashes. See the [reproducible summary](reproduce/scf/recorded-300-summary.json).
-- **Checkpoint status.** S/O(3)-S/M/L each completed 260,000 steps; their packaged weights come from validation-selected step 258,409. XL is still training, with benchmark metrics and its checkpoint pending.
+- **Checkpoint status.** S/O(3)-S/M/L/XL each completed 260,000 steps and full-test evaluation; their exported weights come from validation-selected step 258,409.
 
 ### Updated checkpoints
 
-The four completed checkpoints are available now on
+The five completed checkpoints are available now on
 [Hugging Face](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main/QH9Stable-random/v0.2.0-rc.2).
 Each model folder contains unchanged inference weights, the exact saved training config,
 metrics, provenance, license and checksums. Optimizer state is excluded.
-GitHub archive copies remain in the **v0.2.0-rc.2 draft Release** pending review and publication.
+Checkpoints are hosted **only on Hugging Face**. GitHub contains the source, benchmark image and reproducibility metadata; the earlier checkpoint archive attachments have been removed.
 
 | Model | Hugging Face weights |
 | --- | --- |
@@ -153,6 +153,7 @@ GitHub archive copies remain in the **v0.2.0-rc.2 draft Release** pending review
 | QHFlow2-s + O(3) group averaging | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt) |
 | QHFlow2-m | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt) |
 | QHFlow2-l | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt) |
+| QHFlow2-xl | [Download](https://huggingface.co/ksusu/QHFlow2-QH9/resolve/main/QH9Stable-random/v0.2.0-rc.2/QHFlow2-xl/weights.ckpt) |
 
 See [checkpoint metadata and loading instructions](docs/releases/v0.2.0-rc.2-checkpoints.md).
 The original 16 QH9 checkpoints remain available in the [same Hugging Face repository](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main), alongside the Google Drive collection.
@@ -178,11 +179,11 @@ Original-paper E/F values are preserved; this cleanup does not claim a new full-
 
 ## Version History
 
-### [v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md) — updated 2026-10-23 (draft)
+### [v0.2.0-rc.2](docs/releases/v0.2.0-rc.2-checkpoints.md) — updated 2026-10-28 (draft)
 
-Completed Stable/Muon benchmarks and checkpoint bundles for QHFlow2-s/m/l and
-QHFlow2-s + O(3) group averaging; XL is training on four GPUs. The benchmark
-image reserves columns for training cost and throughput. Validated compute
+Completed Stable/Muon benchmarks and checkpoint bundles for QHFlow2-s/m/l/xl and
+QHFlow2-s + O(3) group averaging, with all five checkpoints on Hugging Face. The benchmark
+image reports training cost and inference speed. Validated compute
 optimizations and selective torch.compile preserve checkpoint state keys;
 see the [compute report](docs/releases/v0.2.0-rc.2.md) and
 [geometry follow-up](docs/releases/v0.2.0-rc.2-geometry.md).
@@ -239,8 +240,8 @@ source snapshot are preserved for reproducibility.
 We plan to retrain **QHFlow2-s/m/l/xl (order-fixed)** and
 **QHFlow2-O(3)-s/m/l/xl** with Muon on QH9Stable and release updated checkpoints
 and detailed benchmark results. The training configurations are available in
-`v0.2.0-rc.1`. S/M/L and O(3)-S now have completed benchmarks and draft checkpoint
-bundles; XL is in progress. O(3)-M/L/XL benchmarks remain planned.
+`v0.2.0-rc.1`. S/M/L/XL and O(3)-S now have completed benchmarks and published Hugging Face
+checkpoints. O(3)-M/L/XL benchmarks remain planned.
 
 See the [full changelog](CHANGELOG.md) and
 [versioning and release guide](docs/RELEASING.md).

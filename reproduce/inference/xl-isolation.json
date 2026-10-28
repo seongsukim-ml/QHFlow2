@@ -1,0 +1,6 @@
+{
+  "status": "passed",
+  "gpu": 0,
+  "job_id": "qhflow2-xl-inference-1step-3step-20261028",
+  "monitor_interval_seconds": 3
+}

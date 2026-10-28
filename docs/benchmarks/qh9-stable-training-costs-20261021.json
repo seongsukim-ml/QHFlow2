@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-10-21T09:46:15.235422+00:00",
-  "update_date": "2026-10-21",
-  "timezone": "Asia/Seoul",
+  "generated_at": "2026-10-28T10:23:20.756494+00:00",
+  "update_date": "2026-10-28",
+  "timezone": "Europe/Zurich",
   "gpu_hours_definition": "Sum of observed first-to-last training event spans in the retained checkpoint lineage times GPU count. Includes validation/checkpointing within each span. Excludes startup, queue/restart gaps, discarded steps/attempts, smoke tests and final test evaluation. Approximate useful training cost, not total allocated GPU time.",
   "samples_per_second_definition": "Aggregate processed samples / elapsed seconds across consecutive 25-step training-only log windows within the same epoch in the final execution configuration; global effective batch 32. Excludes validation/epoch boundaries and startup; includes checkpoint I/O within qualifying windows. O(3) molecules counted once.",
   "models": {
@@ -309,21 +309,21 @@
       ]
     },
     "QHFlow2-xl": {
-      "status": "in_progress",
-      "train_gpu_hours": 2.7391825233333336,
-      "samples_per_second": 16.31234354082794,
+      "status": "completed",
+      "train_gpu_hours": 649.7669857755556,
+      "samples_per_second": 15.83349451675568,
       "throughput_gpu_count": 4,
       "effective_batch": 32,
-      "throughput_windows": 49,
-      "throughput_samples": 39200,
-      "throughput_seconds": 2403.088183,
-      "last_step": 1250,
-      "last_logged_at": "2026-10-21T09:46:17.539639+00:00",
+      "throughput_windows": 10320,
+      "throughput_samples": 8256000,
+      "throughput_seconds": 521426.270825,
+      "last_step": 260000,
+      "last_logged_at": "2026-10-28T03:31:42.562566+00:00",
       "segments": [
         {
           "directory": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-xl5-ddp4-stable-muon-s42-20261021/attempt-1",
-          "progress_sha256": "ee840dc673962fbbf834ae4e8481abe5cae7f3654787281b017c2530d5ac66e4",
-          "snapshot_bytes": 110919,
+          "progress_sha256": "3f82b8867966c3c80f63c14d10f9b536170c42afd7680f27cc4dee37748bff94",
+          "snapshot_bytes": 46642029,
           "source": {
             "code_version": "0.2.0-rc.2",
             "release_tag": "v0.2.0-rc.2",
@@ -332,12 +332,12 @@
           },
           "resume_step": 0,
           "first_logged_step": 1,
-          "last_step": 1250,
+          "last_step": 260000,
           "first_logged_at": "2026-10-21T09:05:12.275368+00:00",
-          "last_logged_at": "2026-10-21T09:46:17.539639+00:00",
+          "last_logged_at": "2026-10-28T03:31:42.562566+00:00",
           "gpu_count": 4,
-          "elapsed_seconds": 2465.264271,
-          "gpu_hours": 2.7391825233333336
+          "elapsed_seconds": 584790.287198,
+          "gpu_hours": 649.7669857755556
         }
       ]
     }

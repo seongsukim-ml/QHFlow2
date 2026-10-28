@@ -1,12 +1,12 @@
 {
   "version": "v0.2.0-rc.2",
-  "update_date": "2026-10-21",
+  "update_date": "2026-10-28",
+  "checkpoint_host": "Hugging Face only",
+  "repository": "ksusu/QHFlow2-QH9",
+  "directory": "QH9Stable-random/v0.2.0-rc.2",
   "models": [
     {
       "model": "QHFlow2-s",
-      "file": "qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar",
-      "bytes": 50329600,
-      "sha256": "64ea4c2ae5ef3a94edd4890fd063fbdded22b48ca48d30ad5d6c9764891872d8",
       "weights_sha256": "03bc2ec51ebefb5449f667ea7e8f73deed07d4061ba2ad73e3c0e9df7148a9e7",
       "source_sha256": "fb60bd049ff1402e770bdda5f6786242491c85a738241d3882de91cc7f19e143",
       "parameters": {
@@ -19,14 +19,14 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-s-qh9stable-random-v0.2.0-rc.2.tar",
-      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-s/weights.ckpt"
+      "file": "QHFlow2-s/weights.ckpt",
+      "bytes": 50291899,
+      "sha256": "03bc2ec51ebefb5449f667ea7e8f73deed07d4061ba2ad73e3c0e9df7148a9e7",
+      "download_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-s/weights.ckpt",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-s/weights.ckpt"
     },
     {
       "model": "QHFlow2-O(3)-s",
-      "file": "qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar",
-      "bytes": 50329600,
-      "sha256": "61b584b504baaf9aa0b796a9850106c800fbe3cfb0baf3897be70188ed1b11d1",
       "weights_sha256": "acd8c52e08abca6ab5024fddcb86a8483c92b4432bb2d59d4f7872c924aa9f59",
       "source_sha256": "fdb78e6e35e3b60013c0ab24e11d1b761ab4d220fc85a62e8df9a159e279c5d4",
       "parameters": {
@@ -39,14 +39,14 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-o3-s-qh9stable-random-v0.2.0-rc.2.tar",
-      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt"
+      "file": "QHFlow2-O3-s/weights.ckpt",
+      "bytes": 50291899,
+      "sha256": "acd8c52e08abca6ab5024fddcb86a8483c92b4432bb2d59d4f7872c924aa9f59",
+      "download_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-O3-s/weights.ckpt"
     },
     {
       "model": "QHFlow2-m",
-      "file": "qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar",
-      "bytes": 178032640,
-      "sha256": "20d74854af85dcdec5968439590aa9ec996d6f30651c30b1593dc3720bf011ef",
       "weights_sha256": "fc2d2686ca3ac0c431ca72ae881b7a5a7083634f58ce94ed6d1c0e22bf220dea",
       "source_sha256": "b1b329aba5570158874a6b504ee3abd451dc8557001576fa4794bff2832c8f3c",
       "parameters": {
@@ -59,14 +59,14 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-m-qh9stable-random-v0.2.0-rc.2.tar",
-      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt"
+      "file": "QHFlow2-m/weights.ckpt",
+      "bytes": 177996667,
+      "sha256": "fc2d2686ca3ac0c431ca72ae881b7a5a7083634f58ce94ed6d1c0e22bf220dea",
+      "download_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-m/weights.ckpt"
     },
     {
       "model": "QHFlow2-l",
-      "file": "qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar",
-      "bytes": 753459200,
-      "sha256": "0726a483f853019d1166e4b67ea328d144fb14a62f0448d2a10808c65c576085",
       "weights_sha256": "54f8c5a2aa3a16198197f9458c3492c8427334d50839491c51e2442c102a23e8",
       "source_sha256": "3104cb38353a44015fb999b42b5c72c14e0bdd41c4e1c1f05b44ef4a9923e398",
       "parameters": {
@@ -79,10 +79,33 @@
         "strict_cpu_load": true,
         "safe_weights_only_load": true
       },
-      "download_url": "https://github.com/seongsukim-ml/QHFlow2/releases/download/v0.2.0-rc.2/qhflow2-l-qh9stable-random-v0.2.0-rc.2.tar",
-      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/91fa3150d75d1d63bb69d4f81089bddbe7fd9000/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt"
+      "file": "QHFlow2-l/weights.ckpt",
+      "bytes": 753425979,
+      "sha256": "54f8c5a2aa3a16198197f9458c3492c8427334d50839491c51e2442c102a23e8",
+      "download_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-l/weights.ckpt"
+    },
+    {
+      "model": "QHFlow2-xl",
+      "weights_sha256": "ee9cbf7293c1bcec62799fcd06178e06f15894ddb56f0a26fe857f0e5ec9dc52",
+      "source_sha256": "f761b6ea56aa36dc7808da31c30bf42b799c68f18154c56e1c3fde3281453d7f",
+      "parameters": {
+        "trainable": 1013183801,
+        "total": 1013184313
+      },
+      "best_step": 258409,
+      "validation": {
+        "all_tensors_exact": true,
+        "strict_cpu_load": true,
+        "safe_weights_only_load": true
+      },
+      "file": "QHFlow2-xl/weights.ckpt",
+      "bytes": 4056136167,
+      "sha256": "ee9cbf7293c1bcec62799fcd06178e06f15894ddb56f0a26fe857f0e5ec9dc52",
+      "download_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-xl/weights.ckpt",
+      "huggingface_url": "https://huggingface.co/ksusu/QHFlow2-QH9/resolve/e624b5dee4cb2cb29985a34d55bd97359ff0aa55/QH9Stable-random/v0.2.0-rc.2/QHFlow2-xl/weights.ckpt"
     }
   ],
-  "xl": "Training in progress; no benchmark checkpoint included.",
-  "huggingface_revision": "91fa3150d75d1d63bb69d4f81089bddbe7fd9000"
+  "xl": "Completed 260000 steps and full-test evaluation; exported validation-selected step 258409.",
+  "huggingface_revision": "e624b5dee4cb2cb29985a34d55bd97359ff0aa55"
 }

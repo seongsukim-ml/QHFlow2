@@ -3,19 +3,22 @@
 Code releases are independent of trained checkpoint releases. Git tags pin the
 source and configuration files; `model.version` selects an architecture.
 
-## Unreleased — benchmark/checkpoint update and config audit, 2026-10-23
+## Unreleased — benchmark/checkpoint update and config audit, 2026-10-28
 
+- Complete XL at 260,000 steps; publish full-test 3-step H MAE 3.286 μEh and
+  1-step H MAE 3.298 μEh from validation-selected step 258,409.
 - Display ERIC as a percentage. Omit original-paper training GPU hours at the
   maintainer's request; retain the attempted reconstruction only in the archive.
 - Pair completed updated models' recorded 3-step and 1-step accuracy in two
   rows, with a Steps column, shared model/cost labels, and grey O(3) rows. Match
   each row to one inference-speed column, now filled from exclusive-H100
-  measurements. Retain raw 1-step/3-step timings for all eight original/updated
+  measurements. Retain raw 1-step/3-step timings for all nine original/updated
   checkpoints, cohort/source hashes and the passed GPU isolation check.
 - Display saved updated H/orbital metrics to three decimals and SCF percentages
   to two; retain unrounded source values and original-paper precision.
-- Publish four verified inference checkpoints on Hugging Face while preserving
-  all 16 original checkpoints; GitHub release assets remain in a draft.
+- Publish five verified inference checkpoints on Hugging Face while preserving
+  all 16 original checkpoints. Host weights only on Hugging Face and remove
+  the four earlier GitHub checkpoint archive attachments.
 - Add five release training profiles matching the recorded final configurations,
   and a training entrypoint with evaluation shards that do not repeat molecules.
   Move other training/evaluation experiments into an indexed, hashed archive.
@@ -29,9 +32,9 @@ source and configuration files; `model.version` selects an architecture.
   evaluation with explicit units, solver policies, hashes and failure records.
 - Add the README benchmark image, update date, original-paper references,
   spectral gate/O(3) labels, and measured training GPU hours for
-  completed S/O(3)-S/M/L runs. Only XL is marked `(on train)`.
-- Prepare exact best-validation inference exports for S, O(3)-S, M and L
-  with configs, metrics, provenance and checksums; XL is still training.
+  completed S/O(3)-S/M/L/XL runs; replace XL placeholders with final results.
+- Prepare exact best-validation inference exports for S, O(3)-S, M, L and XL
+  with configs, metrics, provenance and checksums.
   See the [draft checkpoint update](docs/releases/v0.2.0-rc.2-checkpoints.md).
 - Keep release history below the usage guide and retain the existing
   collapsed explanation of the legacy equivariance issue.

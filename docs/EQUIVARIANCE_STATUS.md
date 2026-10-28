@@ -111,8 +111,8 @@ These eight trained variants are planned releases. The initial experimental
 branch provides the ordering correction for `QHFlow_so2_v5_1`; the Stable/Muon
 implementation is now published as code prerelease `v0.2.0-rc.1` and supplies
 the new architectures and training configurations in `main`.
-S/M/L and O(3)-S now have completed benchmark results and draft checkpoint
-bundles. XL training is in progress; O(3)-M/L/XL benchmarks remain planned.
+S/M/L/XL and O(3)-S now have completed benchmark results and verified
+checkpoints hosted on Hugging Face. O(3)-M/L/XL benchmarks remain planned.
 The full eight-variant checkpoint release remains planned for `v0.2.0`.
 The legacy implementation remains available under its original model names
 for reproducibility. See the [versioning and release guide](RELEASING.md).

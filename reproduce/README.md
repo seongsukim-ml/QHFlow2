@@ -1,6 +1,6 @@
 # QHFlow2 reproduction
 
-Updated 2026-10-23 · code/checkpoints v0.2.0-rc.2.
+Updated 2026-10-28 · code/checkpoints v0.2.0-rc.2.
 
 Use the repository root as the working directory and install the
 [Stable/Muon runtime](../docs/QH9STABLE_MUON.md#stable-data-and-runtime).
@@ -52,11 +52,10 @@ model definitions when loading checkpoints.
 
 The table places **Steps** after Param. and pairs each completed updated
 model's **3-step then 1-step** results. One **Inference samples/s** column
-matches the step count on each row. The measurements below completed on an
-exclusive H100 on 2026-10-21 UTC and passed the GPU isolation check. Updated XL
-retains `(on train)`. Original-paper
-rows preserve their reported metrics without assigning a new step label; the
-speed benchmark still records both step counts for all eight checkpoints.
+matches the step count on each row. Measurements completed on an exclusive H100 on 2026-10-21 UTC
+(original models and updated S/O(3)-S/M/L) and 2026-10-28 UTC (updated XL),
+with both GPU isolation checks passed. Original-paper rows preserve their reported metrics without assigning a new step label; the
+speed benchmark still records both step counts for all nine checkpoints.
 
 | Checkpoint family | Model | 1 step (samples/s) | 3 steps (samples/s) |
 | --- | --- | ---: | ---: |
@@ -68,16 +67,22 @@ speed benchmark still records both step counts for all eight checkpoints.
 | v0.2.0-rc.2 | QHFlow2-O(3)-s | 68.64 | 24.91 |
 | v0.2.0-rc.2 | QHFlow2-m | 130.78 | 47.73 |
 | v0.2.0-rc.2 | QHFlow2-l | 96.74 | 34.35 |
+| v0.2.0-rc.2 | QHFlow2-xl | 41.23 | 14.06 |
 
 [Unrounded speed CSV](inference/results.csv), [raw timing and provenance JSON](inference/measurements.json), and [GPU isolation record](inference/isolation.json) preserve the measured evidence. These are batched model-inference rates, not end-to-end DFT rates or single-molecule latency.
 
 The [checkpoint/cohort manifest](inference/benchmark-manifest.json) pins exact
 inputs and local paths (replace paths on another machine, preserving hashes).
-The frozen protocol uses all eight completed original/updated checkpoints,
+The frozen protocol uses all nine completed original/updated checkpoints,
 one H100 80GB, FP32 with high matmul precision, no torch.compile, batch 8,
 128 fixed seed-42 test molecules, one complete warmup sweep per step count,
 and three timed sweeps. Every model uses identical molecule order and batching.
-The original XL checkpoint is included; the unfinished updated XL is excluded.
+The completed updated XL uses the identical frozen source, hardware type,
+cohort and timing settings in its [separate manifest](inference/xl-benchmark-manifest.json).
+Its [raw timings](inference/xl-measurements.json) and [isolation record](inference/xl-isolation.json)
+are separate from the earlier eight-model measurement. To reproduce XL, use
+`/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-xl-inference-1step-3step-20261028/benchmark-manifest.json`
+with a fresh absolute output directory in the command below.
 The small common batch makes this a comparison at a fixed batch size, not a
 claim about peak throughput attainable with model-specific batching.
 

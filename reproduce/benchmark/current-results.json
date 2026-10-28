@@ -315,6 +315,85 @@
           }
         }
       }
+    },
+    {
+      "model": "QHFlow2-xl",
+      "display_model": "QHFlow2-xl",
+      "completed_json": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-xl5-ddp4-stable-muon-s42-20261021/attempt-1/completed.json",
+      "sha256": "09250c48195347b32f11c4ef261b58faf1cfc4ac77bf341215540549a3efe2a8",
+      "checkpoint": "/dataset/seongsu/shared-home/workspace/project/MALOQ/outputs/qhflow2-xl5-ddp4-stable-muon-s42-20261021/attempt-1/training/checkpoints/epoch078-step00258409.ckpt",
+      "trainable_parameters": 1013183801,
+      "ode_steps": 3,
+      "raw_metrics": {
+        "hamiltonian": 3.28584271376394e-06,
+        "orbital_energies": 3.153193512572541e-05,
+        "orbital_coefficients": 0.9986753772738141,
+        "HOMO": 2.82379400486613e-05,
+        "LUMO": 5.162332667060335e-05,
+        "GAP": 5.743143230795319e-05
+      },
+      "display_metrics": {
+        "hamiltonian": 3.28584271376394,
+        "orbital_energies": 31.53193512572541,
+        "orbital_coefficients": 99.8675377273814,
+        "HOMO": 28.2379400486613,
+        "LUMO": 51.623326670603355,
+        "GAP": 57.43143230795319
+      },
+      "evaluations": {
+        "3": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian",
+            "orbital_energies": "test/sample_orbital_energies",
+            "orbital_coefficients": "test/sample_orbital_coefficients",
+            "HOMO": "test/sample_HOMO",
+            "LUMO": "test/sample_LUMO",
+            "GAP": "test/sample_GAP"
+          },
+          "raw_metrics": {
+            "hamiltonian": 3.28584271376394e-06,
+            "orbital_energies": 3.153193512572541e-05,
+            "orbital_coefficients": 0.9986753772738141,
+            "HOMO": 2.82379400486613e-05,
+            "LUMO": 5.162332667060335e-05,
+            "GAP": 5.743143230795319e-05
+          },
+          "display_metrics": {
+            "hamiltonian": 3.28584271376394,
+            "orbital_energies": 31.53193512572541,
+            "orbital_coefficients": 99.8675377273814,
+            "HOMO": 28.2379400486613,
+            "LUMO": 51.623326670603355,
+            "GAP": 57.43143230795319
+          }
+        },
+        "1": {
+          "source_metric_keys": {
+            "hamiltonian": "test/sample_hamiltonian_1",
+            "orbital_energies": "test/sample_orbital_energies_1",
+            "orbital_coefficients": "test/sample_orbital_coefficients_1",
+            "HOMO": "test/sample_HOMO_1",
+            "LUMO": "test/sample_LUMO_1",
+            "GAP": "test/sample_GAP_1"
+          },
+          "raw_metrics": {
+            "hamiltonian": 3.2979291597455574e-06,
+            "orbital_energies": 3.169557554169339e-05,
+            "orbital_coefficients": 0.9986843326950486,
+            "HOMO": 2.8517169785682883e-05,
+            "LUMO": 5.069659402533706e-05,
+            "GAP": 5.6775537650537214e-05
+          },
+          "display_metrics": {
+            "hamiltonian": 3.2979291597455576,
+            "orbital_energies": 31.695575541693394,
+            "orbital_coefficients": 99.86843326950486,
+            "HOMO": 28.517169785682885,
+            "LUMO": 50.69659402533706,
+            "GAP": 56.77553765053722
+          }
+        }
+      }
     }
   ],
   "display_decimals": 3,
