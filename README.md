@@ -8,6 +8,10 @@ By Seongsu Kim, Feb, 2026 [[PDF]](https://arxiv.org/pdf/2602.16897v1)
 
 [Latest published release](https://github.com/seongsukim-ml/QHFlow2/releases/tag/v0.2.0-rc.1) · [Hugging Face checkpoints](https://huggingface.co/ksusu/QHFlow2-QH9/tree/main/QH9Stable-random/v0.2.0-rc.2) · [Updated benchmarks](#qh9stable-benchmark-update) · [Stable/Muon training guide](docs/QH9STABLE_MUON.md) · [Version history](#version-history)
 
+Datasets and checkpoint binaries are downloaded separately. The
+[2026-10-28 history cleanup](docs/history/2026-10-28-cleanup.md) removes bundled
+data from Git history; use a fresh clone if you have an older checkout.
+
 ## Packages and Requirements
 
 For the corrected SO(3)/O(3) models with Muon, use

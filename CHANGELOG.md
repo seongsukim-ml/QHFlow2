@@ -5,6 +5,10 @@ source and configuration files; `model.version` selects an architecture.
 
 ## Unreleased — benchmark/checkpoint update and config audit, 2026-10-28
 
+- Remove bundled water data/caches from all branch and tag histories while
+  preserving source and configurations. Keep checkpoints on Hugging Face; add
+  the [historical commit map](docs/history/2026-10-28-cleanup.md) for reproducibility.
+
 - Complete XL at 260,000 steps; publish full-test 3-step H MAE 3.286 μEh and
   1-step H MAE 3.298 μEh from validation-selected step 258,409.
 - Display ERIC as a percentage. Omit original-paper training GPU hours at the

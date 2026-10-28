@@ -1,0 +1,105 @@
+{
+  "removed_paths": [
+    {
+      "path": "dataset/water/processed/pre_filter.pt",
+      "git_blob": "19d49ca4042abf4ec9e0899c722d410b9f923833",
+      "bytes": 876
+    },
+    {
+      "path": "dataset/water_shard/processed/pre_filter.pt",
+      "git_blob": "19d49ca4042abf4ec9e0899c722d410b9f923833",
+      "bytes": 876
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_001.lmdb/data.mdb",
+      "git_blob": "271cf99a9c37ed0e1e87f8393a587fd2cd9c0b49",
+      "bytes": 51249152
+    },
+    {
+      "path": "dataset/water/raw/schnorb_hamiltonian_water.tgz",
+      "git_blob": "2fa4e07776339f52b34198aac8777e032a1a5126",
+      "bytes": 14528307
+    },
+    {
+      "path": "dataset/water_shard/raw/schnorb_hamiltonian_water.tgz",
+      "git_blob": "2fa4e07776339f52b34198aac8777e032a1a5126",
+      "bytes": 14528307
+    },
+    {
+      "path": "dataset/water_shard/processed/random_split.json",
+      "git_blob": "34d9c3734a4b85edfe1924c40d976593bb9eee48",
+      "bytes": 28914
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_000.lmdb/single_index.json",
+      "git_blob": "512865090fa73abe10d7c6a28a427587c970084b",
+      "bytes": 40291
+    },
+    {
+      "path": "dataset/water_shard/processed/db_info.txt",
+      "git_blob": "531fc7df7d5bbc1416592f340b75aa1ef19f23b1",
+      "bytes": 1847
+    },
+    {
+      "path": "dataset/water_shard/processed/ALL_SHARDS_COMPLETED.txt",
+      "git_blob": "54c5f544abe4b28cbff01612548048826a389630",
+      "bytes": 53
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_000.lmdb/lock.mdb",
+      "git_blob": "5e275bda700873476d8b980619573a1519ed0f55",
+      "bytes": 8192
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_000.lmdb/data.mdb",
+      "git_blob": "635986e0da00aa964ca0ec70c9c2e200b3a8fb7f",
+      "bytes": 51269632
+    },
+    {
+      "path": "dataset/water/processed/data.pt",
+      "git_blob": "7509928aca0110eb3aeef0b560a1bc83ac960a3b",
+      "bytes": 73250078
+    },
+    {
+      "path": "dataset/water/raw/schnorb_hamiltonian_water.db",
+      "git_blob": "8765f45f8157e1b9380411b1d8dcd6b6b8cba042",
+      "bytes": 28278784
+    },
+    {
+      "path": "dataset/water_shard/raw/schnorb_hamiltonian_water.db",
+      "git_blob": "8765f45f8157e1b9380411b1d8dcd6b6b8cba042",
+      "bytes": 28278784
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_001.lmdb/single_index.json",
+      "git_blob": "8fddfd73b6da7cc361f406457e6481abd5abac77",
+      "bytes": 41384
+    },
+    {
+      "path": "dataset/water_shard/processed/index.json",
+      "git_blob": "9a6c30d6272c8f4a5f7cdc04b3112d9a6d4fdadb",
+      "bytes": 81664
+    },
+    {
+      "path": "dataset/water_shard/processed/shard_completion_status.json",
+      "git_blob": "b2104c6635b4542cdb949cc2a3c07f2668535ef6",
+      "bytes": 165
+    },
+    {
+      "path": "dataset/water_shard/processed/lmdbs/shard_001.lmdb/lock.mdb",
+      "git_blob": "dbcfe2f4e5e3bda712e83e68542037552641a484",
+      "bytes": 8192
+    },
+    {
+      "path": "dataset/water/processed/pre_transform.pt",
+      "git_blob": "ede5b48c941ce974522ccfc4e7a284e9125453d6",
+      "bytes": 888
+    },
+    {
+      "path": "dataset/water_shard/processed/pre_transform.pt",
+      "git_blob": "ede5b48c941ce974522ccfc4e7a284e9125453d6",
+      "bytes": 888
+    }
+  ],
+  "unique_blob_bytes": 218788419
+}

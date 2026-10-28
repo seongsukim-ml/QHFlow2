@@ -17,8 +17,6 @@ data_dir/*
 dataset/*
 data/*
 !dataset/README.md
-!dataset/water
-!dataset/water_shard
 
 outputs/
 checkpoints/
@@ -41,3 +39,8 @@ debug_outputs/
 *.pt
 *.ckpt
 lightning_logs/
+
+# Download model weights from Hugging Face; keep binaries out of Git.
+*.pth
+*.safetensors
+!src/models/modules/Jd.pt

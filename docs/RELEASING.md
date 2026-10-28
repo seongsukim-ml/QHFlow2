@@ -4,7 +4,7 @@
 
 The code version lives in **`src/qhflow2_version.py`**. New releases use
 `vMAJOR.MINOR.PATCH` tags, with `-rc.N` for release candidates. The existing
-`ver.0.1.0` tag keeps its original name and contents. This follows
+`ver.0.1.0` tag keeps its original name and source/configuration contents. This follows
 [Semantic Versioning](https://semver.org/); the project is still in the 0.x
 development series.
 
@@ -13,7 +13,7 @@ model classes. Development branches are working areas, not release identifiers.
 Pin a published tag when reproducing an experiment:
 
 ```bash
-cd /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-equivariance-fix
+cd /dataset/seongsu/shared-home/workspace/worktrees/qhflow2-git-history-cleanup-main-20261028
 git fetch origin --tags
 git switch --detach v0.2.0-rc.1
 python3 src/qhflow2_version.py --json
@@ -32,6 +32,13 @@ Older model configuration names remain supported. Pinning a new code release
 does not automatically convert old weights to a corrected architecture. Keep
 legacy weights with their original model config. The packing-only model
 `QHFlow_so2_v5_1_ordering_fixed` remains a historical intermediate variant.
+
+## Historical Git IDs
+
+The [2026-10-28 storage cleanup](history/2026-10-28-cleanup.md) rewrote existing
+branches and tags only to remove bundled data. Source/configuration blobs are
+unchanged. Use its commit map for older IDs recorded in checkpoints. This
+one-time cleanup is an exception to the normal immutable-tag release policy.
 
 ## Runtime and checkpoint identity
 
