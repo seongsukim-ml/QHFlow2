@@ -4,6 +4,7 @@ Archived 2026-10-21. Use [the reproduction guide](../reproduce/README.md) for cu
 
 | Location | Contents |
 | --- | --- |
+| [LEGACY_SETUP.md](LEGACY_SETUP.md) | Earlier Torch 2.4 installation examples; updated models use the Stable/Muon runtime |
 | `configs/qh9/` | Complete pre-cleanup Hydra tree, including ablations, QHNet baselines, fine-tuning and paired-branch optimization experiments |
 | `configs/md17/` | Historical MD17/rMD17 training and fine-tuning configs |
 | `legacy/src/dft_process/post_process/` | Original energy/force evaluators, including `measure_energy_force_uma_gpu_v4.py` |

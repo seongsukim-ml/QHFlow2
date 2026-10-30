@@ -1,12 +1,67 @@
-# Download datasets separately
+# Datasets
 
 Full dataset payloads and generated caches are excluded from Git. A small
 [three-molecule test fixture](../examples/qh9stable/README.md) is included
-separately for loading and checkpoint smoke tests. Follow the
-[QH9 download instructions](../README.md#dataset) and
-[Stable/Muon data preparation](../docs/QH9STABLE_MUON.md#stable-data-and-runtime)
-for the current benchmarks. Checkpoints are available separately on
+separately for loading and checkpoint smoke tests. Checkpoints are available on
 [Hugging Face](https://huggingface.co/ksusu/QHFlow2-QH9).
+
+Keep full datasets outside the source checkout and set the dataset root in your
+configuration. On the shared SC26 workspace, new durable datasets belong below
+`/dataset/seongsu/shared-home/datasets/`. The commands below use that location;
+on another machine, substitute your own absolute dataset path.
+
+## QH9
+
+Download the raw databases with `gdown` (included in the model requirements):
+
+```bash
+mkdir -p /dataset/seongsu/shared-home/datasets/qh9/QH9Stable/raw
+gdown 'https://drive.google.com/uc?id=1LcEJGhB8VUGkuyb0oQ_9ANJdSkky9xMS' \
+  -O /dataset/seongsu/shared-home/datasets/qh9/QH9Stable/raw/QH9Stable.db
+
+mkdir -p /dataset/seongsu/shared-home/datasets/qh9/QH9Dynamic_300k/raw
+gdown 'https://drive.google.com/uc?id=1sbf-sFhh3ZmhXgTcN2ke_la39MaG0Yho' \
+  -O /dataset/seongsu/shared-home/datasets/qh9/QH9Dynamic_300k/raw/QH9Dynamic_300k.db
+```
+
+For an existing processed dataset, follow the
+[Stable/Muon data and split instructions](../docs/QH9STABLE_MUON.md#stable-data-and-runtime).
+The updated training entrypoint opens existing shards read-only; it does not
+download or preprocess data. Earlier dataset loaders can preprocess raw files
+when first opened. To prepare shards explicitly, run from the repository root:
+
+```bash
+PYTHONPATH=src python -m dataset_module.qh9_datasets_split \
+  --root /dataset/seongsu/shared-home/datasets/qh9 \
+  --name QH9Stable --split random --num_chunks 30 --chunk_idx -1
+```
+
+| Dataset | `--name` | Splits |
+| --- | --- | --- |
+| QH9Stable | `QH9Stable` | `random`, `size_ood` |
+| QH9Dynamic | `QH9Dynamic` | `geometry`, `mol` (use `--version 300k` for the download above) |
+
+`--chunk_idx -1` processes all shards; a single index processes one shard for a
+resumable partial run. Shards are stored under each dataset's `processed/lmdbs/`.
+Use the resulting processed directory and its paired split file in your config.
+The current release benchmarks use QH9Stable's **random** split.
+
+This preprocessing command is retained as a compatibility CLI. New Python code
+should import `dataset_module.qh9_dataset`. The older `qh9_common`,
+`qh9_datasets_split`, `qh9_datasets_shard`, and `qh9_datasets_shard_full_process`
+module paths retain their exports but emit `DeprecationWarning`.
+
+## MD17 and rMD17
+
+| Dataset | Download | Example folders |
+| --- | --- | --- |
+| MD17 | [Processed data](https://drive.google.com/drive/folders/1d3HTu0H7gdg54kirWBqN24x-s1QW6OKV?usp=sharing) | `ethanol`, `malondialdehyde`, `uracil` |
+| rMD17 | [Processed data](https://drive.google.com/drive/folders/1yqxWmy2NM84Q_yjBnvQaZLO6vAAc5ghA) | `rmd-aspirin`, `rmd-ethanol`, `rmd-naphthalene`, `rmd-salicylic_acid` |
+
+Place each downloaded folder under your external dataset root and set that root
+in the [archived MD17/rMD17 configurations](../archive/README.md).
+
+## Legacy water example
 
 The legacy water example uses the original
 [SchNOrb water archive](https://quantum-machine.org/data/schnorb_hamiltonian/schnorb_hamiltonian_water.tgz).
